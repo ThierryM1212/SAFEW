@@ -1,0 +1,80 @@
+.App {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: rgb(212, 212, 212);
+  background-color: rgb(39, 40, 34);
+  min-height: 100vh;
+  font-family: monospace;
+}
+
+.material-icons.red { color: #aa292d;}
+.material-icons.green { color: #5a884e;}
+.material-icons.blue { color: #216A94;}
+.material-icons.orange { color: #946526;}
+
+.redAmount { color: #ac3344;}
+.greenAmount { color: #5a884e;}
+
+.validInput {
+  border: 1px solid #000000;
+  outline-color: #000000;
+}
+
+.invalidInput {
+  border: 1px solid #aa292d;
+  outline-color: #aa292d;
+}
+
+.card {
+  background-color: rgb(51, 51, 51);
+  border-color: rgb(141, 140, 143);
+  text-align: left;
+}
+
+.walletCard {
+  border: 2px solid;
+}
+
+table,td,th .tokentable {
+  padding: 10px;
+  border: 1px solid rgb(231, 211, 211);
+  border-collapse: collapse;
+  }
+th {
+  text-align: center;
+}
+
+.addborder {
+  border: 1px solid rgb(231, 211, 211);
+  padding: 0px;
+}
+
+.address {
+  font-family: monospace;
+}
+
+.dropzone {
+  border-radius: 5px;
+  border: 2px dashed;
+  border-image: none;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.selectReact {
+  color: rgb(51, 51, 51) !important;
+}
+
+.textSmall {
+  font-size: 0.8rem;
+}
+
+.radioLabel {
+  padding-left: 2rem;
+}
+
+.walletName {
+    flex-basis: 200rem;
+}

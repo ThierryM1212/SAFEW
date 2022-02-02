@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="177.30391mm"
+   height="69.273613mm"
+   viewBox="0 0 177.30391 69.273613"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+   sodipodi:docname="safew_logo.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <title
+     id="title29625">SAFEW</title>
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     inkscape:zoom="0.74118967"
+     inkscape:cx="316.38325"
+     inkscape:cy="192.25848"
+     inkscape:window-width="1920"
+     inkscape:window-height="1017"
+     inkscape:window-x="1912"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2">
+    <rect
+       x="63.411568"
+       y="381.8186"
+       width="758.24048"
+       height="257.69382"
+       id="rect6354" />
+    <rect
+       x="94.442764"
+       y="381.8186"
+       width="495.1499"
+       height="120.07723"
+       id="rect2498" />
+  </defs>
+  <g
+     inkscape:label="Calque 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-21.366654,-98.087875)">
+    <text
+       xml:space="preserve"
+       transform="scale(0.26458333)"
+       id="text2496"
+       style="font-style:normal;font-weight:normal;font-size:40px;line-height:1.25;font-family:sans-serif;white-space:pre;shape-inside:url(#rect2498);fill:#000000;fill-opacity:1;stroke:none" />
+    <text
+       xml:space="preserve"
+       transform="scale(0.26458333)"
+       id="text6352"
+       style="font-style:normal;font-weight:normal;font-size:192px;line-height:1.25;font-family:sans-serif;white-space:pre;shape-inside:url(#rect6354);fill:#000000;fill-opacity:1;stroke:none"><tspan
+         x="63.412109"
+         y="556.98578"
+         id="tspan72180"><tspan
+           style="font-family:'Courier New';-inkscape-font-specification:'Courier New, Normal';fill:#cccccc"
+           id="tspan72178">SAF  W</tspan></tspan></text>
+    <g
+       id="main"
+       transform="matrix(1.0446781,0,0,1.0430466,108.15495,102.25551)"
+       style="fill:#cccccc">
+      <g
+         id="Group-16"
+         transform="translate(-70,-35)"
+         style="fill:#cccccc">
+        <g
+           transform="translate(70,34)"
+           id="g26425"
+           style="fill:#cccccc">
+          <g
+             id="Group-15"
+             transform="translate(0,0.83028)"
+             style="fill:#cccccc">
+            <path
+               id="Fill-9"
+               class="st0"
+               d="M 11.2,47.8 29.5,55.2 47.7,47.4 55,29.1 47.2,10.9 28.9,3.6 10.7,11.4 3.4,29.7 Z m 18.3,10.8 c -0.2,0 -0.4,0 -0.6,-0.1 L 9.3,50.6 C 8.9,50.4 8.6,50.1 8.4,49.7 L 0.1,30.3 C -0.1,29.9 -0.1,29.5 0.1,29 L 8,9.5 C 8.2,9.1 8.5,8.8 8.9,8.6 L 28.3,0.3 c 0.4,-0.2 0.8,-0.2 1.3,0 L 49.2,8.2 C 49.5,8.3 49.8,8.6 50,9 l 8.3,19.4 c 0.2,0.4 0.2,0.8 0,1.3 l -7.9,19.6 c -0.2,0.4 -0.5,0.7 -0.9,0.9 l -19.4,8.3 c -0.1,0.1 -0.4,0.1 -0.6,0.1 z"
+               style="fill:#cccccc" />
+            <polygon
+               id="Fill-10"
+               class="st0"
+               points="33.4,29.1 25.6,37.7 38,37.7 38,41.5 20.5,41.5 20.5,37.7 28.3,29.1 20.5,21 20.5,17.3 38,17.3 38,21 25.8,21 "
+               style="fill:#cccccc" />
+          </g>
+        </g>
+      </g>
+    </g>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:10.5833px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="105.96881"
+       y="140.92441"
+       id="text64102"><tspan
+         sodipodi:role="line"
+         id="tspan64100"
+         style="stroke-width:0.264583"
+         x="105.96881"
+         y="140.92441"> </tspan></text>
+  </g>
+  <style
+     type="text/css"
+     id="style26416">
+	.st0{fill-rule:evenodd;clip-rule:evenodd;}
+</style>
+  <metadata
+     id="metadata29623">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:title>SAFEW</dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+</svg>
