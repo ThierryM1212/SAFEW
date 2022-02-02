@@ -14,15 +14,15 @@ Wallet features:
  - Configure Explorer, Node and Explorer UI addresses used by the wallet
 
 ## Security
-The wallets are stored in the local storage of the SAFEW browser extension.
-The mnemonic is encrypted (AES-256) with the spending password, that is not stored in the application.
-The password will be required to spend funds or to add or discover new addresses.
+The wallets are stored in the local storage of the SAFEW browser extension.<br/>
+The mnemonic is encrypted (AES-256) with the spending password, that is not stored in the application.<br/>
+The password will be required to spend funds or to add or discover new addresses.<br/>
 
 ## Privacy
-The address discovery can be launched at any time to generate unused addresses in the wallets.
-Non connected sites have no access to the information of your wallet.
-Connected sites can read the wallet content.
-The explorer and node used to interact with Ergo blockchain are configurable.
+The address discovery can be launched at any time to generate unused addresses in the wallets.<br/>
+Non connected sites have no access to the information of your wallet.<br/>
+Connected sites can read the wallet content.<br/>
+The explorer and node used to interact with Ergo blockchain are configurable.<br/>
 
 ## Build the project
 > git clone https://github.com/ThierryM1212/SAFEW.git<br/>
