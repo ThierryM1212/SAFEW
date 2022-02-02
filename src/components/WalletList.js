@@ -3,6 +3,7 @@ import Wallet from './Wallet';
 import ImageButton from './ImageButton';
 import { getAddressListContent, getUnconfirmedTransactionsForAddressList, getWalletListAddressList } from '../utils/walletUtils';
 import { errorAlert, waitingAlert } from '../utils/Alerts';
+import { updateErgoPrice } from '../ergo-related/ergoprice';
 
 export default class WalletList extends React.Component {
     constructor(props) {
@@ -69,11 +70,13 @@ export default class WalletList extends React.Component {
         } catch (e) {
             errorAlert("Failed to fetch wallet content from explorer API")
         }
-
+        await updateErgoPrice();
         this.setState({
             addressContentList: walletsAddressListContent,
         });
+
         if (showAlert) { alert.close(); }
+
     }
 
     render() {

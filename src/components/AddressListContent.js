@@ -1,12 +1,14 @@
 import React, { Fragment, useState } from 'react';
+import { readErgoPrice } from '../ergo-related/ergoprice';
 import { getUtxoBalanceForAddressList2 } from '../ergo-related/utxos';
-import { VERIFIED_TOKENS } from '../utils/constants';
+import { NANOERG_TO_ERG, VERIFIED_TOKENS } from '../utils/constants';
 import { formatERGAmount, formatTokenAmount, getSummaryFromAddressListContent } from '../utils/walletUtils';
 import ImageButton from './ImageButton';
 import VerifiedTokenImage from './VerifiedTokenImage';
 
 export default function AddressListContent(props) {
     const [details, toggleDetails] = useState(0);
+    const ergoPrice = parseFloat(readErgoPrice());
 
     var nanoErgs = 0, tokens = [], addressList = [], unconfirmedBalance = { value: 0, tokens: [] };
     if (props.addressContentList !== undefined) {
@@ -51,8 +53,11 @@ export default function AddressListContent(props) {
                             </div>
                             : <div></div>
                     }
-
-                    <h5>{formatERGAmount(nanoErgs)} ERG</h5>
+                    <div className='d-flex flex-row align-items-baseline'>
+                        <h6 className='textSmall'>({(nanoErgs / NANOERG_TO_ERG * ergoPrice).toFixed(2)} USD)</h6>
+                        &nbsp;
+                        <h5>{formatERGAmount(nanoErgs)} ERG</h5>
+                    </div>
                 </div>
 
                 <div className='d-flex flex-row justify-content-end'>

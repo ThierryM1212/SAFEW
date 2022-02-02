@@ -1,4 +1,5 @@
 import React, { Fragment } from 'react';
+import { updateErgoPrice } from '../ergo-related/ergoprice';
 import { waitingAlert } from '../utils/Alerts';
 import { getAddressListContent, getTransactionsForAddressList, getUnconfirmedTransactionsForAddressList, getWalletAddressList, getWalletById } from '../utils/walletUtils';
 import AddressListContent from './AddressListContent';
@@ -35,7 +36,7 @@ export default class TransactionList extends React.Component {
         const walletAddressList = getWalletAddressList(wallet);
         const addressContentList = await getAddressListContent(walletAddressList);
         this.setState({ addressContentList: addressContentList, });
-
+        await updateErgoPrice();
         const unConfirmedTxByAddressList = (await getUnconfirmedTransactionsForAddressList(walletAddressList))
             .map(txForAddr => txForAddr.transactions)
             .flat()
