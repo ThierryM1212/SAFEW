@@ -31,6 +31,8 @@ The explorer and node used to interact with Ergo blockchain are configurable.<br
 > npm run build <br/>
 <br/>
 Load the unpacked extension as described at: https://developer.chrome.com/docs/extensions/mv3/getstarted/ <br/>
+<br/>
+It requires to disable Yoroi extension to use the dApp connector.<br/>
 
 ## dApp Connector
 It tries to follow https://github.com/Emurgo/Emurgo-Research/blob/master/ergo/EIP-0012.md
