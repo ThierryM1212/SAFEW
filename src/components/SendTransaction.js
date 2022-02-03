@@ -3,13 +3,12 @@ import Address from './Address';
 import ValidInput from './ValidInput';
 import ImageButton from './ImageButton';
 import { NANOERG_TO_ERG, SUGGESTED_TRANSACTION_FEE, VERIFIED_TOKENS } from '../utils/constants';
-import { copySuccess, displayTransaction, errorAlert, promptPassword } from '../utils/Alerts';
-import { getWalletById, getWalletAddressList, formatERGAmount, formatTokenAmount, getSummaryFromAddressListContent, getSummaryFromSelectedAddressListContent, getAddressListContent, decryptMnemonic, formatLongString } from '../utils/walletUtils';
+import { copySuccess, errorAlert, promptPassword } from '../utils/Alerts';
+import { getWalletById, getWalletAddressList, formatERGAmount, formatTokenAmount, getSummaryFromAddressListContent, getSummaryFromSelectedAddressListContent, getAddressListContent, decryptMnemonic, formatLongString, getWalletUsedAddressList } from '../utils/walletUtils';
 import { createTxOutputs, createUnsignedTransaction, getUtxosForSelectedInputs, isValidErgAddress } from '../ergo-related/ergolibUtils';
 import { getWalletForAddresses, signTransaction } from '../ergo-related/serializer';
 import { sendTx } from '../ergo-related/node';
 import { getUtxoBalanceForAddressList } from '../ergo-related/utxos';
-import { delay } from '../utils/utils';
 import VerifiedTokenImage from './VerifiedTokenImage';
 
 export default class SendTransaction extends React.Component {
@@ -71,12 +70,11 @@ export default class SendTransaction extends React.Component {
             tokenAmountToSend: new Array(tokens.length).fill(0.0),
             isValidTokenAmountToSend: new Array(tokens.length).fill(true),
         })
-
     }
 
     async updateWalletContent() {
         const wallet = getWalletById(this.state.walletId);
-        var walletAddressList = getWalletAddressList(wallet);
+        var walletAddressList = getWalletUsedAddressList(wallet);
         var addressContentList = await getAddressListContent(walletAddressList);
         // remove 0 erg addresses
         var i = walletAddressList.length;

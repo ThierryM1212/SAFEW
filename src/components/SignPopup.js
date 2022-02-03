@@ -5,7 +5,7 @@ import { getWalletForAddresses, signTransaction } from '../ergo-related/serializ
 import { getUtxoBalanceForAddressList, parseUnsignedTx, parseUtxos } from '../ergo-related/utxos';
 import { errorAlert } from '../utils/Alerts';
 import { TX_FEE_ERGO_TREE } from '../utils/constants';
-import { decryptMnemonic, formatERGAmount, formatTokenAmount, getConnectedWalletByURL, getWalletAddressList } from '../utils/walletUtils';
+import { decryptMnemonic, formatERGAmount, formatTokenAmount, getConnectedWalletByURL, getWalletAddressList, getWalletUsedAddressList } from '../utils/walletUtils';
 
 /* global chrome */
 
@@ -53,7 +53,7 @@ export default class SignPopup extends React.Component {
     setPassword = (password) => { this.setState({ password: password }) };
 
     async componentDidMount() {
-        const walletAddressList = getWalletAddressList(this.state.wallet);
+        const walletAddressList = getWalletUsedAddressList(this.state.wallet);
         const txBalance = await getUtxoBalanceForAddressList(this.state.unSignedTx.inputs, this.state.unSignedTx.outputs, walletAddressList);
         this.setState({
             txBalance: txBalance,
@@ -63,7 +63,7 @@ export default class SignPopup extends React.Component {
 
     async signTx() {
         console.log("signTx", this.state)
-        const walletAddressList = getWalletAddressList(this.state.wallet);
+        const walletAddressList = getWalletUsedAddressList(this.state.wallet);
         const mnemonic = decryptMnemonic(this.state.wallet.mnemonic, this.state.password);
         if (mnemonic === null) {
             return;

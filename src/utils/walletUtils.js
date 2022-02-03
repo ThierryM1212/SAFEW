@@ -130,6 +130,17 @@ export function getWalletAddressList(wallet) {
     }
     return addressList;
 }
+export function getWalletUsedAddressList(wallet) {
+    let addressList = [];
+    for (var account of wallet.accounts) {
+        for (var address of account.addresses) {
+            if (address.used) {
+                addressList.push(address.address);
+            }
+        }
+    }
+    return addressList;
+}
 function getConnectedWalletName(url) {
     const connectedSites = JSON.parse(localStorage.getItem('connectedSites')) ?? {};
     for (const walletName of Object.keys(connectedSites)) {
@@ -261,7 +272,6 @@ export async function getUnconfirmedTransactionsForAddressList(addressList) {
         //console.log("getUnconfirmedTransactionsForAddressList", address, addressTransactions);
         for (const tx of addressTransactions) {
             tx.inputs = await enrichUtxos(tx.inputs);
-
         }
         return { address: address, transactions: addressTransactions };
     }));
