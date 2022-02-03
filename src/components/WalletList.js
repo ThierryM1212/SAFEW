@@ -51,14 +51,22 @@ export default class WalletList extends React.Component {
         if (showAlert) { alert = waitingAlert("Loading wallet content..."); }
         var walletsAddressListContent = [];
         const addressList = getWalletListAddressList(this.state.walletList);
-        try {
+
+        var unconfirmedTransactions = [];
+        try { // when the tx disappear from mempool we fail to fetch the box content
             const distinctWalletAddressList = [...new Set(addressList.flat())];
-            const unconfirmedTransactions = (await getUnconfirmedTransactionsForAddressList(distinctWalletAddressList))
+            unconfirmedTransactions = (await getUnconfirmedTransactionsForAddressList(distinctWalletAddressList))
                 .map(txForAddr => txForAddr.transactions)
                 .flat()
                 .filter((t, index, self) => {
                     return self.findIndex(tx => tx.id === t.id) === index;
                 });
+        } catch(e) {
+            console.log("Failed fetch Unconfirmed transactions", e)
+        }
+        
+
+        try {
             for (const walletAddressList of addressList) {
                 var addressContentList = await getAddressListContent(walletAddressList);
                 for (const e of addressContentList) {

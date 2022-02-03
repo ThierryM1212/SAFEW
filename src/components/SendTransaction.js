@@ -237,7 +237,7 @@ export default class SendTransaction extends React.Component {
         var signedTx = {};
 
         try {
-            signedTx = JSON.parse(await signTransaction(unsignedTransaction, selectedUtxos, [], signingWallet));
+            signedTx = JSON.parse(await signTransaction(jsonUnsignedTx, selectedUtxos, [], signingWallet));
             console.log("signedTx", signedTx);
         } catch (e) {
             errorAlert("Failed to sign transaction", e);

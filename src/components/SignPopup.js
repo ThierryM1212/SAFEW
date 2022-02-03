@@ -53,7 +53,7 @@ export default class SignPopup extends React.Component {
     setPassword = (password) => { this.setState({ password: password }) };
 
     async componentDidMount() {
-        const walletAddressList = getWalletUsedAddressList(this.state.wallet);
+        const walletAddressList = getWalletAddressList(this.state.wallet);
         const txBalance = await getUtxoBalanceForAddressList(this.state.unSignedTx.inputs, this.state.unSignedTx.outputs, walletAddressList);
         this.setState({
             txBalance: txBalance,

@@ -195,10 +195,12 @@ export async function signTxWithMnemonic(json, inputs, dataInputs, mnemonic, add
 }
 
 export async function signTransaction(unsignedTx, inputs, dataInputs, wallet) {
+    //console.log("signTransaction1", unsignedTx, inputs, dataInputs);
     const unsignedTransaction = (await ergolib).UnsignedTransaction.from_json(JSONBigInt.stringify(unsignedTx));
     const inputBoxes = (await ergolib).ErgoBoxes.from_boxes_json(inputs);
     const dataInputsBoxes = (await ergolib).ErgoBoxes.from_boxes_json(dataInputs);
     const ctx = await getErgoStateContext();
+    //console.log("signTransaction2", unsignedTx, inputs, dataInputs);
     const signedTx = wallet.sign_transaction(ctx, unsignedTransaction, inputBoxes, dataInputsBoxes);
     return await signedTx.to_json();
 }

@@ -270,10 +270,15 @@ export async function getUnconfirmedTransactionsForAddressList(addressList) {
     const addressUnConfirmedTransactionsList = await Promise.all(addressList.map(async (address) => {
         var addressTransactions = await getUnconfirmedTxsFor(address);
         //console.log("getUnconfirmedTransactionsForAddressList", address, addressTransactions);
-        for (const tx of addressTransactions) {
-            tx.inputs = await enrichUtxos(tx.inputs);
+        try { // if we fail to fetch one box, skip the unconfirmed transactions for that address
+            for (const tx of addressTransactions) {
+                tx.inputs = await enrichUtxos(tx.inputs);
+            }
+            return { address: address, transactions: addressTransactions };
+        } catch(e) {
+            console.log(e);
+            return { address: address, transactions: [] };
         }
-        return { address: address, transactions: addressTransactions };
     }));
     return addressUnConfirmedTransactionsList;
 }
