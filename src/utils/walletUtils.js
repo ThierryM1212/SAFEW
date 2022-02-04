@@ -22,7 +22,7 @@ export function isValidPassword(password) {
 
 export async function addErgoPayWallet(name, address, color) {
     // const walletAccounts = await discoverAddresses(mnemonic);
-    const walletAccounts = [{id: undefined, addresses: [{ id: 0, address }], name}];
+    const walletAccounts = [{id: undefined, addresses: [{ id: 0, address, used: true }], name}];
     console.log("walletAccounts", walletAccounts, walletAccounts[0].addresses[0].address);
     const newWallet = {
         name: name,
