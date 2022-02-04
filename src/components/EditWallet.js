@@ -30,6 +30,9 @@ export default class EditWallet extends React.Component {
             invalidPassword2Message: INVALID_PASSWORD_LENGTH_MSG,
             color: "#8D8C8F",
             walletColor: "#8D8C8F",
+            colorRgb: {
+                r: 141, g: 140, b: 143
+            },
             selectedChangeAddress: '',
         };
         this.updateWalletName = this.updateWalletName.bind(this);
@@ -81,6 +84,7 @@ export default class EditWallet extends React.Component {
     updateWalletColor = () => {
         var wallet = getWalletById(this.state.walletId);
         wallet.color = this.state.color;
+        wallet.colorRgb = this.state.colorRgb;
         updateWallet(wallet, this.state.walletId);
         this.setWalletName(this.state.walletName);
         this.setState({
@@ -104,7 +108,8 @@ export default class EditWallet extends React.Component {
 
     onChangeColor = (color) => {
         this.setState({
-            color: color.hex
+            color: color.hex,
+            colorRgb: color.rgb
         });
     };
 
@@ -225,7 +230,7 @@ export default class EditWallet extends React.Component {
 
         return (
             <Fragment >
-                <div className='container card m-1 p-1 d-flex flex-column w-75 ' style={{ borderColor: this.state.color }}>
+                <div className='container card m-1 p-1 d-flex flex-column w-75 ' style={{ borderColor: this.state.color, backgroundColor: `rgba(${this.state.colorRgb.r},${this.state.colorRgb.g},${this.state.colorRgb.b},0.25)` }}>
                     <div className='d-flex flex-row justify-content-between editWalletCard'>
                         <h4>Update an Ergo wallet - {this.state.walletName}</h4>
 

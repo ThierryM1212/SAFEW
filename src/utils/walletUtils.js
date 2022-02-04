@@ -20,7 +20,7 @@ export function isValidPassword(password) {
     return true;
 }
 
-export async function addNewWallet(name, mnemonic, password, color) {
+export async function addNewWallet(name, mnemonic, password, color, colorRgb) {
     const walletAccounts = await discoverAddresses(mnemonic);
     console.log("walletAccounts", walletAccounts, walletAccounts[0].addresses[0].address);
     const newWallet = {
@@ -28,6 +28,7 @@ export async function addNewWallet(name, mnemonic, password, color) {
         mnemonic: CryptoJS.AES.encrypt(mnemonic, password + PASSWORD_SALT).toString(),
         accounts: walletAccounts,
         color: color,
+        colorRgb: colorRgb,
         changeAddress: walletAccounts[0].addresses[0].address,
     };
     var walletList = JSON.parse(localStorage.getItem('walletList'));
