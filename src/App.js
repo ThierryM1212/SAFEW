@@ -84,7 +84,7 @@ export default class App extends React.Component {
                 page = <AddWallet setPage={this.setPage} />
                 break
             case 'addErgoPay':
-                page = <AddErgoPayWallet setPage={this.setPage} />
+                page = <AddWallet isErgoPayWallet={true} setPage={this.setPage} />
                 break
             case 'edit':
                 page = <EditWallet setPage={this.setPage} walletId={this.state.walletId} />
