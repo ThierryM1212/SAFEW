@@ -3,6 +3,7 @@ import './App.css';
 import WalletList from './components/WalletList';
 import NavigationBar from './components/NavigationBar';
 import AddWallet from './components/AddWallet';
+import AddErgoPayWallet from './components/AddErgoPayWallet';
 import EditWallet from './components/EditWallet';
 import Config from './components/Config';
 import { DEFAULT_EXPLORER_API_ADDRESS, DEFAULT_EXPLORER_WEBUI_ADDRESS, DEFAULT_MIXER_ADDRESS, DEFAULT_NODE_ADDRESS, DISCLAIMER_TEXT } from './utils/constants';
@@ -81,6 +82,9 @@ export default class App extends React.Component {
                 break
             case 'add':
                 page = <AddWallet setPage={this.setPage} />
+                break
+            case 'addErgoPay':
+                page = <AddErgoPayWallet setPage={this.setPage} />
                 break
             case 'edit':
                 page = <EditWallet setPage={this.setPage} walletId={this.state.walletId} />
