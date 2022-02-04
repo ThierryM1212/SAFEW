@@ -4,10 +4,11 @@ export default function ImageButton(props) {
     return (
         <div className="m-1 d-flex flex-column">
             <span
-                className={"btn btn-sm material-icons " + props.color}
+                className={"material-icons " + props.color}
                 onClick={props.onClick}
                 data-tip
                 data-for={props.id}
+                style={{cursor: 'pointer'}}
             >
                 {props.icon}
             </span>
