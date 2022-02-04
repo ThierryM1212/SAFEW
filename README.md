@@ -41,7 +41,7 @@ sign_tx_input, sign_data and add_external_box are not implemented yet
 Same ergo_request_read_access and ergo_check_read_access than Yoroi method are declared to ensure the compatibility of existing dApp using Yoroi.
 
 ## Next steps ?
-Publish on Chrome Web Stored (currently blocked by https://bugs.chromium.org/p/chromium/issues/detail?id=1173354 and the requirement to publish the new extensions with manifest v3)<br/>
+Publish on Chrome Web Store (currently blocked by https://bugs.chromium.org/p/chromium/issues/detail?id=1173354 and the requirement to publish the new extensions with manifest v3)<br/>
 Publish on Opera Addons<br/>
 Build for Firefox<br/>
 Ergo mixer integration: https://github.com/ergoMixer/ergoMixBack<br/>

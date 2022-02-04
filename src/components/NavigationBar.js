@@ -1,51 +1,62 @@
 import ImageButton from "./ImageButton";
 import logo from "../resources/safew_logo.svg";
+import GitLogo from "../resources/GitHub.png";
+import ReactTooltip from "react-tooltip";
 
 export default function NavigationBar(props) {
     return (
-        <div className="container d-flex flex-row flex-start w-75 m-1 p-1 align-items-center" >
-            <img src={logo}
-                alt="SAFEW"
-                height='40'
-                onClick={() => { props.setPage('home') }}
-            />&nbsp;&nbsp;
-            <ImageButton
-                id={"home"}
-                color={"blue"}
-                icon={"home"}
-                tips={"Wallet list"}
-                onClick={() => { props.setPage('home') }}
-            />
-            {
-                props.mixerAvailable ?
-                    <ImageButton
-                        id={"ergoMixer"}
-                        color={"blue"}
-                        icon={"blender"}
-                        tips={"Ergo mixer"}
-                        onClick={() => {
-                            const url = localStorage.getItem('mixerAddress');
-                            window.open(url, '_blank').focus();
-                        }}
-
-                    /> : null
-            }
-
-            <ImageButton
-                id={"config"}
-                color={"blue"}
-                icon={"settings"}
-                tips={"Settings"}
-                onClick={() => { props.setPage('config') }}
-            />
-
-            <ImageButton
-                id={"config"}
-                color={"blue"}
-                icon={"link_off"}
-                tips={"Disconnect wallets"}
-                onClick={() => { props.setPage('disconnect') }}
-            />
+        <div className="container d-flex flex-row justify-content-between w-75 m-1 p-1 align-items-center" >
+            <div className="d-flex flex-row align-items-center" >
+                <img src={logo}
+                    alt="SAFEW"
+                    height='40'
+                    onClick={() => { props.setPage('home') }}
+                />&nbsp;&nbsp;
+                <ImageButton
+                    id={"home"}
+                    color={"blue"}
+                    icon={"home"}
+                    tips={"Wallet list"}
+                    onClick={() => { props.setPage('home') }}
+                />
+                <ImageButton
+                    id={"config"}
+                    color={"blue"}
+                    icon={"settings"}
+                    tips={"Settings"}
+                    onClick={() => { props.setPage('config') }}
+                />
+                <ImageButton
+                    id={"disconnectWallets"}
+                    color={"blue"}
+                    icon={"link_off"}
+                    tips={"Disconnect wallets"}
+                    onClick={() => { props.setPage('disconnect') }}
+                />
+                <ImageButton
+                    id={"ergoMixer"}
+                    color={"blue"}
+                    icon={"blender"}
+                    tips={"Ergo mixer"}
+                    onClick={() => { props.setPage('mixer') }}
+                />
+            </div>
+            <div className="d-flex flex-row align-items-center" >
+                <div className="m-1 d-flex flex-column">
+                    <span
+                        onClick={() => { window.open("https://github.com/ThierryM1212/SAFEW", '_blank').focus(); }}
+                        data-tip
+                        data-for="GitLinkId"
+                    >
+                        <a href="https://github.com/ThierryM1212/SAFEW" target="_blank">
+                            <img alt="GitLink" src={GitLogo} width={30} height={30} />
+                        </a>
+                    </span>
+                    <ReactTooltip id="GitLinkId" html={true} delayShow={400}>
+                        {"Review the code, report issues,<br/>make pull requests at<br/><b>https://github.com/ThierryM1212/SAFEW</b>"}
+                    </ReactTooltip>
+                </div>
+            </div>
         </div>
     );
 }

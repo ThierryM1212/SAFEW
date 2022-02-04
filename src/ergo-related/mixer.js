@@ -1,21 +1,18 @@
 import { DEFAULT_MIXER_ADDRESS } from '../utils/constants';
-import { get, post } from './rest';
+import { get2, post } from './rest';
 
 const mixerURL = localStorage.getItem('mixerAddress') ?? DEFAULT_MIXER_ADDRESS;
 
 async function getRequest(url) {
-    return get(mixerURL + url).then(res => {
+    return get2(mixerURL + url).then(res => {
         return { data: res };
     });
 }
 
 export async function isMixerAvailable() {
-    
-
     try {
         const res = await getRequest('info');
-        console.log("isMixerAvailable", res)
-        return true
+        return true;
     } catch (e) {
         return false;
     }

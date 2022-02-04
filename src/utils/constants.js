@@ -33,4 +33,19 @@ export const VERIFIED_TOKENS = {
     [TOKENID_LUNADOG]: ['LunaDog', "token-lunadog.svg"],
     [TOKENID_NETA]: ['NETA', "token-neta.svg"],
   }
-  
+
+export const DISCLAIMER_TEXT = `
+<div align="left">
+This software is distributed for free with its source code.<br/>
+https://github.com/ThierryM1212/SAFEW<br/>
+<br/>
+The security of each wallet is ensured by the encryption of the mnemonic using its spending password (AES-256).<br/>
+The clear text mnemonic and the spending password are not stored by the application. <br/>
+The privacy of the wallet content is ensured by the browser local storage that cannot be accessed by other sites or extensions.<br/>
+Only the connected sites can read the available addresses and their content through the dApp connector.<br/>
+<br/>
+There is no guarantee that the current version has no severe regressions from the previous ones.<br/>
+Enjoy Ergo dApps carefully !<br/>
+<br/>
+<div/>
+`

@@ -41,13 +41,14 @@ export function waitingAlert(title) {
   });
 }
 
-export function confirmAlert(msg, txt, confirmMsg, denyMsg) {
+export function confirmAlert(msg, txt, confirmMsg = 'Yes', denyMsg = 'No') {
   return Swal.fire({
     title: msg,
     html: txt,
     showDenyButton: true,
-    confirmButtonText: 'Yes',
-    denyButtonText: 'No',
+    confirmButtonText: confirmMsg,
+    denyButtonText: denyMsg,
+    allowOutsideClick: false,
   })
 }
 

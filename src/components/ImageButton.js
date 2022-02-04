@@ -14,7 +14,6 @@ export default function ImageButton(props) {
             <ReactTooltip id={props.id} html={true} delayShow={400}>
                 {props.tips}
             </ReactTooltip>
-            
         </div>
     )
 

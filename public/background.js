@@ -1,6 +1,7 @@
 /* global chrome BigInt */
 chrome.runtime.onInstalled.addListener(() => {
-    console.log('Chrome extension successfully installed!');
+    console.log('SAFEW extension successfully installed!');
+    localStorage.setItem('disclaimerAccepted', "false")
     return;
 });
 
@@ -44,11 +45,7 @@ function launchPopup(message, sender, param = '') {
             setSelfAsOpener: true,
             focused: true,
         });
-
-
     });
-
-
 }
 
 function getConnectedWalletName(url) {

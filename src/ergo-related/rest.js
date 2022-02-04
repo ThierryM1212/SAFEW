@@ -19,9 +19,9 @@ export async function postTx(url, body = {}, apiKey = '') {
                 return JSON.parse(body);
             } else {
                 console.log("fetch2", body);
-                try{
+                try {
                     errorAlert("Failed to fetch", JSON.stringify(body))
-                } catch(e) {
+                } catch (e) {
                     console.log("fetch21", body.toString());
                     errorAlert("Failed to fetch", body.toString())
                 }
@@ -59,4 +59,15 @@ export async function get(url, apiKey = '') {
         console.error(e);
         return [];
     }
+}
+
+export async function get2(url, apiKey = '') {
+    const result = await fetch(url, {
+        headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            api_key: apiKey,
+        }
+    }).then(res => res.json());
+    return result;
 }
