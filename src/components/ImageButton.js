@@ -4,7 +4,7 @@ export default function ImageButton(props) {
     return (
         <div className="m-1 d-flex flex-column">
             <span
-                className={"material-icons " + props.color}
+                className={"btn btn-sm material-icons " + props.color}
                 onClick={props.onClick}
                 data-tip
                 data-for={props.id}
