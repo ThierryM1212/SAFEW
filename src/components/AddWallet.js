@@ -23,6 +23,9 @@ export default class AddWallet extends React.Component {
             isValidPassword2: false,
             invalidPassword2Message: 'min 10 characters !',
             color: "#8D8C8F",
+            colorRgb: {
+                r: 141, g: 140, b: 143
+            }
         };
         this.setWalletName = this.setWalletName.bind(this);
         this.setMnemonic = this.setMnemonic.bind(this);
@@ -76,7 +79,7 @@ export default class AddWallet extends React.Component {
 
     saveWallet = () => {
         var swal = waitingAlert("Searching existing addresses...");
-        addNewWallet(this.state.walletName, this.state.mnemonic, this.state.password1, this.state.color).then((numWal) => {
+        addNewWallet(this.state.walletName, this.state.mnemonic, this.state.password1, this.state.color, this.state.colorRgb).then((numWal) => {
             console.log("saveWallet", this.state.mnemonic)
             swal = displayMnemonic(this.state.mnemonic).then(res => {
                 this.props.setPage('home');
@@ -91,7 +94,8 @@ export default class AddWallet extends React.Component {
 
     onChangeColor = (color) => {
         this.setState({
-            color: color.hex
+            color: color.hex,
+            colorRgb: color.rgb
         });
     };
 
@@ -99,7 +103,7 @@ export default class AddWallet extends React.Component {
         console.log("this.state.invalidWalletMessage", this.state.invalidWalletMessage)
         return (
             <Fragment>
-                <div className='container card m-1 p-1 d-flex flex-column w-75' style={{ borderColor: this.state.color }}>
+                <div className='container card m-1 p-1 d-flex flex-column w-75' style={{ borderColor: this.state.color, backgroundColor: `rgba(${this.state.colorRgb.r},${this.state.colorRgb.g},${this.state.colorRgb.b},0.25)` }}>
                     <h4>Create or restore an Ergo wallet</h4>
                     <div className='d-flex flex-column m-1'>
                         <div className='d-flex flex-column'>
