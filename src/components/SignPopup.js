@@ -1,11 +1,13 @@
 import React, { Fragment } from 'react';
 import ReactJson from 'react-json-view';
+import { getTxReducedB64Safe } from '../ergo-related/ergolibUtils';
 import { boxByBoxId } from '../ergo-related/explorer';
 import { getWalletForAddresses, signTransaction } from '../ergo-related/serializer';
-import { getUtxoBalanceForAddressList, parseUnsignedTx, parseUtxos } from '../ergo-related/utxos';
-import { errorAlert } from '../utils/Alerts';
+import { getUtxoBalanceForAddressList, parseSignedTx, parseUnsignedTx, parseUtxos } from '../ergo-related/utxos';
+import { errorAlert, waitingAlert } from '../utils/Alerts';
 import { TX_FEE_ERGO_TREE } from '../utils/constants';
-import { decryptMnemonic, formatERGAmount, formatTokenAmount, getConnectedWalletByURL, getWalletAddressList, getWalletUsedAddressList } from '../utils/walletUtils';
+import { decryptMnemonic, formatERGAmount, formatTokenAmount, getConnectedWalletByURL, getUnconfirmedTransactionsForAddressList, getWalletAddressList, getWalletUsedAddressList } from '../utils/walletUtils';
+import BigQRCode from './BigQRCode';
 
 /* global chrome */
 
@@ -44,13 +46,61 @@ export default class SignPopup extends React.Component {
             password: '',
             expertMode: (localStorage.getItem('expertMode') === 'true') ?? false,
             txBalance: { value: 0, tokens: [] },
+            txReducedB64safe: "",
+            txId: "",
         };
         this.signTx = this.signTx.bind(this);
         this.setPassword = this.setPassword.bind(this);
+        this.showTxReduced = this.showTxReduced.bind(this);
+        this.timer = this.timer.bind(this);
         //console.log("SignPopup constructor state", this.state);
     }
 
     setPassword = (password) => { this.setState({ password: password }) };
+
+    async showTxReduced() {
+        const inputsDetails = parseUtxos(await Promise.all(this.state.unSignedTx.inputs.map(async (box) => {
+            return await boxByBoxId(box.boxId);
+        })));
+        const dataInputsDetails = parseUtxos(await Promise.all(this.state.unSignedTx.dataInputs.map(async (box) => {
+            return await boxByBoxId(box.boxId);
+        })));
+        const [txId, txReducedB64safe] = await getTxReducedB64Safe(this.state.unSignedTx, inputsDetails, dataInputsDetails);
+        var intervalId = setInterval(this.timer, 5000);
+        this.setState({
+            txReducedB64safe: txReducedB64safe,
+            txId: txId,
+            intervalId: intervalId,
+        })
+    }
+
+    async timer() {
+        const walletAddressList = getWalletAddressList(this.state.wallet);
+        const unconfirmedTransactions = await getUnconfirmedTransactionsForAddressList(walletAddressList, false);
+        const unconfirmedTransactions2 = unconfirmedTransactions.map(tx => tx.transactions).flat();
+        console.log("timer1", unconfirmedTransactions2);
+        const ourTx = unconfirmedTransactions2.filter(tx => tx !== undefined && tx.id === this.state.txId);
+        console.log("timer2", ourTx, this.state.txId);
+        if (ourTx.length > 0) {
+            var fixedTx = parseSignedTx(ourTx[0]);
+            fixedTx.id = this.state.txId;
+            console.log("fixedTx", fixedTx);
+            chrome.runtime.sendMessage({
+                channel: "safew_extension_background_channel",
+                data: {
+                    type: "ergo_api_response",
+                    result: true,
+                    data: fixedTx,
+                    requestId: this.state.requestId,
+                }
+            });
+            window.close();
+        }
+    }
+
+    componentWillUnmount() {
+        clearInterval(this.state.intervalId);
+    }
 
     async componentDidMount() {
         const walletAddressList = getWalletAddressList(this.state.wallet);
@@ -129,8 +179,6 @@ export default class SignPopup extends React.Component {
         } catch (e) {
             console.log("fee not found...", e)
         }
-
-
         return (
             <Fragment>
                 <div className='card w-75 m-1 p-1 d-flex flex-column' style={{ borderColor: this.state.wallet.color }}>
@@ -174,6 +222,20 @@ export default class SignPopup extends React.Component {
                             </div>
                             : null
                     }
+                    {
+                        this.state.txId === "" ?
+                            null
+                            :
+                            <div className='card m-1 p-1'>
+                                <h6>Ergopay transaction</h6>
+                                <BigQRCode QRCodeTx={this.state.txReducedB64safe} />
+                                <br />
+                            </div>
+                    }
+                    <button className="btn btn-outline-info"
+                        onClick={this.showTxReduced}>
+                        Show Ergopay transaction
+                    </button>
 
                     <div className='card m-1 p-1 d-flex flex-column'>
                         <label htmlFor="walletPassword" >Spending password for {this.state.wallet.name}</label>
@@ -186,6 +248,7 @@ export default class SignPopup extends React.Component {
                     </div>
                     <div className='d-flex flex-row justify-content-between'>
                         <div></div>
+
                         <button className="btn btn-outline-info"
                             onClick={this.signTx}>
                             Sign

@@ -138,25 +138,38 @@ export function parseUnsignedTx(json) {
 }
 
 function parseSignedInputSwagger(input) {
+    console.log("parseSignedInputSwagger",input);
     return {
-        boxId: input.boxId,
+        boxId: input.id,
         spendingProof: input.spendingProof,
-        extension: {},
     }
+}
+function parseSignedInputsSwagger(inputs) {
+    return inputs.map(input => parseSignedInputSwagger(input));
+}
+
+
+export function parseSignedTx(tx) {
+    var res = {};
+    res["dataInputs"] = parseSignedInputsSwagger(tx.dataInputs);
+    res["inputs"] = parseSignedInputsSwagger(tx.inputs);
+    res["outputs"] = tx.outputs;
+    res["id"] = tx.id;
+    return res;
 }
 
 export function generateSwaggerTx(json) {
     console.log("generateSwaggerTx", json);
     var res = {};
 
-    var newInsputs = [];
+    var newInputs = [];
     for (const input of json.inputs) {
-        newInsputs.push(parseSignedInputSwagger(input));
+        newInputs.push(parseSignedInputSwagger(input));
     }
     if (json.hasOwnProperty("tx_id")) {
         res["id"] = json.tx_id;
     }
-    res["inputs"] = newInsputs;
+    res["inputs"] = newInputs;
     if (json.hasOwnProperty("data_inputs")) {
         res["dataInputs"] = json.data_inputs;
     } else {

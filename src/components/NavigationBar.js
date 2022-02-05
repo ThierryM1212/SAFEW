@@ -53,7 +53,7 @@ export default function NavigationBar(props) {
                         </a>
                     </span>
                     <ReactTooltip id="GitLinkId" html={true} delayShow={400}>
-                        {"Review the code, report issues,<br/>make pull requests at<br/><b>https://github.com/ThierryM1212/SAFEW</b>"}
+                        {"Review the code, report issues,<br/>contribute at<br/><b>https://github.com/ThierryM1212/SAFEW</b>"}
                     </ReactTooltip>
                 </div>
             </div>

@@ -17,3 +17,15 @@ export async function isMixerAvailable() {
         return false;
     }
 }
+
+export async function getActiveMixes() {
+    try {
+        const res = await getRequest('mix/request/activeList');
+        console.log("getActiveMixes",res.data);
+        return res.data;
+    } catch (e) {
+        console.log(e);
+        return [];
+    }
+}
+

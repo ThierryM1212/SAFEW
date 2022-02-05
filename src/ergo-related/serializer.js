@@ -16,7 +16,7 @@ export async function decodeNum(n, isInt = false) {
 
 }
 
-function byteArrayToBase64( byteArray ) {
+export function byteArrayToBase64( byteArray ) {
     var binary = '';
     var len = byteArray.byteLength;
     for (var i = 0; i < len; i++) {
@@ -112,49 +112,12 @@ export async function ergoTreeToAddress(ergoTree) {
 }
 
 
-export async function getTxReducedAndCSR(json, inputs, dataInputs, address) {
-    console.log("getTxReduced", json, inputs, dataInputs);
-    const reducedTx = await getTxReduced(json, inputs, dataInputs);
-    // Reduced transaction is encoded with Base64
-    const txReducedBase64 = byteArrayToBase64(reducedTx.sigma_serialize_bytes());
-
-    var inputsB64 = inputs.map(function (chunk) {
-        return  window.btoa(JSONBigInt.stringify(chunk));
-    });
-    // build Cold Signing Request as described in https://github.com/ergoplatform/eips/blob/34445e3e69c12f6e6dc2507c5f7bc3fc33ca4830/eip-0019.md
-    const csrDict = {
-        "reducedTx":txReducedBase64,
-        "sender": address,
-        "inputs": inputsB64
-    };
-    const csrDictStr = JSONBigInt.stringify(csrDict);
-    var pageNumber = Math.floor(csrDictStr.length/1000);
-    if (csrDictStr.length%1000 !== 0) {pageNumber++};
-    var csrResult = "CSR";
-    if (pageNumber > 1) {
-        csrResult += "/1/"+pageNumber;
-    }
-    csrResult += "-"+csrDictStr;
-
-    // split by chunk of 1000 char to generates the QR codes
-    return [txReducedBase64.match(/.{1,1000}/g), csrResult.match(/.{1,1000}/g)];
-}
-
 export async function getErgoStateContext() {
     const block_headers = (await ergolib).BlockHeaders.from_json(await getLastHeaders());
     const pre_header = (await ergolib).PreHeader.from_block_header(block_headers.get(0));
     return new (await ergolib).ErgoStateContext(pre_header, block_headers);
 }
 
-export async function getTxReduced(json, inputs, dataInputs) {
-    // build ergolib objects from json
-    const unsignedTx = (await ergolib).UnsignedTransaction.from_json(JSONBigInt.stringify(json));
-    const inputBoxes = (await ergolib).ErgoBoxes.from_boxes_json(inputs);
-    const inputDataBoxes = (await ergolib).ErgoBoxes.from_boxes_json(dataInputs);
-    const ctx = await getErgoStateContext();
-    
-    return (await ergolib).ReducedTransaction.from_unsigned_tx(unsignedTx,inputBoxes,inputDataBoxes,ctx);
-}
 
 export async function getTxReducedFromB64(txReducedB64) {
     return (await ergolib).ReducedTransaction.sigma_parse_bytes(base64ToByteArray(txReducedB64));

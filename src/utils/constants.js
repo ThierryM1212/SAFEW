@@ -44,7 +44,8 @@ The clear text mnemonic and the spending password are not stored by the applicat
 The privacy of the wallet content is ensured by the browser local storage that cannot be accessed by other sites or extensions.<br/>
 Only the connected sites can read the available addresses and their content through the dApp connector.<br/>
 <br/>
-There is no guarantee that the current version has no severe regressions from the previous ones.<br/>
+The current is not audited and tested only be me before release.<br/>
+Use at your own riks.
 Enjoy Ergo dApps carefully !<br/>
 <br/>
 <div/>

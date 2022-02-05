@@ -266,18 +266,22 @@ export async function getTransactionsForAddressList(addressList, limit) {
     return addressTransactionsList;
 }
 
-export async function getUnconfirmedTransactionsForAddressList(addressList) {
+export async function getUnconfirmedTransactionsForAddressList(addressList, enrich = true) {
     const addressUnConfirmedTransactionsList = await Promise.all(addressList.map(async (address) => {
         var addressTransactions = await getUnconfirmedTxsFor(address);
-        //console.log("getUnconfirmedTransactionsForAddressList", address, addressTransactions);
-        try { // if we fail to fetch one box, skip the unconfirmed transactions for that address
-            for (const tx of addressTransactions) {
-                tx.inputs = await enrichUtxos(tx.inputs);
+        console.log("getUnconfirmedTransactionsForAddressList", address, addressTransactions);
+        if (enrich) {
+            try { // if we fail to fetch one box, skip the unconfirmed transactions for that address
+                for (const tx of addressTransactions) {
+                    tx.inputs = await enrichUtxos(tx.inputs);
+                }
+                return { address: address, transactions: addressTransactions };
+            } catch(e) {
+                console.log(e);
+                return { address: address, transactions: [] };
             }
+        } else  {
             return { address: address, transactions: addressTransactions };
-        } catch(e) {
-            console.log(e);
-            return { address: address, transactions: [] };
         }
     }));
     return addressUnConfirmedTransactionsList;

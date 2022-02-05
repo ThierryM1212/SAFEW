@@ -72,7 +72,7 @@ export default class TransactionList extends React.Component {
     }
 
     timer() {
-        this.updateWalletContent();
+        this.updateTransactionList();
     }
 
     componentDidUpdate(prevProps, prevState) {
