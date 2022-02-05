@@ -80,10 +80,11 @@ export default class Wallet extends React.Component {
         }
         const walletAddressList = this.state.wallet.accounts.map(account => account.addresses).flat();
         const walletColor = this.state.wallet.color;
+        const colorRgb = this.state.wallet.colorRgb || { r: 141, g: 140, b: 143 };
         console.log("Wallet", this.state.wallet, walletAddressList);
         return (
             <Fragment>
-                <div key={this.state.wallet.name} className='card p-1 m-2 walletCard d-flex flex-column' style={{ borderColor: walletColor }}>
+                <div key={this.state.wallet.name} className='card p-1 m-2 walletCard d-flex flex-column' style={{ borderColor: walletColor, backgroundColor: `rgba(${colorRgb.r},${colorRgb.g},${colorRgb.b},0.25)` }}>
                     <div className='d-flex flex-row justify-content-between align-items-start'>
                         <div className='d-flex flex-row align-items-baseline'>
                             <ImageButton

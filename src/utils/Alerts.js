@@ -17,7 +17,6 @@ export function successAlert(title, msg) {
     text: msg,
     icon: 'success',
     confirmButtonText: 'Ok',
-    allowOutsideClick: true,
     showConfirmButton: true,
   })
 }
@@ -36,7 +35,6 @@ export function waitingAlert(title) {
   return Swal.fire({
     title: title,
     imageUrl: Spinner,
-    allowOutsideClick: true,
     showConfirmButton: true,
   });
 }

@@ -1,5 +1,7 @@
 import { MAX_NUMBER_OF_UNUSED_ADDRESS_PER_ACCOUNT, NANOERG_TO_ERG } from '../utils/constants';
 import { addressHasTransactions, currentHeight, unspentBoxesFor } from './explorer';
+import { byteArrayToBase64, getErgoStateContext } from './serializer';
+import JSONBigInt from 'json-bigint';
 import { getTokenListFromUtxos, getUtxosListValue, parseUtxos } from './utxos';
 let ergolib = import('ergo-lib-wasm-browser');
 
@@ -243,4 +245,28 @@ export async function createUnsignedTransaction(selectedUtxos, outputCandidates)
     const unsignedTx = new (await ergolib).UnsignedTransaction(unsignedInputs, new (await ergolib).DataInputs(), outputCandidates);
     console.log("createUnsignedTransaction unsignedTx",unsignedTx.to_json());
     return unsignedTx;
+}
+
+// https://github.com/ergoplatform/eips/pull/37 ergopay:<txBase64safe>
+export async function getTxReducedB64Safe(json, inputs, dataInputs) {
+    console.log("getTxReducedB64Safe", json, inputs, dataInputs);
+    const [txId, reducedTx] = await getTxReduced(json, inputs, dataInputs);
+    console.log("getTxReducedB64Safe1", json, inputs, dataInputs);
+    // Reduced transaction is encoded with Base64
+    const txReducedBase64 = byteArrayToBase64(reducedTx.sigma_serialize_bytes());
+    console.log("getTxReducedB64Safe2", json, inputs, dataInputs);
+    const ergoPayTx = "ergopay:"+txReducedBase64.replace(/\//g, '_').replace(/\+/g, '-');
+    console.log("getTxReducedB64Safe3", json, inputs, dataInputs);
+    // split by chunk of 1000 char to generates the QR codes
+    return [txId, ergoPayTx.match(/.{1,1000}/g)];
+}
+
+async function getTxReduced(json, inputs, dataInputs) {
+    // build ergolib objects from json
+    console.log("getTxReduced", json, inputs, dataInputs);
+    const unsignedTx = (await ergolib).UnsignedTransaction.from_json(JSONBigInt.stringify(json));
+    const inputBoxes = (await ergolib).ErgoBoxes.from_boxes_json(inputs);
+    const inputDataBoxes = (await ergolib).ErgoBoxes.from_boxes_json(dataInputs);
+    const ctx = await getErgoStateContext();
+    return [unsignedTx.id().to_str(), (await ergolib).ReducedTransaction.from_unsigned_tx(unsignedTx,inputBoxes,inputDataBoxes,ctx)];
 }
