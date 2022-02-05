@@ -8,6 +8,7 @@ export default function ImageButton(props) {
                 onClick={props.onClick}
                 data-tip
                 data-for={props.id}
+                style={{cursor: 'pointer'}}
             >
                 {props.icon}
             </span>
