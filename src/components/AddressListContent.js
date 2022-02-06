@@ -18,10 +18,10 @@ export default function AddressListContent(props) {
             const unconfirmedInputs = props.addressContentList[0].unconfirmedTx.map(tx => tx.inputs).flat();
             const unconfirmedOutputs = props.addressContentList[0].unconfirmedTx.map(tx => tx.outputs).flat();
             unconfirmedBalance = getUtxoBalanceForAddressList2(unconfirmedInputs, unconfirmedOutputs, addressList);
-            console.log("AddressListContent23", unconfirmedInputs, unconfirmedOutputs, addressList, JSON.stringify(unconfirmedBalance))
+            //console.log("AddressListContent23", unconfirmedInputs, unconfirmedOutputs, addressList, JSON.stringify(unconfirmedBalance))
         }
     }
-    console.log("AddressListContent22", props.addressContentList, unconfirmedBalance)
+    //console.log("AddressListContent22", props.addressContentList, unconfirmedBalance)
 
 
     return (

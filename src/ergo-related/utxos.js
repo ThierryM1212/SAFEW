@@ -349,7 +349,7 @@ export function getUtxoBalanceForAddressList2(inputs, outputs, addressList) {
 }
 
 function buildBalance(inputBal, outputBal) {
-    console.log("buildBalance1", inputBal, outputBal)
+    //console.log("buildBalance1", inputBal, outputBal)
     const balValue = parseInt(outputBal.value.toString()) - parseInt(inputBal.value.toString());
     var balTokens = [];
     const tokenList = [... new Set([inputBal.tokens.map(tok => tok.tokenId), outputBal.tokens.map(tok => tok.tokenId)].flat())];
@@ -379,6 +379,6 @@ function buildBalance(inputBal, outputBal) {
             });
         }
     }
-    console.log("buildBalance2", inputBal, outputBal, balValue, balTokens);
+    //console.log("buildBalance2", inputBal, outputBal, balValue, balTokens);
     return { value: balValue, tokens: balTokens };
 }

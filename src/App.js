@@ -14,6 +14,7 @@ import ConnectWalletPopup from './components/ConnectWalletPopup';
 import DisconnectWallet from './components/DisconnectWallet';
 import Mixer from './components/Mixer';
 import { confirmAlert } from './utils/Alerts';
+import { isUpgradeWalletRequired, upgradeWallets } from './utils/walletUtils';
 
 export default class App extends React.Component {
     constructor(props) {
@@ -39,6 +40,10 @@ export default class App extends React.Component {
             walletList = JSON.parse(walletList);
         } catch (e) {
             localStorage.setItem('walletList', JSON.stringify([]));
+        }
+        // handle wallet version and upgrade
+        if (isUpgradeWalletRequired()) {
+            upgradeWallets();
         }
     }
 
@@ -80,10 +85,10 @@ export default class App extends React.Component {
                 page = <WalletList setPage={this.setPage} />
                 break
             case 'add':
-                page = <AddWallet setPage={this.setPage} />
+                page = <AddWallet ergoPayOnly={false} setPage={this.setPage} />
                 break
             case 'addErgoPay':
-                page = <AddWallet isErgoPayWallet={true} setPage={this.setPage} />
+                page = <AddWallet ergoPayOnly={true} setPage={this.setPage} />
                 break
             case 'edit':
                 page = <EditWallet setPage={this.setPage} walletId={this.state.walletId} />

@@ -35,13 +35,16 @@ export default function NavigationBar(props) {
                     tips={"Disconnect wallets"}
                     onClick={() => { props.setPage('disconnect') }}
                 />
-                <ImageButton
-                    id={"ergoMixer"}
-                    color={"blue"}
-                    icon={"blender"}
-                    tips={"Ergo mixer"}
-                    onClick={() => { props.setPage('mixer') }}
-                />
+                { // hide mixer
+                    true ? null :
+                        <ImageButton
+                            id={"ergoMixer"}
+                            color={"blue"}
+                            icon={"blender"}
+                            tips={"Ergo mixer"}
+                            onClick={() => { props.setPage('mixer') }}
+                        />
+                }
                 {
                     debug ?
                         <Fragment>

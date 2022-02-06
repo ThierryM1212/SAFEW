@@ -35,7 +35,7 @@ export function waitingAlert(title) {
   return Swal.fire({
     title: title,
     imageUrl: Spinner,
-    showConfirmButton: true,
+    showConfirmButton: false,
   });
 }
 

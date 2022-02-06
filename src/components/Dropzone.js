@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { confirmAlert, errorAlert } from '../utils/Alerts';
-import { addWallet, getWalletNames, updateWallet } from '../utils/walletUtils';
+import { addWallet, getWalletNames, isUpgradeWalletRequired, updateWallet, upgradeWallet, upgradeWallets } from '../utils/walletUtils';
 
 export default function Dropzone(props) {
   const onDrop = useCallback((acceptedFiles) => {
@@ -21,10 +21,13 @@ export default function Dropzone(props) {
           confirmAlert("Restore SAFEW backup ?",
             "The current wallets will be lost and replaced by the backup",
             "OK")
-            
+
             .then(res => {
               if (res.isConfirmed) {
                 localStorage.setItem('walletList', json.walletList);
+                if (isUpgradeWalletRequired()) {
+                  upgradeWallets();
+                }
                 props.setPage('home');
               }
             })
@@ -41,7 +44,7 @@ export default function Dropzone(props) {
               .then(res => {
                 if (res.isConfirmed) {
                   if (walletIndex > -1) {
-                    updateWallet(json, walletIndex);
+                    updateWallet(upgradeWallet(json), walletIndex);
                   } else {
                     addWallet(json);
                   }
