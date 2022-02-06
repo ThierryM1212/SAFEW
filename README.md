@@ -12,17 +12,20 @@ Wallet features:
  - View wallet transactions confirmed and unconfirmed
  - Display unconfirmed balances per wallet, account and address
  - Configure Explorer, Node and Explorer UI addresses used by the wallet
+ - ErgoPay wallet and signing (only the public address is provided, signing is delegated to ErgoPay EIP-19)
 
 ## Security
 The wallets are stored in the local storage of the SAFEW browser extension.<br/>
 The mnemonic is encrypted (AES-256) with the spending password, that is not stored in the application.<br/>
 The password will be required to spend funds or to add or discover new addresses.<br/>
+You can use ErgoPay wallet to keep your secrets on a mobile device (beta on iOS wallet, soon on Android)<br/>
 
 ## Privacy
 The address discovery can be launched at any time to generate unused addresses in the wallets.<br/>
 Non connected sites have no access to the information of your wallet.<br/>
 Connected sites can read the wallet content.<br/>
 The explorer and node used to interact with Ergo blockchain are configurable.<br/>
+ErgoPay wallets allow you to keep the content of your wallet hidden..<br/>
 
 ## Build the project
 > git clone https://github.com/ThierryM1212/SAFEW.git<br/>
@@ -33,6 +36,9 @@ The explorer and node used to interact with Ergo blockchain are configurable.<br
 Load the unpacked extension as described at: https://developer.chrome.com/docs/extensions/mv3/getstarted/ <br/>
 <br/>
 It requires to disable Yoroi extension to use the dApp connector.<br/>
+
+## debug
+set the key "debug" = "true" in the local storage to display dApp connector popups buttons
 
 ## dApp Connector
 It tries to follow https://github.com/Emurgo/Emurgo-Research/blob/master/ergo/EIP-0012.md

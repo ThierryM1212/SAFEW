@@ -2,8 +2,10 @@ import ImageButton from "./ImageButton";
 import logo from "../resources/safew_logo.svg";
 import GitLogo from "../resources/GitHub.png";
 import ReactTooltip from "react-tooltip";
+import { Fragment } from "react";
 
 export default function NavigationBar(props) {
+    const debug = (localStorage.getItem('debug') === 'true') ?? false;
     return (
         <div className="container d-flex flex-row justify-content-between w-75 m-1 p-1 align-items-center" >
             <div className="d-flex flex-row align-items-center" >
@@ -40,6 +42,26 @@ export default function NavigationBar(props) {
                     tips={"Ergo mixer"}
                     onClick={() => { props.setPage('mixer') }}
                 />
+                {
+                    debug ?
+                        <Fragment>
+                            <ImageButton
+                                id={"connectPopup"}
+                                color={"blue"}
+                                icon={"link"}
+                                tips={"connect popup debug"}
+                                onClick={() => { props.setPage('connectPopup') }}
+                            />
+                            <ImageButton
+                                id={"signPopup"}
+                                color={"blue"}
+                                icon={"border_color"}
+                                tips={"Sign popup debug"}
+                                onClick={() => { props.setPage('signPopup') }}
+                            />
+                        </Fragment>
+                        : null
+                }
             </div>
             <div className="d-flex flex-row align-items-center" >
                 <div className="m-1 d-flex flex-column">

@@ -103,6 +103,12 @@ export default class App extends React.Component {
             case 'mixer':
                 page = <Mixer setPage={this.setPage} />
                 break
+            case 'connectPopup':
+                page = <ConnectWalletPopup />
+                break
+            case 'signPopup':
+                page = <SignPopup />
+                break
             default:
                 page = <WalletList />
                 break

@@ -1,7 +1,6 @@
-import { discoverAddresses, getAddress } from "../ergo-related/ergolibUtils";
-import { errorAlert, successAlert } from './Alerts';
+import { discoverAddresses } from "../ergo-related/ergolibUtils";
 import { addressHasTransactions, getBalanceForAddress, getTransactionsForAddress, getUnconfirmedTxsFor } from "../ergo-related/explorer";
-import { MAX_NUMBER_OF_UNUSED_ADDRESS_PER_ACCOUNT, NANOERG_TO_ERG, PASSWORD_SALT } from "./constants";
+import { NANOERG_TO_ERG, PASSWORD_SALT } from "./constants";
 import '@sweetalert2/theme-dark/dark.css';
 import { enrichUtxos } from "../ergo-related/utxos";
 var CryptoJS = require("crypto-js");
@@ -21,32 +20,23 @@ export function isValidPassword(password) {
 }
 
 export async function addErgoPayWallet(name, address, color) {
-    // const walletAccounts = await discoverAddresses(mnemonic);
-    const walletAccounts = [{id: undefined, addresses: [{ id: 0, address, used: true }], name}];
-    console.log("walletAccounts", walletAccounts, walletAccounts[0].addresses[0].address);
-    const newWallet = {
-        name: name,
-        accounts: walletAccounts,
-        color: color,
-        changeAddress: walletAccounts[0].addresses[0].address,
-        ergoPayOnly: true,
-    };
-    var walletList = JSON.parse(localStorage.getItem('walletList'));
-    walletList.push(newWallet);
-    localStorage.setItem('walletList', JSON.stringify(walletList));
-    return walletList.length;
+    const walletAccounts = [{id: 0, addresses: [{ id: 0, address, used: true }], name}];
+    return _addNewWallet(name, walletAccounts, color, " ", " ", true)
 }
 
-export async function addNewWallet(name, mnemonic, password, color, colorRgb) {
+export async function addNewWallet(name, mnemonic, password, color) {
     const walletAccounts = await discoverAddresses(mnemonic);
-    console.log("walletAccounts", walletAccounts, walletAccounts[0].addresses[0].address);
+    return _addNewWallet(name, walletAccounts, color, mnemonic, password, false)
+}
+
+function _addNewWallet(name, walletAccounts, color, mnemonic, password, ergoPayOnly) {
     const newWallet = {
         name: name,
         mnemonic: CryptoJS.AES.encrypt(mnemonic, password + PASSWORD_SALT).toString(),
         accounts: walletAccounts,
         color: color,
-        colorRgb: colorRgb,
         changeAddress: walletAccounts[0].addresses[0].address,
+        ergoPayOnly: ergoPayOnly,
     };
     var walletList = JSON.parse(localStorage.getItem('walletList'));
     walletList.push(newWallet);

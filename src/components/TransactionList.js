@@ -76,7 +76,7 @@ export default class TransactionList extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        console.log("TransactionList componentDidUpdate",prevProps,prevState, this.state)
+        console.log("TransactionList componentDidUpdate", prevProps, prevState, this.state)
         if (prevState.limit !== this.state.limit) {
             this.updateTransactionList();
         }
@@ -92,7 +92,13 @@ export default class TransactionList extends React.Component {
 
         return (
             <Fragment>
-                <div className='container card m-1 p-1 d-flex flex-column w-75 ' style={{ borderColor: this.state.color }}>
+                <div className='container card m-1 p-1 d-flex flex-column w-75 '
+                    style={{
+                        borderColor: `rgba(${wallet.color.r},${wallet.color.g},${wallet.color.b}, 0.95)`,
+                    }}
+
+
+                >
                     <div className='m-1 p-1 d-flex flex-row justify-content-between align-items-center'>
                         <div className='m-1 p-1 d-flex flex-column'>
                             <h4>Transactions list for {wallet.name}</h4>
