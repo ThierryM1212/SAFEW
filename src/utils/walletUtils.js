@@ -198,6 +198,17 @@ export function getWalletUsedAddressList(wallet) {
     }
     return addressList;
 }
+export function getWalletUnusedAddressList(wallet) {
+    let addressList = [];
+    for (var account of wallet.accounts) {
+        for (var address of account.addresses) {
+            if (!address.used) {
+                addressList.push(address.address);
+            }
+        }
+    }
+    return addressList;
+}
 function getConnectedWalletName(url) {
     const connectedSites = JSON.parse(localStorage.getItem('connectedSites')) ?? {};
     for (const walletName of Object.keys(connectedSites)) {
@@ -305,14 +316,20 @@ export async function updateUnusedAddresses() {
     var walletList = JSON.parse(localStorage.getItem('walletList'));
     for (var k in walletList) {
         var newWallet = { ...walletList[k] };
+        const walletUnusedAddressList = getWalletUnusedAddressList(newWallet);
+        const checkResultList = await Promise.all(walletUnusedAddressList.map(async (addr) => {
+            const isUsed = await addressHasTransactions(addr);
+            return isUsed;
+        }));
         for (var i in newWallet.accounts) {
             var account = newWallet.accounts[i];
             for (var j in account.addresses) {
                 var addr = account.addresses[j];
                 //console.log("updateUnusedAddresses",addr);
-                if (!addr.used) {
-                    newWallet.accounts[i].addresses[j]["used"] = await addressHasTransactions(newWallet.accounts[i].addresses[j].address);
-                    if (newWallet.accounts[i].addresses[j]["used"]) {
+                var addrIndex = walletUnusedAddressList.indexOf(addr);
+                if (addrIndex > -1) {
+                    newWallet.accounts[i].addresses[j]["used"] = checkResultList[addrIndex];
+                    if (checkResultList[addrIndex]) {
                         updateWallet(newWallet, k);
                     }
                 }
