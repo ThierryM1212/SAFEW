@@ -52,7 +52,12 @@ export default class SignPopup extends React.Component {
         this.signTx = this.signTx.bind(this);
         this.setPassword = this.setPassword.bind(this);
         this.showTxReduced = this.showTxReduced.bind(this);
+        this.getReducedTxState = this.getReducedTxState.bind(this);
         this.timer = this.timer.bind(this);
+        if (connectedWallet.ergoPayOnly) {
+            this.showTxReduced();
+        }
+
         //console.log("SignPopup constructor state", this.state);
     }
 
@@ -232,11 +237,11 @@ export default class SignPopup extends React.Component {
                                 <br />
                             </div>
                     }
+                    { this.state.wallet.ergoPayOnly ? (<Fragment></Fragment>) : (<Fragment>
                     <button className="btn btn-outline-info"
                         onClick={this.showTxReduced}>
                         Show Ergopay transaction
                     </button>
-
                     <div className='card m-1 p-1 d-flex flex-column'>
                         <label htmlFor="walletPassword" >Spending password for {this.state.wallet.name}</label>
                         <input type="password"
@@ -245,14 +250,14 @@ export default class SignPopup extends React.Component {
                             onChange={e => this.setPassword(e.target.value)}
                             value={this.state.password}
                         />
-                    </div>
+                    </div></Fragment>)}
                     <div className='d-flex flex-row justify-content-between'>
                         <div></div>
-
+                        { this.state.wallet.ergoPayOnly ? (<Fragment></Fragment>) : (<Fragment>
                         <button className="btn btn-outline-info"
                             onClick={this.signTx}>
                             Sign
-                        </button>
+                        </button></Fragment>)}
                         <button className="btn btn-outline-info"
                             onClick={this.cancelSigning}>
                             Cancel

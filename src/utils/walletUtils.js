@@ -20,6 +20,23 @@ export function isValidPassword(password) {
     return true;
 }
 
+export async function addErgoPayWallet(name, address, color) {
+    // const walletAccounts = await discoverAddresses(mnemonic);
+    const walletAccounts = [{id: undefined, addresses: [{ id: 0, address, used: true }], name}];
+    console.log("walletAccounts", walletAccounts, walletAccounts[0].addresses[0].address);
+    const newWallet = {
+        name: name,
+        accounts: walletAccounts,
+        color: color,
+        changeAddress: walletAccounts[0].addresses[0].address,
+        ergoPayOnly: true,
+    };
+    var walletList = JSON.parse(localStorage.getItem('walletList'));
+    walletList.push(newWallet);
+    localStorage.setItem('walletList', JSON.stringify(walletList));
+    return walletList.length;
+}
+
 export async function addNewWallet(name, mnemonic, password, color, colorRgb) {
     const walletAccounts = await discoverAddresses(mnemonic);
     console.log("walletAccounts", walletAccounts, walletAccounts[0].addresses[0].address);
