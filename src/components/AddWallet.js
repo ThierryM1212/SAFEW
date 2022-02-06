@@ -1,11 +1,12 @@
 import React, { Fragment } from 'react';
 import { addNewWallet, addErgoPayWallet, getWalletNames, isValidPassword } from '../utils/walletUtils';
-import { INVALID_PASSWORD_LENGTH_MSG, INVALID_NAME_LENGTH_MSG }  from '../utils/walletUtils';
+import { INVALID_PASSWORD_LENGTH_MSG, INVALID_NAME_LENGTH_MSG } from '../utils/walletUtils';
 import { generateMnemonic, validateMnemonic } from 'bip39';
 import { waitingAlert, displayMnemonic } from '../utils/Alerts';
 import { SketchPicker } from 'react-color';
 import ValidInput from './ValidInput';
 import { isValidErgAddress } from '../ergo-related/ergolibUtils';
+import { rgbToHex } from '../utils/utils';
 
 
 export default class AddWallet extends React.Component {
@@ -26,10 +27,8 @@ export default class AddWallet extends React.Component {
             password2: '',
             isValidPassword2: false,
             invalidPassword2Message: 'min 10 characters !',
-            color: "#8D8C8F",
-            colorRgb: {
-                r: 141, g: 140, b: 143
-            }
+            color: { r: 141, g: 140, b: 143, a: 1 },
+            isErgoPayWallet: false,
         };
         this.setWalletName = this.setWalletName.bind(this);
         this.setAddress = this.setAddress.bind(this);
@@ -57,12 +56,12 @@ export default class AddWallet extends React.Component {
         });
     };
     setAddress = (address) => {
-        
+
         this.setState({
             address: address
         });
         isValidErgAddress(address).then(isValidAddress => {
-            this.setState({isValidAddress});
+            this.setState({ isValidAddress });
         })
     };
     setMnemonic = (mnemonic) => {
@@ -74,7 +73,7 @@ export default class AddWallet extends React.Component {
     setPassword1 = (password) => {
         const isValid = isValidPassword(password);
         var validPasswordMessage = ''
-        if (!isValid) {validPasswordMessage += INVALID_PASSWORD_LENGTH_MSG;}
+        if (!isValid) { validPasswordMessage += INVALID_PASSWORD_LENGTH_MSG; }
         this.setState({
             password1: password,
             isValidPassword1: isValidPassword(password),
@@ -85,10 +84,10 @@ export default class AddWallet extends React.Component {
     setPassword2 = (password) => {
         const isValid = isValidPassword(password);
         var validPasswordMessage = ''
-        if (!isValid) {validPasswordMessage += INVALID_PASSWORD_LENGTH_MSG;}
-        if (this.state.password1 !== password) {validPasswordMessage += " Password does not match !";};
+        if (!isValid) { validPasswordMessage += INVALID_PASSWORD_LENGTH_MSG; }
+        if (this.state.password1 !== password) { validPasswordMessage += " Password does not match !"; };
         this.setState((prevState) => ({
-            password2: password, 
+            password2: password,
             isValidPassword2: (isValidPassword(password) && prevState.password1 === password),
             invalidPassword2Message: validPasswordMessage,
         }));
@@ -103,7 +102,7 @@ export default class AddWallet extends React.Component {
             return;
         }
         var swal = waitingAlert("Searching existing addresses...");
-        addNewWallet(this.state.walletName, this.state.mnemonic, this.state.password1, this.state.color, this.state.colorRgb).then((numWal) => {
+        addNewWallet(this.state.walletName, this.state.mnemonic, this.state.password1, this.state.color).then((numWal) => {
             console.log("saveWallet", this.state.mnemonic)
             swal = displayMnemonic(this.state.mnemonic).then(res => {
                 this.props.setPage('home');
@@ -118,8 +117,7 @@ export default class AddWallet extends React.Component {
 
     onChangeColor = (color) => {
         this.setState({
-            color: color.hex,
-            colorRgb: color.rgb
+            color: color.rgb
         });
     };
 
@@ -130,7 +128,7 @@ export default class AddWallet extends React.Component {
     }
 
     ergoPayWalletFields = () => {
-        if (!this.props.isErgoPayWallet) return (<br/>);
+        if (!this.props.isErgoPayWallet) return (<br />);
         return (
             <div className='d-flex flex-column'>
                 <label htmlFor="address" >Address</label>
@@ -150,7 +148,7 @@ export default class AddWallet extends React.Component {
 
 
     signingWalletFields = () => {
-        if (this.props.isErgoPayWallet) return (<br/>);
+        if (this.props.isErgoPayWallet) return (<br />);
         return (
             <Fragment>
                 <div className='d-flex flex-column'>
@@ -191,14 +189,14 @@ export default class AddWallet extends React.Component {
                             <ValidInput id="isValidPassword1" isValid={this.state.isValidPassword1} validMessage="OK" invalidMessage={this.state.invalidPassword1Message} />
                         </div>
                         <div className='d-flex flex-row align-items-center'>
-                        <input type="password"
-                            id="password2"
-                            className="form-control "
-                            onChange={e => this.setPassword2(e.target.value)}
-                            value={this.state.password2}
-                            className={this.state.isValidPassword2 ? "validInput m-1" : "invalidInput m-1"}
-                        />
-                        <ValidInput id="isValidPassword2" isValid={this.state.isValidPassword2} validMessage="OK" invalidMessage={this.state.invalidPassword2Message} />
+                            <input type="password"
+                                id="password2"
+                                className="form-control "
+                                onChange={e => this.setPassword2(e.target.value)}
+                                value={this.state.password2}
+                                className={this.state.isValidPassword2 ? "validInput m-1" : "invalidInput m-1"}
+                            />
+                            <ValidInput id="isValidPassword2" isValid={this.state.isValidPassword2} validMessage="OK" invalidMessage={this.state.invalidPassword2Message} />
                         </div>
                     </div>
                 </div>
@@ -209,7 +207,11 @@ export default class AddWallet extends React.Component {
         console.log("this.state.invalidWalletMessage", this.state.invalidWalletMessage)
         return (
             <Fragment>
-                <div className='container card m-1 p-1 d-flex flex-column w-75' style={{ borderColor: this.state.color, backgroundColor: `rgba(${this.state.colorRgb.r},${this.state.colorRgb.g},${this.state.colorRgb.b},0.25)` }}>
+                <div className='container card m-1 p-1 d-flex flex-column w-75'
+                    style={{
+                        borderColor: `rgba(${this.state.color.r},${this.state.color.g},${this.state.color.b}, 0.95)`,
+                        backgroundColor: `rgba(${this.state.color.r},${this.state.color.g},${this.state.color.b},0.15)`
+                    }}>
                     { this.props.isErgoPayWallet ? (<h4>Create an ErgoPay wallet</h4>) : (<h4>Create or restore an Ergo wallet</h4>)}
                     <div className='d-flex flex-column m-1'>
                         <div className='d-flex flex-column'>

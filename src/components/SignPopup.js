@@ -4,9 +4,9 @@ import { getTxReducedB64Safe } from '../ergo-related/ergolibUtils';
 import { boxByBoxId } from '../ergo-related/explorer';
 import { getWalletForAddresses, signTransaction } from '../ergo-related/serializer';
 import { getUtxoBalanceForAddressList, parseSignedTx, parseUnsignedTx, parseUtxos } from '../ergo-related/utxos';
-import { errorAlert, waitingAlert } from '../utils/Alerts';
-import { TX_FEE_ERGO_TREE } from '../utils/constants';
-import { decryptMnemonic, formatERGAmount, formatTokenAmount, getConnectedWalletByURL, getUnconfirmedTransactionsForAddressList, getWalletAddressList, getWalletUsedAddressList } from '../utils/walletUtils';
+import { errorAlert } from '../utils/Alerts';
+import { sampleTxErgodex, TX_FEE_ERGO_TREE } from '../utils/constants';
+import { decryptMnemonic, formatERGAmount, formatTokenAmount, getConnectedWalletByURL, getUnconfirmedTransactionsForAddressList, getWalletAddressList, getWalletById, getWalletUsedAddressList } from '../utils/walletUtils';
 import BigQRCode from './BigQRCode';
 
 /* global chrome */
@@ -16,10 +16,17 @@ export default class SignPopup extends React.Component {
         super(props);
         const urlFixed = new URL(window.location.href.replace("#sign_tx", '').replace("chrome-extension", "http"));
         const urlOrgigin = urlFixed.searchParams.get("origin");
-        const connectedWallet = getConnectedWalletByURL(urlOrgigin);
-        const background = chrome.extension.getBackgroundPage();
+        var connectedWallet = getConnectedWalletByURL(urlOrgigin);
         const requestId = parseInt(urlFixed.searchParams.get("requestId"));
-        const tx = background.transactionsToSign.get(requestId);
+        var tx = {}
+        try { // allow debug of the UI out of chrome extension
+            const background = chrome.extension.getBackgroundPage();
+            tx = background.transactionsToSign.get(requestId);
+        } catch (e) {
+            console.log(e);
+            tx = sampleTxErgodex;
+            connectedWallet = getWalletById(0);
+        }
         var parsedUnsignedTx = {};
         try {
             parsedUnsignedTx = parseUnsignedTx(tx);
@@ -52,12 +59,7 @@ export default class SignPopup extends React.Component {
         this.signTx = this.signTx.bind(this);
         this.setPassword = this.setPassword.bind(this);
         this.showTxReduced = this.showTxReduced.bind(this);
-        this.getReducedTxState = this.getReducedTxState.bind(this);
         this.timer = this.timer.bind(this);
-        if (connectedWallet.ergoPayOnly) {
-            this.showTxReduced();
-        }
-
         //console.log("SignPopup constructor state", this.state);
     }
 
@@ -71,7 +73,7 @@ export default class SignPopup extends React.Component {
             return await boxByBoxId(box.boxId);
         })));
         const [txId, txReducedB64safe] = await getTxReducedB64Safe(this.state.unSignedTx, inputsDetails, dataInputsDetails);
-        var intervalId = setInterval(this.timer, 5000);
+        var intervalId = setInterval(this.timer, 3000);
         this.setState({
             txReducedB64safe: txReducedB64safe,
             txId: txId,
@@ -83,9 +85,9 @@ export default class SignPopup extends React.Component {
         const walletAddressList = getWalletAddressList(this.state.wallet);
         const unconfirmedTransactions = await getUnconfirmedTransactionsForAddressList(walletAddressList, false);
         const unconfirmedTransactions2 = unconfirmedTransactions.map(tx => tx.transactions).flat();
-        console.log("timer1", unconfirmedTransactions2);
+        //console.log("timer1", unconfirmedTransactions2);
         const ourTx = unconfirmedTransactions2.filter(tx => tx !== undefined && tx.id === this.state.txId);
-        console.log("timer2", ourTx, this.state.txId);
+        //console.log("timer2", ourTx, this.state.txId);
         if (ourTx.length > 0) {
             var fixedTx = parseSignedTx(ourTx[0]);
             fixedTx.id = this.state.txId;
@@ -110,10 +112,13 @@ export default class SignPopup extends React.Component {
     async componentDidMount() {
         const walletAddressList = getWalletAddressList(this.state.wallet);
         const txBalance = await getUtxoBalanceForAddressList(this.state.unSignedTx.inputs, this.state.unSignedTx.outputs, walletAddressList);
+        console.log("sendTransaction txBalance", txBalance);
         this.setState({
             txBalance: txBalance,
         });
-        console.log("sendTransaction txBalance", txBalance);
+        if (this.state.wallet.ergoPayOnly) {
+            await this.showTxReduced();
+        }
     }
 
     async signTx() {
@@ -186,7 +191,10 @@ export default class SignPopup extends React.Component {
         }
         return (
             <Fragment>
-                <div className='card w-75 m-1 p-1 d-flex flex-column' style={{ borderColor: this.state.wallet.color }}>
+                <div className='card w-75 m-1 p-1 d-flex flex-column'
+                    style={{
+                        borderColor: `rgba(${this.state.wallet.color.r},${this.state.wallet.color.g},${this.state.wallet.color.b}, 0.95)`,
+                    }}>
                     <br />
                     <h5>
                         Sign transaction from {this.state.url}
@@ -227,43 +235,50 @@ export default class SignPopup extends React.Component {
                             </div>
                             : null
                     }
-                    {
-                        this.state.txId === "" ?
-                            null
-                            :
-                            <div className='card m-1 p-1'>
-                                <h6>Ergopay transaction</h6>
-                                <BigQRCode QRCodeTx={this.state.txReducedB64safe} />
-                                <br />
-                            </div>
-                    }
-                    { this.state.wallet.ergoPayOnly ? (<Fragment></Fragment>) : (<Fragment>
-                    <button className="btn btn-outline-info"
-                        onClick={this.showTxReduced}>
-                        Show Ergopay transaction
-                    </button>
+
                     <div className='card m-1 p-1 d-flex flex-column'>
-                        <label htmlFor="walletPassword" >Spending password for {this.state.wallet.name}</label>
-                        <input type="password"
-                            id="spendingPassword"
-                            className="form-control "
-                            onChange={e => this.setPassword(e.target.value)}
-                            value={this.state.password}
-                        />
-                    </div></Fragment>)}
-                    <div className='d-flex flex-row justify-content-between'>
-                        <div></div>
-                        { this.state.wallet.ergoPayOnly ? (<Fragment></Fragment>) : (<Fragment>
-                        <button className="btn btn-outline-info"
-                            onClick={this.signTx}>
-                            Sign
-                        </button></Fragment>)}
-                        <button className="btn btn-outline-info"
-                            onClick={this.cancelSigning}>
-                            Cancel
-                        </button>
-                        <div></div>
+                        <h6>ErgoPay transaction</h6>
+                        {this.state.txId === "" ?
+                            <div className='d-flex flex-row justify-content-center'>
+                                <button className="btn btn-outline-info"
+                                    onClick={this.showTxReduced}>
+                                    Show ErgoPay transaction
+                                </button>
+                            </div>
+                            :
+                            <div className='d-flex flex-row justify-content-center'>
+                                <BigQRCode QRCodeTx={this.state.txReducedB64safe} />
+                            </div>
+                        }
                     </div>
+
+                    {
+                        this.state.wallet.ergoPayOnly ? null :
+                            <Fragment>
+                                <div className='card m-1 p-1 d-flex flex-column'>
+                                    <label htmlFor="walletPassword" >Spending password for {this.state.wallet.name}</label>
+                                    <input type="password"
+                                        id="spendingPassword"
+                                        className="form-control "
+                                        onChange={e => this.setPassword(e.target.value)}
+                                        value={this.state.password}
+                                    />
+                                </div>
+                                <div className='d-flex flex-row justify-content-between'>
+                                    <div></div>
+
+                                    <button className="btn btn-outline-info"
+                                        onClick={this.signTx}>
+                                        Sign
+                                    </button>
+                                    <button className="btn btn-outline-info"
+                                        onClick={this.cancelSigning}>
+                                        Cancel
+                                    </button>
+                                    <div></div>
+                                </div>
+                            </Fragment>
+                    }
                     <br />
                 </div>
             </Fragment>

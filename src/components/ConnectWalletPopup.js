@@ -82,13 +82,14 @@ export default class ConnectWalletPopup extends React.Component {
                 </h5>
                 <div className='card w-75 m-1 p-1 d-flex flex-column'>
                     <form onSubmit={this.handleFormSubmit}
-
                         className='m-2 p-2'>
                         {
                             this.state.walletList.map(wallet =>
                                 <div key={wallet.name}
                                     className='card p-2 m-2 walletCard form-check'
-                                    style={{ borderColor: wallet.color }}>
+                                    style={{ 
+                                        borderColor: `rgba(${wallet.color.r},${wallet.color.g},${wallet.color.b}, 0.95)`,
+                                    }}>
                                     <div>
                                         <label className='radioLabel'>
                                             <input

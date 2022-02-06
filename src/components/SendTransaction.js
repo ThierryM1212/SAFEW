@@ -4,12 +4,13 @@ import ValidInput from './ValidInput';
 import ImageButton from './ImageButton';
 import { NANOERG_TO_ERG, SUGGESTED_TRANSACTION_FEE, VERIFIED_TOKENS } from '../utils/constants';
 import { copySuccess, errorAlert, promptPassword } from '../utils/Alerts';
-import { getWalletById, getWalletAddressList, formatERGAmount, formatTokenAmount, getSummaryFromAddressListContent, getSummaryFromSelectedAddressListContent, getAddressListContent, decryptMnemonic, formatLongString, getWalletUsedAddressList } from '../utils/walletUtils';
-import { createTxOutputs, createUnsignedTransaction, getUtxosForSelectedInputs, isValidErgAddress } from '../ergo-related/ergolibUtils';
+import { getWalletById, getWalletAddressList, formatERGAmount, formatTokenAmount, getSummaryFromAddressListContent, getSummaryFromSelectedAddressListContent, getAddressListContent, decryptMnemonic, formatLongString, getWalletUsedAddressList, getUnconfirmedTransactionsForAddressList } from '../utils/walletUtils';
+import { createTxOutputs, createUnsignedTransaction, getTxReducedB64Safe, getUtxosForSelectedInputs, isValidErgAddress } from '../ergo-related/ergolibUtils';
 import { getWalletForAddresses, signTransaction } from '../ergo-related/serializer';
 import { sendTx } from '../ergo-related/node';
-import { getUtxoBalanceForAddressList } from '../ergo-related/utxos';
+import { getUtxoBalanceForAddressList, parseSignedTx } from '../ergo-related/utxos';
 import VerifiedTokenImage from './VerifiedTokenImage';
+import BigQRCode from './BigQRCode';
 
 export default class SendTransaction extends React.Component {
     constructor(props) {
@@ -32,6 +33,8 @@ export default class SendTransaction extends React.Component {
             txFee: SUGGESTED_TRANSACTION_FEE / NANOERG_TO_ERG,
             isValidTxFee: true,
             isSendAll: false,
+            ergoPayTxId: "",
+            ergoPayUnsignedTx: "",
         };
         this.setSendToAddress = this.setSendToAddress.bind(this);
         this.sendTransaction = this.sendTransaction.bind(this);
@@ -40,6 +43,7 @@ export default class SendTransaction extends React.Component {
         this.validateTokenAmount = this.validateTokenAmount.bind(this);
         this.setSendAll = this.setSendAll.bind(this);
         this.updateWalletContent = this.updateWalletContent.bind(this);
+        this.timer = this.timer.bind(this);
     }
 
     async setSendToAddress(address) {
@@ -181,7 +185,25 @@ export default class SendTransaction extends React.Component {
         }
 
         return (tokenAmount >= 0 && tokenAmount <= parseInt(token.amount));
+    }
 
+    componentWillUnmount() {
+        clearInterval(this.state.intervalId);
+    }
+
+    async timer() {
+        const wallet = getWalletById(this.state.walletId);
+        const walletAddressList = getWalletAddressList(wallet);
+        const unconfirmedTransactions = await getUnconfirmedTransactionsForAddressList(walletAddressList, false);
+        const unconfirmedTransactionsIdFiltered = unconfirmedTransactions.map(tx => tx.transactions).flat();
+        const ourTx = unconfirmedTransactionsIdFiltered.filter(tx => tx !== undefined && tx.id === this.state.ergoPayTxId);
+        if (ourTx.length > 0) {
+            var fixedTx = parseSignedTx(ourTx[0]);
+            fixedTx.id = this.state.txId;
+            console.log("fixedTx", fixedTx);
+            clearInterval(this.state.intervalId);
+            this.state.setPage('transactions', this.state.walletId);
+        }
     }
 
     async sendTransaction() {
@@ -203,49 +225,59 @@ export default class SendTransaction extends React.Component {
         const jsonUnsignedTx = JSON.parse(unsignedTransaction.to_json());
         console.log("sendTransaction unsignedTransaction", jsonUnsignedTx);
 
-        const txBalance = await getUtxoBalanceForAddressList(jsonUnsignedTx.inputs, jsonUnsignedTx.outputs, selectedAddresses);
-        const txBalanceReceiver = await getUtxoBalanceForAddressList(jsonUnsignedTx.inputs, jsonUnsignedTx.outputs, [this.state.sendToAddress]);
-        console.log("sendTransaction txBalance", txBalance, txBalanceReceiver);
+        if (wallet.ergoPayOnly) {
+            const [txId, txReducedB64safe] = await getTxReducedB64Safe(jsonUnsignedTx, selectedUtxos);
+            var intervalId = setInterval(this.timer, 3000);
+            this.setState({
+                ergoPayTxId: txId,
+                ergoPayUnsignedTx: txReducedB64safe,
+                intervalId: intervalId,
+            })
+        } else {
+            const txBalance = await getUtxoBalanceForAddressList(jsonUnsignedTx.inputs, jsonUnsignedTx.outputs, selectedAddresses);
+            const txBalanceReceiver = await getUtxoBalanceForAddressList(jsonUnsignedTx.inputs, jsonUnsignedTx.outputs, [this.state.sendToAddress]);
+            console.log("sendTransaction txBalance", txBalance, txBalanceReceiver);
 
-        var txSummaryHtml = "<div class='card m-1 p-1'><table class='txSummarry'><tbody>";
-        txSummaryHtml += "<thead><th colspan='2'>Sending to: &nbsp;" + formatLongString(this.state.sendToAddress, 10) + "</th></thead>";
-        txSummaryHtml += "<tr><td class='textSmall'>Amount</td><td>" + formatERGAmount(txBalanceReceiver.value) + "&nbsp;ERG</td></tr>";
-        txSummaryHtml += "<tr><td class='textSmall'>Fee</td><td>" + formatERGAmount(feeFloat * NANOERG_TO_ERG) + "&nbsp;ERG</td></tr>";
-        txSummaryHtml += "<tr><td class='textSmall'><b>Total</b></td><td><b>" + formatERGAmount(-1 * txBalance.value) + "&nbsp;ERG</b></td></tr>";
-        txSummaryHtml += "</tbody></table>";
-        if (txBalance.tokens.length > 0) {
-            txSummaryHtml += "<table class='txSummarry'><tbody>";
-            txSummaryHtml += "<thead><th colspan='2'>Tokens</th></thead>";
-            for (const token of txBalance.tokens) {
-                txSummaryHtml += "<tr><td class='textSmall'>" + token.name + "</td><td class='textSmall'>" + formatTokenAmount((-1) * token.amount, token.decimals) + "</td></tr>";
+            var txSummaryHtml = "<div class='card m-1 p-1'><table class='txSummarry'><tbody>";
+            txSummaryHtml += "<thead><th colspan='2'>Sending to: &nbsp;" + formatLongString(this.state.sendToAddress, 10) + "</th></thead>";
+            txSummaryHtml += "<tr><td class='textSmall'>Amount</td><td>" + formatERGAmount(txBalanceReceiver.value) + "&nbsp;ERG</td></tr>";
+            txSummaryHtml += "<tr><td class='textSmall'>Fee</td><td>" + formatERGAmount(feeFloat * NANOERG_TO_ERG) + "&nbsp;ERG</td></tr>";
+            txSummaryHtml += "<tr><td class='textSmall'><b>Total</b></td><td><b>" + formatERGAmount(-1 * txBalance.value) + "&nbsp;ERG</b></td></tr>";
+            txSummaryHtml += "</tbody></table>";
+            if (txBalance.tokens.length > 0) {
+                txSummaryHtml += "<table class='txSummarry'><tbody>";
+                txSummaryHtml += "<thead><th colspan='2'>Tokens</th></thead>";
+                for (const token of txBalance.tokens) {
+                    txSummaryHtml += "<tr><td class='textSmall'>" + token.name + "</td><td class='textSmall'>" + formatTokenAmount((-1) * token.amount, token.decimals) + "</td></tr>";
+                }
+                txSummaryHtml += "</tbody></table></div>";
             }
-            txSummaryHtml += "</tbody></table></div>";
-        }
 
-        const password = await promptPassword("Sign transaction for<br/>" + wallet.name, txSummaryHtml, "Sign");
-        //console.log("sendTransaction password", password);
-        const mnemonic = decryptMnemonic(wallet.mnemonic, password);
-        if (mnemonic === null) {
-            return;
-        }
-        if (mnemonic === '' || mnemonic === undefined) {
-            errorAlert("Failed to decrypt Mnemonic", "Wrong password ?");
-            return;
-        }
-        const signingWallet = await getWalletForAddresses(mnemonic, selectedAddresses);
-        console.log("signingWallet", signingWallet);
-        var signedTx = {};
+            const password = await promptPassword("Sign transaction for<br/>" + wallet.name, txSummaryHtml, "Sign");
+            //console.log("sendTransaction password", password);
+            const mnemonic = decryptMnemonic(wallet.mnemonic, password);
+            if (mnemonic === null) {
+                return;
+            }
+            if (mnemonic === '' || mnemonic === undefined) {
+                errorAlert("Failed to decrypt Mnemonic", "Wrong password ?");
+                return;
+            }
+            const signingWallet = await getWalletForAddresses(mnemonic, selectedAddresses);
+            console.log("signingWallet", signingWallet);
+            var signedTx = {};
 
-        try {
-            signedTx = JSON.parse(await signTransaction(jsonUnsignedTx, selectedUtxos, [], signingWallet));
-            console.log("signedTx", signedTx);
-        } catch (e) {
-            errorAlert("Failed to sign transaction", e);
-            return;
+            try {
+                signedTx = JSON.parse(await signTransaction(jsonUnsignedTx, selectedUtxos, [], signingWallet));
+                console.log("signedTx", signedTx);
+            } catch (e) {
+                errorAlert("Failed to sign transaction", e);
+                return;
+            }
+            const res = await sendTx(signedTx);
+            //await delay(3000);
+            this.state.setPage('transactions', this.state.walletId);
         }
-        const res = await sendTx(signedTx);
-        //await delay(3000);
-        this.state.setPage('transactions', this.state.walletId);
     }
 
     render() {
@@ -463,15 +495,36 @@ export default class SendTransaction extends React.Component {
                         </div>
                         <br />
 
-                        <div className='d-flex flex-row align-items-baseline justify-content-center'>
-                            <button className="btn btn-outline-info"
-                                onClick={this.sendTransaction}
-                                disabled={!(this.state.isValidSendToAddress
-                                    && this.state.isValidErgToSend
-                                    && this.state.isValidTokenAmountToSend.every(Boolean)
-                                    && this.state.isValidTxFee)}
-                            >Send transaction</button>
-                        </div>
+                        {
+                            this.state.ergoPayTxId === "" ? null :
+                                <div className='d-flex flex-column'>
+                                    <div className='d-flex flex-row '>
+                                    Ergopay transaction
+                                        <ImageButton
+                                            id={"ergoTxInfo"}
+                                            color={"white"}
+                                            icon={"info"}
+                                            tips={"Ergopay transaction (EIP-19)"}
+                                        />
+                                    </div>
+                                    <div className='d-flex flex-row justify-content-center'>
+                                    <BigQRCode QRCodeTx={this.state.ergoPayUnsignedTx} />
+                                    </div>
+                                </div>
+                        }
+
+                        {this.state.ergoPayTxId === "" ?
+                            <div className='d-flex flex-row align-items-baseline justify-content-center'>
+                                <button className="btn btn-outline-info"
+                                    onClick={this.sendTransaction}
+                                    disabled={!(this.state.isValidSendToAddress
+                                        && this.state.isValidErgToSend
+                                        && this.state.isValidTokenAmountToSend.every(Boolean)
+                                        && this.state.isValidTxFee)}
+                                >{wallet.ergoPayOnly ? "Ergopay" : "Send transaction"}</button>
+                            </div>
+                            : null
+                        }
                     </div>
                 </div>
             </Fragment>

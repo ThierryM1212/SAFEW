@@ -6,6 +6,7 @@ import ImageButton from './ImageButton';
 import Account from './Account';
 import Address from './Address';
 import { errorAlert, promptPassword } from '../utils/Alerts';
+import { rgbToHex } from '../utils/utils';
 
 export default class Wallet extends React.Component {
     constructor(props) {
@@ -18,6 +19,7 @@ export default class Wallet extends React.Component {
             showAccounts: false,
             updateWalletList: props.updateWalletList,
             expertMode: (localStorage.getItem('expertMode') === 'true') ?? false,
+            ergoPayOnly: props.wallet.ergoPayOnly ?? false,
         };
         console.log("Wallet constructor", props.wallet, props.addressContentList, JSON.stringify(props.addressContentList));
         this.addNewAccount = this.addNewAccount.bind(this);
@@ -80,11 +82,13 @@ export default class Wallet extends React.Component {
         }
         const walletAddressList = this.state.wallet.accounts.map(account => account.addresses).flat();
         const walletColor = this.state.wallet.color;
-        const colorRgb = this.state.wallet.colorRgb || { r: 141, g: 140, b: 143 };
-        console.log("Wallet", this.state.wallet, walletAddressList);
         return (
             <Fragment>
-                <div key={this.state.wallet.name} className='card p-1 m-2 walletCard d-flex flex-column' style={{ borderColor: walletColor, backgroundColor: `rgba(${colorRgb.r},${colorRgb.g},${colorRgb.b},0.25)` }}>
+                <div key={this.state.wallet.name} className='card p-1 m-2 walletCard d-flex flex-column'
+                    style={{
+                        borderColor: `rgba(${walletColor.r},${walletColor.g},${walletColor.b}, 0.95)`,
+                        backgroundColor: `rgba(${walletColor.r},${walletColor.g},${walletColor.b}, 0.15)`
+                    }}>
                     <div className='d-flex flex-row justify-content-between align-items-start'>
                         <div className='d-flex flex-row align-items-baseline'>
                             <ImageButton
@@ -116,6 +120,17 @@ export default class Wallet extends React.Component {
                                 onClick={() => this.state.setPage('edit', this.state.id)}
                             />&nbsp;
                             <h5>{this.state.wallet.name}</h5>
+                            {
+
+                                this.state.ergoPayOnly ?
+                                    <ImageButton
+                                        id={"ergopayWallet"}
+                                        color={"white"}
+                                        icon={"phone_android"}
+                                        tips={"ErgoPay wallet"} />
+                                    : null
+
+                            }
                         </div>
                         {
                             !this.state.showAccounts ?
@@ -128,7 +143,7 @@ export default class Wallet extends React.Component {
                     {
                         this.state.showAccounts ?
 
-                            this.state.expertMode ?
+                            this.state.expertMode && !this.state.ergoPayOnly ?
                                 <div>
                                     <div className='d-flex flex-row align-items-center'>
                                         <div className='d-flex flex-row'>&nbsp;Accounts</div>

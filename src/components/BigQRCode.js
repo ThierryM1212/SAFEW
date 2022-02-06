@@ -1,5 +1,6 @@
 import React, { Fragment } from 'react';
 import QRCode from 'qrcode';
+import ReactTooltip from 'react-tooltip';
 
 export default class BigQRCode extends React.Component {
     constructor(props) {
@@ -13,14 +14,14 @@ export default class BigQRCode extends React.Component {
 
     async generateQR(text) {
         try {
-          return await QRCode.toDataURL(text);
+            return await QRCode.toDataURL(text);
         } catch (err) {
-          console.error("generateQR",err)
+            console.error("generateQR", err)
         }
-      }
+    }
 
     async componentDidMount() {
-        const QRCodeTx = await this.generateQR(this.state.QRCodeTx)        
+        const QRCodeTx = await this.generateQR(this.state.QRCodeTx)
         this.setState({
             QRCodeTx: QRCodeTx,
         })
@@ -45,8 +46,23 @@ export default class BigQRCode extends React.Component {
     render() {
         return (
             <Fragment>
-                <img src={this.state.QRCodeTx} width={this.state.size} height={this.state.size} onClick={this.zoomInOut}/>
-            </Fragment>
+                <div className="m-1 d-flex flex-column">
+                    <span
+                        onClick={this.zoomInOut}
+                        data-tip
+                        data-for="BigQRCode"
+                        style={{ cursor: 'pointer' }}
+                    >
+                        <img src={this.state.QRCodeTx}
+                            width={this.state.size}
+                            height={this.state.size}
+                        />
+                    </span>
+                    <ReactTooltip id="BigQRCode" html={true} delayShow={400}>
+                        Click to zoom
+                    </ReactTooltip>
+                </div>
+            </Fragment >
         )
     }
 }
