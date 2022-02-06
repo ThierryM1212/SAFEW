@@ -210,7 +210,7 @@ export default class AddWallet extends React.Component {
         return (
             <Fragment>
                 <div className='container card m-1 p-1 d-flex flex-column w-75' style={{ borderColor: this.state.color, backgroundColor: `rgba(${this.state.colorRgb.r},${this.state.colorRgb.g},${this.state.colorRgb.b},0.25)` }}>
-                    <h4>Create or restore an Ergo wallet</h4>
+                    { this.props.isErgoPayWallet ? (<h4>Create an ErgoPay wallet</h4>) : (<h4>Create or restore an Ergo wallet</h4>)}
                     <div className='d-flex flex-column m-1'>
                         <div className='d-flex flex-column'>
                             <label htmlFor="walletName" >Wallet name</label>

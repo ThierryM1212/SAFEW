@@ -12,6 +12,7 @@ import { MAX_NUMBER_OF_UNUSED_ADDRESS_PER_ACCOUNT } from '../utils/constants';
 export default class EditWallet extends React.Component {
     constructor(props) {
         super(props);
+        const wallet = getWalletById(props.walletId);
         this.state = {
             walletId: props.walletId,
             setPage: props.setPage,
@@ -34,6 +35,7 @@ export default class EditWallet extends React.Component {
                 r: 141, g: 140, b: 143
             },
             selectedChangeAddress: '',
+            ergoPayOnly: wallet.ergoPayOnly,
         };
         this.updateWalletName = this.updateWalletName.bind(this);
         this.updateWalletColor = this.updateWalletColor.bind(this);
@@ -228,11 +230,12 @@ export default class EditWallet extends React.Component {
 
         var optionsChangeAdresses = walletAddressList.map(address => ({ value: address, label: address }));
 
+        const ergoPayOnly = wallet.ergoPayOnly;
         return (
             <Fragment >
                 <div className='container card m-1 p-1 d-flex flex-column w-75 ' style={{ borderColor: this.state.color, backgroundColor: `rgba(${this.state.colorRgb.r},${this.state.colorRgb.g},${this.state.colorRgb.b},0.25)` }}>
                     <div className='d-flex flex-row justify-content-between editWalletCard'>
-                        <h4>Update an Ergo wallet - {this.state.walletName}</h4>
+                        <h4>Update an Ergo{ ergoPayOnly && 'Pay' } wallet - {this.state.walletName}</h4>
 
                         <ImageButton
                             id={"backToWalletList"}
@@ -280,7 +283,7 @@ export default class EditWallet extends React.Component {
                             </div>
                         </div>
                         <br />
-
+{ergoPayOnly ? (<Fragment></Fragment>) : (<Fragment>
                         <h5 >Select change address</h5>
                         <div className='d-flex flex-row'>
                             <Select className='selectReact'
@@ -374,7 +377,7 @@ export default class EditWallet extends React.Component {
                             </div>
                         </div>
                         <br />
-
+</Fragment>)}
                         <h5 >Backup {this.state.walletName}</h5>
                         <div className='d-flex flex-column'>
                             <div>
