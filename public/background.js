@@ -38,8 +38,8 @@ function launchPopup(message, sender, param = '') {
         chrome.windows.create({
             url: URL,
             type: 'popup',
-            width: 700,
-            height: 600,
+            width: 800,
+            height: 700,
             top: focusedWindow.top,
             left: focusedWindow.left + (focusedWindow.width - 375),
             setSelfAsOpener: true,
