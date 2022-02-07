@@ -28,7 +28,7 @@ export default class AddWallet extends React.Component {
             isValidPassword2: false,
             invalidPassword2Message: 'min 10 characters !',
             color: { r: 141, g: 140, b: 143, a: 1 },
-            isErgoPayWallet: false,
+            ergoPayOnly: props.ergoPayOnly,
         };
         this.setWalletName = this.setWalletName.bind(this);
         this.setAddress = this.setAddress.bind(this);
@@ -94,7 +94,7 @@ export default class AddWallet extends React.Component {
     };
 
     saveWallet = () => {
-        if (this.props.isErgoPayWallet) {
+        if (this.props.ergoPayOnly) {
             addErgoPayWallet(this.state.walletName, this.state.address, this.state.color).then((numWal) => {
                 console.log("saveWallet", this.state.address)
                 this.props.setPage('home');
@@ -123,12 +123,12 @@ export default class AddWallet extends React.Component {
 
     walletIsValid = () => {
         const isValidSigningWallet = this.state.isValidWalletName && this.state.isValidMnemonic && this.state.isValidPassword1 && this.state.isValidPassword2;
-        const isValidErgoPayWallet = this.props.isErgoPayWallet && this.state.isValidWalletName && this.state.isValidAddress;
+        const isValidErgoPayWallet = this.props.ergoPayOnly && this.state.isValidWalletName && this.state.isValidAddress;
         return isValidErgoPayWallet || isValidSigningWallet;
     }
 
     ergoPayWalletFields = () => {
-        if (!this.props.isErgoPayWallet) return (<br />);
+        if (!this.props.ergoPayOnly) return (<br />);
         return (
             <div className='d-flex flex-column'>
                 <label htmlFor="address" >Address</label>
@@ -148,7 +148,7 @@ export default class AddWallet extends React.Component {
 
 
     signingWalletFields = () => {
-        if (this.props.isErgoPayWallet) return (<br />);
+        if (this.props.ergoPayOnly) return (<br />);
         return (
             <Fragment>
                 <div className='d-flex flex-column'>
@@ -210,9 +210,9 @@ export default class AddWallet extends React.Component {
                 <div className='container card m-1 p-1 d-flex flex-column w-75'
                     style={{
                         borderColor: `rgba(${this.state.color.r},${this.state.color.g},${this.state.color.b}, 0.95)`,
-                        backgroundColor: `rgba(${this.state.color.r},${this.state.color.g},${this.state.color.b},0.15)`
+                        backgroundColor: `rgba(${this.state.color.r},${this.state.color.g},${this.state.color.b},0.10)`
                     }}>
-                    { this.props.isErgoPayWallet ? (<h4>Create an ErgoPay wallet</h4>) : (<h4>Create or restore an Ergo wallet</h4>)}
+                    { this.props.ergoPayOnly ? (<h4>Create an ErgoPay wallet</h4>) : (<h4>Create or restore an Ergo wallet</h4>)}
                     <div className='d-flex flex-column m-1'>
                         <div className='d-flex flex-column'>
                             <label htmlFor="walletName" >Wallet name</label>

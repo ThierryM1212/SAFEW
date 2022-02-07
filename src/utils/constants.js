@@ -34,6 +34,9 @@ export const VERIFIED_TOKENS = {
     [TOKENID_NETA]: ['NETA', "token-neta.svg"],
   }
 
+// wallet version to handle upgrades (integer)
+export const WALLET_VERSION = 1;
+
 export const DISCLAIMER_TEXT = `
 <div align="left">
 This software is distributed for free with its source code.<br/>

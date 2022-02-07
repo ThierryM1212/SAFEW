@@ -1,8 +1,10 @@
 import { discoverAddresses } from "../ergo-related/ergolibUtils";
 import { addressHasTransactions, getBalanceForAddress, getTransactionsForAddress, getUnconfirmedTxsFor } from "../ergo-related/explorer";
-import { NANOERG_TO_ERG, PASSWORD_SALT } from "./constants";
+import { NANOERG_TO_ERG, PASSWORD_SALT, WALLET_VERSION } from "./constants";
 import '@sweetalert2/theme-dark/dark.css';
 import { enrichUtxos } from "../ergo-related/utxos";
+import { hexToRgbA } from "./utils";
+import { waitingAlert } from "./Alerts";
 var CryptoJS = require("crypto-js");
 
 
@@ -20,7 +22,7 @@ export function isValidPassword(password) {
 }
 
 export async function addErgoPayWallet(name, address, color) {
-    const walletAccounts = [{id: 0, addresses: [{ id: 0, address, used: true }], name}];
+    const walletAccounts = [{ id: 0, addresses: [{ id: 0, address, used: true }], name }];
     return _addNewWallet(name, walletAccounts, color, " ", " ", true)
 }
 
@@ -30,18 +32,65 @@ export async function addNewWallet(name, mnemonic, password, color) {
 }
 
 function _addNewWallet(name, walletAccounts, color, mnemonic, password, ergoPayOnly) {
-    const newWallet = {
+    var newWallet = {
         name: name,
-        mnemonic: CryptoJS.AES.encrypt(mnemonic, password + PASSWORD_SALT).toString(),
         accounts: walletAccounts,
         color: color,
         changeAddress: walletAccounts[0].addresses[0].address,
         ergoPayOnly: ergoPayOnly,
+        version: WALLET_VERSION,
     };
+    if (ergoPayOnly) {
+        newWallet["mnemonic"] = "";
+    } else {
+        newWallet["mnemonic"] = CryptoJS.AES.encrypt(mnemonic, password + PASSWORD_SALT).toString();
+    }
     var walletList = JSON.parse(localStorage.getItem('walletList'));
     walletList.push(newWallet);
     localStorage.setItem('walletList', JSON.stringify(walletList));
     return walletList.length;
+}
+
+export function upgradeWallets() {
+    var walletList = JSON.parse(localStorage.getItem('walletList'));
+    localStorage.setItem('walletList', JSON.stringify(walletList.map(wallet => upgradeWallet(wallet))));
+}
+export function upgradeWallet(wallet) {
+    var upgradedWallet = { ...wallet };
+    if (!Object.keys(upgradedWallet).includes("version")) {
+        // alpha upgrade 0.1 to 0.2 upgrade
+        if (Object.keys(upgradedWallet).includes("color")) {
+            try {
+                upgradedWallet["color"] = hexToRgbA(wallet.color);
+            } catch (e) {
+                console.log("color already RGB")
+            }
+        }
+    }
+    if (!Object.keys(upgradedWallet).includes("ergoPayOnly")) {
+        upgradedWallet["ergoPayOnly"] = false;
+    }
+    for (const account of wallet.accounts) {
+        for (var address of account.addresses) {
+            if (!Object.keys(address).includes("used")) {
+                address["used"] = false;
+            }
+        }
+    }
+    upgradedWallet["version"] = WALLET_VERSION;
+    return upgradedWallet;
+}
+export function isUpgradeWalletRequired() {
+    const walletList = JSON.parse(localStorage.getItem('walletList'));
+    // if a wallet miss the version field, upgrade is required
+    if(walletList.filter(wallet => !Object.keys(wallet).includes("version")).length > 0){
+        return true;
+    }
+    // if a wallet has an older version than the current one
+    if(walletList.filter(wallet => wallet.version < WALLET_VERSION).length > 0){
+        return true;
+    }
+    return false;
 }
 
 export function getWalletById(id) {
@@ -89,7 +138,7 @@ export function formatTokenAmount(amountInt, decimalsInt, trimTrailing0 = true) 
         } else {
             return str[0]
         }
-        
+
     } else {
         return amountInt.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     }
@@ -97,7 +146,7 @@ export function formatTokenAmount(amountInt, decimalsInt, trimTrailing0 = true) 
 
 export function formatTokenAmount__(amountInt, decimalsInt) {
     if (decimalsInt > 0) {
-        const numberAmount = (Number(amountInt)/Number(Math.pow(10, parseInt(decimalsInt)))).toFixed(parseInt(decimalsInt));
+        const numberAmount = (Number(amountInt) / Number(Math.pow(10, parseInt(decimalsInt)))).toFixed(parseInt(decimalsInt));
         var str = numberAmount.toString().split(".");
         str[0] = str[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
         return str.join(".");
@@ -143,6 +192,17 @@ export function getWalletUsedAddressList(wallet) {
     for (var account of wallet.accounts) {
         for (var address of account.addresses) {
             if (address.used) {
+                addressList.push(address.address);
+            }
+        }
+    }
+    return addressList;
+}
+export function getWalletUnusedAddressList(wallet) {
+    let addressList = [];
+    for (var account of wallet.accounts) {
+        for (var address of account.addresses) {
+            if (!address.used) {
                 addressList.push(address.address);
             }
         }
@@ -234,20 +294,49 @@ export function setAccountName(walletId, accountId, accountName) {
 }
 
 export function setAddressUsed(addressToSet) {
+    console.log("setAddressUsed", addressToSet);
     var walletList = JSON.parse(localStorage.getItem('walletList'));
-    for (var k in walletList){
-        var newWallet = {...walletList[k]};
+    for (var k in walletList) {
+        var newWallet = { ...walletList[k] };
         for (var i in newWallet.accounts) {
             var account = newWallet.accounts[i];
-            for(var j in account.addresses) {
+            for (var j in account.addresses) {
                 var addr = account.addresses[j];
                 if (addr.address === addressToSet) {
-                    newWallet.accounts[i].addresses[j].used = true;
-                    updateWallet(newWallet,k);
+                    newWallet.accounts[i].addresses[j]["used"] = true;
+                    updateWallet(newWallet, k);
                 }
             }
         }
     }
+}
+
+export async function updateUnusedAddresses() {
+    var alert = waitingAlert("Searching new used addresses");
+    var walletList = JSON.parse(localStorage.getItem('walletList'));
+    for (var k in walletList) {
+        var newWallet = { ...walletList[k] };
+        const walletUnusedAddressList = getWalletUnusedAddressList(newWallet);
+        const checkResultList = await Promise.all(walletUnusedAddressList.map(async (addr) => {
+            const isUsed = await addressHasTransactions(addr);
+            return isUsed;
+        }));
+        for (var i in newWallet.accounts) {
+            var account = newWallet.accounts[i];
+            for (var j in account.addresses) {
+                var addr = account.addresses[j];
+                //console.log("updateUnusedAddresses",addr);
+                var addrIndex = walletUnusedAddressList.indexOf(addr);
+                if (addrIndex > -1) {
+                    newWallet.accounts[i].addresses[j]["used"] = checkResultList[addrIndex];
+                    if (checkResultList[addrIndex]) {
+                        updateWallet(newWallet, k);
+                    }
+                }
+            }
+        }
+    }
+    alert.close();
 }
 
 export function setChangeAddress(walletId, address) {
@@ -259,7 +348,7 @@ export function setChangeAddress(walletId, address) {
 export async function getAddressListContent(addressList) {
     const addressContentList = await Promise.all(addressList.map(async (address) => {
         const addressContent = await getBalanceForAddress(address);
-        console.log("getAddressListContent", address, addressContent, JSON.stringify(addressContent))
+        //console.log("getAddressListContent", address, addressContent, JSON.stringify(addressContent))
         return { address: address, content: addressContent.confirmed, unconfirmed: { ...addressContent.unconfirmed } };
     }));
     return addressContentList;
@@ -277,18 +366,18 @@ export async function getTransactionsForAddressList(addressList, limit) {
 export async function getUnconfirmedTransactionsForAddressList(addressList, enrich = true) {
     const addressUnConfirmedTransactionsList = await Promise.all(addressList.map(async (address) => {
         var addressTransactions = await getUnconfirmedTxsFor(address);
-        console.log("getUnconfirmedTransactionsForAddressList", address, addressTransactions);
+        //console.log("getUnconfirmedTransactionsForAddressList", address, addressTransactions);
         if (enrich) {
             try { // if we fail to fetch one box, skip the unconfirmed transactions for that address
                 for (const tx of addressTransactions) {
                     tx.inputs = await enrichUtxos(tx.inputs);
                 }
                 return { address: address, transactions: addressTransactions };
-            } catch(e) {
+            } catch (e) {
                 console.log(e);
                 return { address: address, transactions: [] };
             }
-        } else  {
+        } else {
             return { address: address, transactions: addressTransactions };
         }
     }));

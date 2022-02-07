@@ -87,7 +87,7 @@ export default class Wallet extends React.Component {
                 <div key={this.state.wallet.name} className='card p-1 m-2 walletCard d-flex flex-column'
                     style={{
                         borderColor: `rgba(${walletColor.r},${walletColor.g},${walletColor.b}, 0.95)`,
-                        backgroundColor: `rgba(${walletColor.r},${walletColor.g},${walletColor.b}, 0.15)`
+                        backgroundColor: `rgba(${walletColor.r},${walletColor.g},${walletColor.b}, 0.10)`
                     }}>
                     <div className='d-flex flex-row justify-content-between align-items-start'>
                         <div className='d-flex flex-row align-items-baseline'>

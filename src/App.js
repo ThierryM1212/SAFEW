@@ -14,14 +14,20 @@ import ConnectWalletPopup from './components/ConnectWalletPopup';
 import DisconnectWallet from './components/DisconnectWallet';
 import Mixer from './components/Mixer';
 import { confirmAlert } from './utils/Alerts';
+import { isUpgradeWalletRequired, upgradeWallets } from './utils/walletUtils';
 
 export default class App extends React.Component {
     constructor(props) {
         super(props);
+        var iniPage = 'empty';
+        const disclaimerAccepted = (localStorage.getItem('disclaimerAccepted') === "true") ?? false;
+        if (disclaimerAccepted) iniPage = 'home';
+        console.log("App ini",disclaimerAccepted,iniPage);
         this.state = {
-            page: 'home',
+            page: iniPage,
             walletId: 0,
             mixerAvailable: false,
+            disclaimerAccepted: disclaimerAccepted,
         };
         this.setPage = this.setPage.bind(this);
 
@@ -40,6 +46,10 @@ export default class App extends React.Component {
         } catch (e) {
             localStorage.setItem('walletList', JSON.stringify([]));
         }
+        // handle wallet version and upgrade
+        if (isUpgradeWalletRequired()) {
+            upgradeWallets();
+        }
     }
 
     setPage = (page, walletId = 0) => {
@@ -55,11 +65,12 @@ export default class App extends React.Component {
     }
 
     componentDidMount() {
-        const disclaimerAccepted = localStorage.getItem('disclaimerAccepted') ?? "false";
-        if (disclaimerAccepted === "false") {
+        if (!this.state.disclaimerAccepted) {
             confirmAlert("Disclaimer", DISCLAIMER_TEXT, "Use SAFEW", "Refuse").then(res => {
                 if (res.isConfirmed) {
                     localStorage.setItem('disclaimerAccepted', "true");
+                    this.setState({disclaimerAccepted: true});
+                    this.setPage('home');
                 } else {
                     window.close();
                 }
@@ -68,11 +79,10 @@ export default class App extends React.Component {
     }
 
     render() {
-
         const signPopup = window.location.hash.startsWith("#sign_tx");
         const connectPopup = window.location.hash.startsWith("#connect");
         const popup = signPopup || connectPopup;
-        console.log("window.location", popup, signPopup, connectPopup);
+        console.log("window.location", popup, signPopup, connectPopup, this.state.page);
 
         let page = null
         switch (this.state.page) {
@@ -80,10 +90,10 @@ export default class App extends React.Component {
                 page = <WalletList setPage={this.setPage} />
                 break
             case 'add':
-                page = <AddWallet setPage={this.setPage} />
+                page = <AddWallet ergoPayOnly={false} setPage={this.setPage} />
                 break
             case 'addErgoPay':
-                page = <AddWallet isErgoPayWallet={true} setPage={this.setPage} />
+                page = <AddWallet ergoPayOnly={true} setPage={this.setPage} />
                 break
             case 'edit':
                 page = <EditWallet setPage={this.setPage} walletId={this.state.walletId} />
@@ -109,8 +119,10 @@ export default class App extends React.Component {
             case 'signPopup':
                 page = <SignPopup />
                 break
+            case 'empty':
+                page = null;
             default:
-                page = <WalletList />
+                page = null;
                 break
         }
 

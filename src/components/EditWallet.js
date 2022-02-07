@@ -192,7 +192,7 @@ export default class EditWallet extends React.Component {
     async deleteWallet() {
         confirmAlert("Delete the wallet " + this.state.walletName + "?",
             "The wallet will be deleted from the application but will stay in the Ergo blockchain.<br/>It can be restored at any time with the mnemonic.",
-            "Wallet deleted")
+            "Delete")
             .then(res => {
                 if (res.isConfirmed) {
                     // remove wallet from connected site list

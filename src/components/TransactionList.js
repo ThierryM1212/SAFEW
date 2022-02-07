@@ -29,8 +29,9 @@ export default class TransactionList extends React.Component {
         this.setState({ limit: limit });
     }
 
-    async updateTransactionList() {
-        var alert = waitingAlert("Loading transations...");
+    async updateTransactionList(showAlert = true) {
+        var alert = "";
+        if (showAlert) alert = waitingAlert("Loading transations...");
         const wallet = getWalletById(this.state.walletId);
         this.setState({ color: wallet.color });
         const walletAddressList = getWalletAddressList(wallet);
@@ -43,11 +44,8 @@ export default class TransactionList extends React.Component {
             .filter((t, index, self) => {
                 return self.findIndex(tx => tx.id === t.id) === index;
             });
-        console.log("unConfirmedTxByAddressList", unConfirmedTxByAddressList);
         this.setState({ unconfirmedTransactionList: unConfirmedTxByAddressList });
-
         const transactionByAddressList = await getTransactionsForAddressList(walletAddressList, this.state.limit);
-        console.log("componentDidMount transactionList1", transactionByAddressList)
         const numberOfTransactions = transactionByAddressList.map(item => item.total).reduce((prev, next) => prev + next)
         const transactionList = transactionByAddressList.map(txForAddr => txForAddr.transactions).flat();
         const transactionListFiltered = transactionList.filter((e, i) => transactionList.findIndex(a => a.id === e.id) === i)
@@ -55,9 +53,8 @@ export default class TransactionList extends React.Component {
                 return a.numConfirmations - b.numConfirmations;
             })
             .slice(0, 2 * this.state.limit, Infinity);
-        console.log("componentDidMount transactionList2", transactionListFiltered)
         this.setState({ transactionList: transactionListFiltered, numberOfTransactions: numberOfTransactions });
-        alert.close();
+        if (showAlert) alert.close();
     }
 
     async componentDidMount() {
@@ -72,7 +69,7 @@ export default class TransactionList extends React.Component {
     }
 
     timer() {
-        this.updateTransactionList();
+        this.updateTransactionList(false);
     }
 
     componentDidUpdate(prevProps, prevState) {

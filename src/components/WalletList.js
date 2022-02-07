@@ -1,7 +1,7 @@
 import React, { Fragment } from 'react';
 import Wallet from './Wallet';
 import ImageButton from './ImageButton';
-import { getAddressListContent, getUnconfirmedTransactionsForAddressList, getWalletListAddressList } from '../utils/walletUtils';
+import { getAddressListContent, getUnconfirmedTransactionsForAddressList, getWalletListAddressList, updateUnusedAddresses } from '../utils/walletUtils';
 import { errorAlert, waitingAlert } from '../utils/Alerts';
 import { updateErgoPrice } from '../ergo-related/ergoprice';
 
@@ -26,6 +26,7 @@ export default class WalletList extends React.Component {
     async componentDidMount() {
         var intervalId = setInterval(this.timer, 60000);
         this.setState({ intervalId: intervalId });
+        await updateUnusedAddresses();
         await this.updateWalletAddressListContent();
     }
 
