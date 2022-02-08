@@ -6,7 +6,6 @@ import { waitingAlert, displayMnemonic } from '../utils/Alerts';
 import { SketchPicker } from 'react-color';
 import ValidInput from './ValidInput';
 import { isValidErgAddress } from '../ergo-related/ergolibUtils';
-import { rgbToHex } from '../utils/utils';
 
 
 export default class AddWallet extends React.Component {

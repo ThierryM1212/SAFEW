@@ -29,3 +29,7 @@ export async function getActiveMixes() {
     }
 }
 
+export function getMixURL(mixId) {
+    return mixerURL + "dashboard/mix/active/" + mixId;
+}
+

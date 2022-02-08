@@ -28,6 +28,11 @@ export default class App extends React.Component {
             walletId: 0,
             mixerAvailable: false,
             disclaimerAccepted: disclaimerAccepted,
+            setPageParam: {
+                address: '',
+                amount: 0,
+                tokens: [],
+            },
         };
         this.setPage = this.setPage.bind(this);
 
@@ -52,17 +57,22 @@ export default class App extends React.Component {
         }
     }
 
-    setPage = (page, walletId = 0) => {
-        console.log("setPage", page, walletId);
+    setPage = (page, walletId = 0, setPageParam = {
+        address: '',
+        amount: 0,
+        tokens: [],
+    }) => {
+        console.log("setPage", page, walletId, setPageParam);
         this.setState({
             page: page,
             walletId: walletId,
+            setPageParam: setPageParam,
         });
     };
 
-    componentDidUpdate(prevProps, prevState) {
-        console.log("App componentDidUpdate", prevProps, prevState, this.props, this.state);
-    }
+    //componentDidUpdate(prevProps, prevState) {
+    //    console.log("App componentDidUpdate", prevProps, prevState, this.props, this.state);
+    //}
 
     componentDidMount() {
         if (!this.state.disclaimerAccepted) {
@@ -99,7 +109,7 @@ export default class App extends React.Component {
                 page = <EditWallet setPage={this.setPage} walletId={this.state.walletId} />
                 break
             case 'send':
-                page = <SendTransaction setPage={this.setPage} walletId={this.state.walletId} />
+                page = <SendTransaction setPage={this.setPage} walletId={this.state.walletId} iniTran={this.state.setPageParam}/>
                 break
             case 'transactions':
                 page = <TransactionList setPage={this.setPage} walletId={this.state.walletId} />
