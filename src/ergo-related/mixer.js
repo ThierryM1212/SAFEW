@@ -21,7 +21,7 @@ export async function isMixerAvailable() {
 export async function getActiveMixes() {
     try {
         const res = await getRequest('mix/request/activeList');
-        console.log("getActiveMixes",res.data);
+        console.log("getActiveMixes", res.data);
         return res.data;
     } catch (e) {
         console.log(e);
@@ -33,3 +33,13 @@ export function getMixURL(mixId) {
     return mixerURL + "dashboard/mix/active/" + mixId;
 }
 
+export async function getMixBoxes(mixId) {
+    try {
+        const res = await getRequest('mix/request/' + mixId + '/list');
+        console.log("getMixBoxes", res.data);
+        return res.data;
+    } catch (e) {
+        console.log(e);
+        return [];
+    }
+}

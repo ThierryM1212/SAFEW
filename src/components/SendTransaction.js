@@ -72,7 +72,7 @@ export default class SendTransaction extends React.Component {
             tokens: tokens,
             nanoErgs: nanoErgs,
             ergsToSend: this.state.ergsToSend,
-            isValidErgToSend: this.validateErgAmount(this.state.ergsToSend,this.state.txFee,nanoErgs),
+            isValidErgToSend: this.validateErgAmount(this.state.ergsToSend, this.state.txFee, nanoErgs),
         })
     }
 
@@ -135,7 +135,7 @@ export default class SendTransaction extends React.Component {
     setErgsToSend = (ergAmount) => {
         this.setState({
             ergsToSend: ergAmount,
-            isValidErgToSend: this.validateErgAmount(ergAmount,this.state.txFee),
+            isValidErgToSend: this.validateErgAmount(ergAmount, this.state.txFee),
         })
     }
 
@@ -197,7 +197,7 @@ export default class SendTransaction extends React.Component {
         if (tokAmount === '' || tokAmount === undefined) { return true; };
         const token = this.state.tokens[index];
         const tokenDecimals = parseInt(token.decimals);
-        console.log("validateTokenAmount", token, tokenDecimals , tokAmount)
+        console.log("validateTokenAmount", token, tokenDecimals, tokAmount)
         const tokAmountStr = tokAmount.toString();
         var tokenAmount = 0;
         if (tokAmountStr.indexOf('.') > -1) {
@@ -307,7 +307,9 @@ export default class SendTransaction extends React.Component {
         const wallet = getWalletById(this.state.walletId);
         return (
             <Fragment>
-                <div className='container card m-1 p-1 d-flex flex-column w-75' style={{ borderColor: wallet.color }}>
+                <div className='container card m-1 p-1 d-flex flex-column w-75'
+                    style={{ borderColor: `rgba(${wallet.color.r},${wallet.color.g},${wallet.color.b}, 0.95)`, }}
+                >
                     <div className='d-flex flex-row justify-content-between align-items-center'>
                         <h5>Send ERGs and tokens - Wallet {wallet.name}</h5>
                         <div className='d-flex flex-row '>

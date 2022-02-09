@@ -27,7 +27,7 @@ export const TOKENID_COMET = '0cd8c9f416e5b1ca9f986a7f10a84191dfb85941619e49e53c
 
 // [token_name, token_icon, token_decimals]
 export const VERIFIED_TOKENS = {
-    ['']: ['', "", 0],
+    ['']: ['', "token-unknown.svg", 0],
     [TOKENID_SIGUSD]: ['SigUSD', "token-sigusd.svg", 2],
     [TOKENID_SIGRSV]: ['SigRSV', "token-sigrsv.svg", 0],
     [TOKENID_KUSHTI]: ['kushti', "token-kushti.svg", 0],
@@ -35,7 +35,6 @@ export const VERIFIED_TOKENS = {
     [TOKENID_ERGOPAD]: ['ergopad', "token-ergopad.svg", 2],
     [TOKENID_LUNADOG]: ['LunaDog', "token-lunadog.svg", 8],
     [TOKENID_NETA]: ['NETA', "token-neta.svg", 6],
-    [TOKENID_COMET]: ['COMET', "token-neta.svg", 0],
   }
 
 // wallet version to handle upgrades (integer)

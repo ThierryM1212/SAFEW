@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="25mm"
+   height="25mm"
+   viewBox="0 0 25.000001 25.000001"
+   version="1.1"
+   id="svg5"
+   sodipodi:docname="token-unknown.svg"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+   inkscape:export-filename="C:\Users\famil\ergo\SAFEW\src\resources\tokens\token-unknown.png"
+   inkscape:export-xdpi="24.383999"
+   inkscape:export-ydpi="24.383999"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="0.72337262"
+     inkscape:cx="-254.36406"
+     inkscape:cy="172.11047"
+     inkscape:window-width="1920"
+     inkscape:window-height="1001"
+     inkscape:window-x="-9"
+     inkscape:window-y="-9"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     scale-x="2.2" />
+  <defs
+     id="defs2">
+    <rect
+       x="308.2782"
+       y="438.22504"
+       width="353.89783"
+       height="391.22299"
+       id="rect4978" />
+    <rect
+       x="308.2782"
+       y="438.22504"
+       width="353.89783"
+       height="391.22299"
+       id="rect4978-5" />
+  </defs>
+  <g
+     inkscape:label="Calque 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-66.437187,-103.19643)">
+    <circle
+       style="fill:#216a94;fill-opacity:1;stroke-width:0.0826821"
+       id="path926"
+       cx="78.937187"
+       cy="115.69643"
+       r="12.5" />
+    <text
+       xml:space="preserve"
+       transform="matrix(0.08340069,0,0,0.07796965,46.021303,68.925459)"
+       id="text4976"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:293.333px;line-height:1.25;font-family:'Arial Rounded MT Bold';-inkscape-font-specification:'Arial Rounded MT Bold, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;white-space:pre;shape-inside:url(#rect4978);fill:#ececec;fill-opacity:1;stroke:none"><tspan
+         x="308.27734"
+         y="702.56407"
+         id="tspan20">?</tspan></text>
+  </g>
+</svg>
