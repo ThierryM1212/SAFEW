@@ -7,7 +7,7 @@ export default class BigQRCode extends React.Component {
         super(props);
         this.state = {
             QRCodeTx: props.QRCodeTx,
-            size: "128",
+            size: "256",
         };
         this.zoomInOut = this.zoomInOut.bind(this);
     }
@@ -28,15 +28,12 @@ export default class BigQRCode extends React.Component {
     }
 
     zoomInOut = () => {
-        var newSize = "128";
-        if (this.state.size === "128") {
-            newSize = "256";
-        }
+        var newSize = "256";
         if (this.state.size === "256") {
             newSize = "512";
         }
         if (this.state.size === "512") {
-            newSize = "128";
+            newSize = "256";
         }
         this.setState({
             size: newSize,
