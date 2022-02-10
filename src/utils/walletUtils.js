@@ -83,11 +83,11 @@ export function upgradeWallet(wallet) {
 export function isUpgradeWalletRequired() {
     const walletList = JSON.parse(localStorage.getItem('walletList'));
     // if a wallet miss the version field, upgrade is required
-    if(walletList.filter(wallet => !Object.keys(wallet).includes("version")).length > 0){
+    if (walletList.filter(wallet => !Object.keys(wallet).includes("version")).length > 0) {
         return true;
     }
     // if a wallet has an older version than the current one
-    if(walletList.filter(wallet => wallet.version < WALLET_VERSION).length > 0){
+    if (walletList.filter(wallet => wallet.version < WALLET_VERSION).length > 0) {
         return true;
     }
     return false;
@@ -125,6 +125,53 @@ export function convertToErgoPay(walletId) {
     wallet.mnemonic = "";
     wallet.ergoPayOnly = true;
     updateWallet(wallet, walletId);
+}
+
+export function deleteWalletAddress(walletId, address) {
+    console.log("deleteWalletAddress", address);
+    var newWallet = getWalletById(walletId);
+    var newAccounts = [];
+    for (var i in newWallet.accounts) {
+        var account = newWallet.accounts[i];
+        var newAddresses = [];
+        for (var j in account.addresses) {
+            var addr = account.addresses[j];
+            if (addr.address !== address) {
+                newAddresses.push(account.addresses[j]);
+            }
+        }
+        account.addresses = newAddresses;
+        newAccounts.push(account);
+    }
+    newWallet.accounts = newAccounts;
+    updateWallet(newWallet, walletId);
+}
+
+export async function addWalletAddress(walletId, address) {
+    // used for ErgoPay wallet, add to account 0
+    console.log("addWalletAddress", address);
+    var newWallet = getWalletById(walletId);
+    var newAccounts = [];
+    for (var i in newWallet.accounts) {
+        var account = newWallet.accounts[i];
+        var newAddresses = [...account.addresses];
+        console.log("addWalletAddress0", i);
+        if (i == 0) {
+            console.log("addWalletAddress1", newAddresses);
+            newAddresses.push(
+                {
+                    "id": account.addresses.length,
+                    "address": address,
+                    "used": (await addressHasTransactions(address)),
+                }
+            );
+            console.log("addWalletAddress2", newAddresses);
+        }
+        account["addresses"] = newAddresses;
+        newAccounts.push(account);
+    }
+    newWallet["accounts"] = newAccounts;
+    updateWallet(newWallet, walletId);
 }
 
 

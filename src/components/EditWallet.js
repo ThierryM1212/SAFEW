@@ -1,8 +1,8 @@
 import React, { Fragment } from 'react';
-import { decryptMnemonic, getWalletById, getWalletNames, isValidPassword, passwordIsValid, updateWallet, changePassword, setChangeAddress, getWalletAddressList, deleteWallet, convertToErgoPay } from "../utils/walletUtils";
+import { decryptMnemonic, getWalletById, getWalletNames, isValidPassword, passwordIsValid, updateWallet, changePassword, setChangeAddress, getWalletAddressList, deleteWallet, convertToErgoPay, deleteWalletAddress, addWalletAddress } from "../utils/walletUtils";
 import { INVALID_PASSWORD_LENGTH_MSG, INVALID_NAME_LENGTH_MSG } from '../utils/walletUtils';
 import { confirmAlert, displayMnemonic, errorAlert, promptPassword, successAlert, waitingAlert } from '../utils/Alerts';
-import { discoverAddresses } from '../ergo-related/ergolibUtils';
+import { discoverAddresses, isValidErgAddress } from '../ergo-related/ergolibUtils';
 import { SketchPicker } from 'react-color';
 import Select from 'react-select';
 import ValidInput from './ValidInput';
@@ -17,6 +17,7 @@ export default class EditWallet extends React.Component {
             walletId: props.walletId,
             setPage: props.setPage,
             walletName: '',
+            walletAddressList: [],
             isValidWalletName: false,
             invalidWalletMessage: 'Not changed',
             mnemonic: '',
@@ -32,6 +33,8 @@ export default class EditWallet extends React.Component {
             walletColor: { r: 141, g: 140, b: 143, a: 1 },
             color: { r: 141, g: 140, b: 143, a: 1 },
             selectedChangeAddress: '',
+            isValidAddressToAdd: false,
+            addressToAdd: '',
         };
         this.updateWalletName = this.updateWalletName.bind(this);
         this.updateWalletColor = this.updateWalletColor.bind(this);
@@ -45,6 +48,7 @@ export default class EditWallet extends React.Component {
         this.showMnemonic = this.showMnemonic.bind(this);
         this.deleteWallet = this.deleteWallet.bind(this);
         this.deleteMnemonic = this.deleteMnemonic.bind(this);
+        this.addAddress = this.addAddress.bind(this);
     }
 
     setWalletName = (name) => {
@@ -146,6 +150,20 @@ export default class EditWallet extends React.Component {
             invalidPassword2Message: validPasswordMessage,
         }));
     };
+    setAddressToAdd = (address) => {
+        this.setState({
+            addressToAdd: address
+        });
+        const wallet = getWalletById(this.state.walletId);
+        const walletAddressList = getWalletAddressList(wallet);
+        if (walletAddressList.includes(address)) {
+            this.setState({ isValidAddressToAdd: false });
+        } else {
+            isValidErgAddress(address).then(isValidAddressToAdd => {
+                this.setState({ isValidAddressToAdd: isValidAddressToAdd });
+            })
+        }
+    };
 
     isValidColor = () => {
         console.log("isValidColor", this.state.color, this.state.walletColor)
@@ -154,12 +172,14 @@ export default class EditWallet extends React.Component {
 
     componentDidMount() {
         const wallet = getWalletById(this.state.walletId);
+        const walletAddressList = getWalletAddressList(wallet);
         console.log("EditWallet componentDidMount wallet", wallet);
         this.setState({
             walletName: wallet.name,
             walletColor: wallet.color,
             color: wallet.color,
             selectedChangeAddress: wallet.changeAddress,
+            walletAddressList: walletAddressList,
         })
     }
 
@@ -222,6 +242,26 @@ export default class EditWallet extends React.Component {
             })
     }
 
+    deleteAddress = (address) => {
+        deleteWalletAddress(this.state.walletId, address);
+        const wallet = getWalletById(this.state.walletId);
+        this.setState({
+            walletAddressList: getWalletAddressList(wallet),
+        });
+    }
+
+    async addAddress() {
+        if (this.state.isValidAddressToAdd) {
+            await addWalletAddress(this.state.walletId, this.state.addressToAdd);
+            const wallet = getWalletById(this.state.walletId);
+            this.setState({
+                walletAddressList: getWalletAddressList(wallet),
+                addressToAdd: '',
+                isValidAddressToAdd: false,
+            });
+        }
+    }
+
     backupWallet = () => {
         const wallet = getWalletById(this.state.walletId);
         var _myArray = JSON.stringify(wallet, null, 4);
@@ -236,7 +276,7 @@ export default class EditWallet extends React.Component {
 
     render() {
         const wallet = getWalletById(this.state.walletId);
-        const walletAddressList = getWalletAddressList(wallet);
+        const walletAddressList = this.state.walletAddressList;
         var optionsChangeAdresses = walletAddressList.map(address => ({ value: address, label: address }));
 
         return (
@@ -294,21 +334,81 @@ export default class EditWallet extends React.Component {
                             </div>
                         </div>
                         <br />
+
+                        <h5 >Select change address</h5>
+                        <div className='d-flex flex-row'>
+                            <Select className='selectReact'
+                                value={{ value: this.state.selectedChangeAddress, label: this.state.selectedChangeAddress }}
+                                onChange={this.setChangeAddress}
+                                options={optionsChangeAdresses}
+                                isSearchable={false}
+                                isMulti={false}
+                            />
+                        </div>
+                        <br />
                         {
-                            wallet.ergoPayOnly ? null :
+                            wallet.ergoPayOnly ?
                                 <Fragment >
-                                    <h5 >Select change address</h5>
-                                    <div className='d-flex flex-row'>
-                                        <Select className='selectReact'
-                                            value={{ value: this.state.selectedChangeAddress, label: this.state.selectedChangeAddress }}
-                                            onChange={this.setChangeAddress}
-                                            options={optionsChangeAdresses}
-                                            isSearchable={false}
-                                            isMulti={false}
-                                        />
+                                    <h5 >Wallet addresses</h5>
+                                    <div className='d-flex flex-column'>
+                                        {
+                                            walletAddressList.map(address =>
+                                                <div key={"address_" + address}
+                                                    className='d-flex flex-row align-items-center'
+                                                >
+                                                    {address}
+                                                    <ImageButton
+                                                        id={"openAddressExplorer" + address}
+                                                        color={"blue"}
+                                                        icon={"open_in_new"}
+                                                        tips={"Open in Explorer"}
+                                                        onClick={() => {
+                                                            const url = localStorage.getItem('explorerWebUIAddress') + 'en/addresses/' + address;
+                                                            window.open(url, '_blank').focus();
+                                                        }}
+                                                    />
+                                                    <ImageButton
+                                                        id={"deleteAddress_" + address}
+                                                        color={"red"}
+                                                        icon={"delete"}
+                                                        tips={"Remove the address from the wallet"}
+                                                        onClick={() => this.deleteAddress(address)}
+                                                    />
+                                                </div>
+                                            )
+                                        }
+                                        <div className='d-flex flex-row'>
+                                            < input type="text"
+                                                size="55"
+                                                id={"addressToAdd"}
+                                                className="form-control"
+                                                onChange={e => this.setAddressToAdd(e.target.value)}
+                                                value={this.state.addressToAdd}
+                                                className={this.state.isValidAddressToAdd ? "validInput m-1" : "invalidInput m-1"}
+                                            />
+                                            <ValidInput id={"isValidAddressToAdd"}
+                                                isValid={this.state.isValidAddressToAdd}
+                                                validMessage="OK"
+                                                invalidMessage="Invalid address" />
+
+                                            {
+                                                this.state.isValidAddressToAdd ?
+                                                    <ImageButton
+                                                        id={"addAddress"}
+                                                        color={"green"}
+                                                        icon={"add"}
+                                                        tips={"Add new address"}
+                                                        onClick={this.addAddress}
+                                                    />
+                                                    : null
+                                            }
+
+                                        </div>
                                     </div>
                                     <br />
-
+                                </Fragment >
+                                :
+                                <Fragment >
                                     <h5 >Spending password</h5>
                                     <div className='d-flex flex-column'>
                                         <label htmlFor="walletPassword" >Password</label>
