@@ -1,13 +1,10 @@
 import React, { Fragment } from 'react';
 import { getTokenBoxV1 } from '../ergo-related/explorer';
-import { getActiveMixes, getMixURL, isMixerAvailable } from '../ergo-related/mixer';
-import { copySuccess } from '../utils/Alerts';
-import { DEFAULT_MIXER_ADDRESS, VERIFIED_TOKENS } from '../utils/constants';
-import { formatERGAmount, formatLongString, formatTokenAmount } from '../utils/walletUtils';
+import { getActiveMixes, isMixerAvailable } from '../ergo-related/mixer';
+import { DEFAULT_MIXER_ADDRESS } from '../utils/constants';
 import ImageButton from './ImageButton';
 import Mix from './Mix';
 import SelectWallet from './SelectWallet';
-import VerifiedTokenImage from './VerifiedTokenImage';
 
 export default class Mixer extends React.Component {
     constructor(props) {
@@ -16,7 +13,7 @@ export default class Mixer extends React.Component {
             mixerAvailable: false,
             mixerAddress: localStorage.getItem('mixerAddress') ?? DEFAULT_MIXER_ADDRESS,
             availableMixes: [],
-            showAvailableMixes: false,
+            showAvailableMixes: true,
             mixedTokenInfo: {},
             walletList: JSON.parse(localStorage.getItem('walletList')) ?? [],
             selectedWalletId: 0,

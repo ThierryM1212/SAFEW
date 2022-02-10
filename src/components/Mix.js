@@ -45,6 +45,12 @@ export default class Mix extends React.Component {
         if (prevProps.walletId !== this.props.walletId) {
             this.setState({ walletId: this.props.walletId })
         }
+        if (prevProps.mix.groupStat.doneMixRound !== this.props.mix.groupStat.doneMixRound
+            || prevProps.mix.status !== this.props.mix.status
+            || prevProps.mix.doneDeposit !== this.props.mix.doneDeposit
+            || prevProps.mix.doneTokenDeposit !== this.props.mix.doneTokenDeposit) {
+            this.setState({ mix: this.props.mix })
+        }
     }
 
     render() {
@@ -201,6 +207,7 @@ export default class Mix extends React.Component {
                                     mixStatus={mix.status}
                                     setPage={this.state.setPage}
                                     updateBoxes={this.updateBoxes}
+                                    mixedTokenInfo={mixedTokenInfo}
                                 />
                             )
                         }

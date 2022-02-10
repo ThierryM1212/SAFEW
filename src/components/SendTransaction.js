@@ -313,13 +313,6 @@ export default class SendTransaction extends React.Component {
                     <div className='d-flex flex-row justify-content-between align-items-center'>
                         <h5>Send ERGs and tokens - Wallet {wallet.name}</h5>
                         <div className='d-flex flex-row '>
-                            <ImageButton
-                                id={"backToWalletList"}
-                                color={"blue"}
-                                icon={"arrow_back"}
-                                tips={"Wallet list"}
-                                onClick={() => this.state.setPage('home')}
-                            />
                         </div>
                     </div>
                     <div className='d-flex flex-row justify-content-left align-items-center card m-1 p-1'>
