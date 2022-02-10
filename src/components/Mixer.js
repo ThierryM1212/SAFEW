@@ -16,15 +16,27 @@ export default class Mixer extends React.Component {
             mixerAvailable: false,
             mixerAddress: localStorage.getItem('mixerAddress') ?? DEFAULT_MIXER_ADDRESS,
             availableMixes: [],
+            showAvailableMixes: false,
             mixedTokenInfo: {},
             walletList: JSON.parse(localStorage.getItem('walletList')) ?? [],
             selectedWalletId: 0,
             setPage: props.setPage,
         };
         this.updateMixList = this.updateMixList.bind(this);
+        this.timer = this.timer.bind(this);
+    }
+
+    componentWillUnmount() {
+        clearInterval(this.state.intervalId);
+    }
+
+    timer() {
+        this.updateMixList(false);
     }
 
     async componentDidMount() {
+        var intervalId = setInterval(this.timer, 10000);
+        this.setState({ intervalId: intervalId });
         await this.updateMixList();
     }
 
@@ -55,6 +67,12 @@ export default class Mixer extends React.Component {
         });
     };
 
+    toggleAvailableMixes = () => {
+        this.setState(prevState => ({
+            showAvailableMixes: !prevState.showAvailableMixes,
+        }))
+    }
+
     render() {
         const selectedWallet = this.state.walletList[this.state.selectedWalletId];
         return (
@@ -78,13 +96,34 @@ export default class Mixer extends React.Component {
                                 </div>
                                 <div className='d-flex flex-column'>
                                     <div className='d-flex flex-row justify-content-between align-items-center'>
-                                        <h4>Available mixes</h4>
+                                        <div className='d-flex flex-row'>
+                                            <ImageButton
+                                                id={"availableMixesToggle"}
+                                                color={"blue"}
+                                                icon={this.state.showAvailableMixes ? "expand_more" : "expand_less"}
+                                                tips={"Show available mixes"}
+                                                onClick={() => this.toggleAvailableMixes()}
+                                            />
+                                            <h4>Available mixes</h4>
+                                            <ImageButton
+                                                id={"addMix"}
+                                                color={"green"}
+                                                icon={"add"}
+                                                tips={"Create a new mix"}
+                                                onClick={() => {
+                                                    const url = this.state.mixerAddress + 'dashboard/mix/active/new';
+                                                    window.open(url, '_blank').focus();
+                                                }}
+                                            />
+                                        </div>
                                         <div className='d-flex flex-row '>
-                                            <SelectWallet selectedWalletId={this.state.selectedWalletId} setWallet={this.setWallet} />
+                                            <SelectWallet selectedWalletId={this.state.selectedWalletId}
+                                                setWallet={this.setWallet} />
                                         </div>
                                     </div>
 
                                     {
+                                        this.state.showAvailableMixes ?
                                         this.state.availableMixes.map(availableMix =>
                                             <Mix key={"mix_" + availableMix.id}
                                                 mix={availableMix}
@@ -93,6 +132,7 @@ export default class Mixer extends React.Component {
                                                 mixedTokenInfo={this.state.mixedTokenInfo}
                                             />
                                         )
+                                        :null
                                     }
 
                                 </div>

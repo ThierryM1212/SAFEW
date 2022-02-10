@@ -333,18 +333,18 @@ function getUtxoContentForAddressList2(utxos, addressList) {
 
 
 export async function getUtxoBalanceForAddressList(inputs, outputs, addressList) {
-    console.log("getUtxoBalanceForAddressList params", inputs, outputs, addressList);
+    //console.log("getUtxoBalanceForAddressList params", inputs, outputs, addressList);
     const inputBal = await getUtxoContentForAddressList(inputs, addressList);
     const outputBal = await getUtxoContentForAddressList(outputs, addressList);
-    console.log("getUtxoBalanceForAddressList", inputBal, outputBal, addressList);
+    //console.log("getUtxoBalanceForAddressList", inputBal, outputBal, addressList);
     return buildBalance(inputBal, outputBal);
 }
 
 export function getUtxoBalanceForAddressList2(inputs, outputs, addressList) {
-    console.log("getUtxoBalanceForAddressList2 params", inputs, outputs, addressList);
+    //console.log("getUtxoBalanceForAddressList2 params", inputs, outputs, addressList);
     const inputBal = getUtxoContentForAddressList2(inputs, addressList);
     const outputBal = getUtxoContentForAddressList2(outputs, addressList);
-    console.log("getUtxoBalanceForAddressList2", inputBal, outputBal, addressList);
+    //console.log("getUtxoBalanceForAddressList2", inputBal, outputBal, addressList);
     return buildBalance(inputBal, outputBal);
 }
 

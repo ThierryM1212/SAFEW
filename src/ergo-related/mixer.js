@@ -9,6 +9,16 @@ async function getRequest(url) {
     });
 }
 
+async function postRequest(url, body = {}) {
+    try {
+        const res = await post(mixerURL + url, body)
+        return { data: res };
+    } catch(err) {
+        console.log("postRequest", err);
+        return { data: err.toString() }
+    }
+}
+
 export async function isMixerAvailable() {
     try {
         const res = await getRequest('info');
@@ -42,4 +52,22 @@ export async function getMixBoxes(mixId) {
         console.log(e);
         return [];
     }
+}
+
+export async function setBoxWithdrawAddress (boxId, address) {
+    return await postRequest('mix/withdraw', {
+            "nonStayAtMix": false,
+            "withdrawAddress": address,
+            "mixId": boxId,
+          }
+    )
+}
+
+export async function withdrawBox (boxId, address) {
+    return await postRequest('mix/withdraw', {
+            "nonStayAtMix": true,
+            "withdrawAddress": address,
+            "mixId": boxId,
+          }
+    )
 }

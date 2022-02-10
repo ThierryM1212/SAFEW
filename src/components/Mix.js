@@ -3,6 +3,7 @@ import { getMixBoxes, getMixURL } from '../ergo-related/mixer';
 import { copySuccess } from '../utils/Alerts';
 import { formatERGAmount, formatLongString, formatTokenAmount, getWalletById } from '../utils/walletUtils';
 import ImageButton from './ImageButton';
+import MixBox from './MixBox';
 import VerifiedTokenImage from './VerifiedTokenImage';
 
 
@@ -14,20 +15,35 @@ export default class Mix extends React.Component {
             walletId: props.walletId,
             setPage: props.setPage,
             mixedTokenInfo: props.mixedTokenInfo,
-            mixBoxes : [],
+            mixBoxes: [],
         };
-        //this.setURL = this.setURL.bind(this);
+        this.updateBoxes = this.updateBoxes.bind(this);
+        this.timer = this.timer.bind(this);
+    }
+
+    componentWillUnmount() {
+        clearInterval(this.state.intervalId);
+    }
+
+    timer() {
+        this.updateBoxes();
+    }
+
+    async updateBoxes() {
+        const mixBoxes = await getMixBoxes(this.state.mix.id);
+        this.setState({ mixBoxes: mixBoxes })
     }
 
     async componentDidMount() {
-        const mixBoxes = await getMixBoxes(this.state.mix.id);
-        this.setState({mixBoxes: mixBoxes})
+        var intervalId = setInterval(this.timer, 10000);
+        this.setState({ intervalId: intervalId });
+        await this.updateBoxes();
     }
 
     componentDidUpdate(prevProps, prevState) {
         //console.log("componentDidUpdate", prevProps, prevState, this.props, this.state);
         if (prevProps.walletId !== this.props.walletId) {
-            this.setState({walletId: this.props.walletId})
+            this.setState({ walletId: this.props.walletId })
         }
     }
 
@@ -45,7 +61,7 @@ export default class Mix extends React.Component {
                 decimals: mixedTokenInfo[mix.mixingTokenId].decimals,
             }];
         }
-        
+
         console.log("Mix render", mix, mixedTokenInfo, mixBoxes)
         return (
             <Fragment>
@@ -152,7 +168,7 @@ export default class Mix extends React.Component {
                                             color={"white"}
                                             icon={"send"}
                                             tips={"Deposit - Start mix"}
-                                            onClick={() => this.state.setPage('send', this.state.selectedWalletId,
+                                            onClick={() => this.state.setPage('send', this.state.walletId,
                                                 {
                                                     address: mix.deposit,
                                                     amount: Math.max(0, mix.amount - mix.doneDeposit),
@@ -174,6 +190,22 @@ export default class Mix extends React.Component {
                                 </div>
                             </div>
                     }
+                    <div className='d-flex flex-column '>
+                        <div className='d-flex flex-row '>
+                            Withdraw Addresses
+                        </div>
+                        {
+                            mixBoxes.map(box =>
+                                <MixBox
+                                    box={box}
+                                    mixStatus={mix.status}
+                                    setPage={this.state.setPage}
+                                    updateBoxes={this.updateBoxes}
+                                />
+                            )
+                        }
+
+                    </div>
                 </div>
             </Fragment>
         )
