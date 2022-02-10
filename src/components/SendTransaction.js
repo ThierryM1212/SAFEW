@@ -297,7 +297,7 @@ export default class SendTransaction extends React.Component {
                 errorAlert("Failed to sign transaction", e);
                 return;
             }
-            const res = await sendTx(signedTx);
+            await sendTx(signedTx);
             //await delay(3000);
             this.state.setPage('transactions', this.state.walletId);
         }

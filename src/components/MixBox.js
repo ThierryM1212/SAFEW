@@ -70,10 +70,9 @@ export default class MixBox extends React.Component {
                         <input type="text"
                             size="55"
                             id={"address" + this.state.box.id}
-                            className="form-control"
                             onChange={e => this.setAddress(e.target.value)}
                             value={this.state.address}
-                            className={this.state.isValidAddress ? "validInput m-1" : "invalidInput m-1"}
+                            className={this.state.isValidAddress ? "form-control validInput m-1" : "form-control invalidInput m-1"}
                             disabled={this.state.box.withdrawStatus !== "nothing"}
                         />
                         <ValidInput id={"isValidAddress" + this.state.box.id}

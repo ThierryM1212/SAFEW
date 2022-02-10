@@ -44,7 +44,7 @@ export default class VerifiedTokenImage extends React.Component {
 
     render() {
         return (
-            <img src={this.renderSwitch(this.state.tokenId)} />
+            <img src={this.renderSwitch(this.state.tokenId)} alt={this.state.tokenId}/>
         )
     }
 }

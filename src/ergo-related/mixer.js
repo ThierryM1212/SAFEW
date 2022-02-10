@@ -21,7 +21,7 @@ async function postRequest(url, body = {}) {
 
 export async function isMixerAvailable() {
     try {
-        const res = await getRequest('info');
+        await getRequest('info');
         return true;
     } catch (e) {
         return false;

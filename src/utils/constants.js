@@ -27,7 +27,7 @@ export const TOKENID_COMET = '0cd8c9f416e5b1ca9f986a7f10a84191dfb85941619e49e53c
 
 // [token_name, token_icon, token_decimals]
 export const VERIFIED_TOKENS = {
-    ['']: ['', "token-unknown.svg", 0],
+    '': ['', "token-unknown.svg", 0],
     [TOKENID_SIGUSD]: ['SigUSD', "token-sigusd.svg", 2],
     [TOKENID_SIGRSV]: ['SigRSV', "token-sigrsv.svg", 0],
     [TOKENID_KUSHTI]: ['kushti', "token-kushti.svg", 0],

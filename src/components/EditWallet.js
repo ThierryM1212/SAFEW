@@ -8,7 +8,6 @@ import Select from 'react-select';
 import ValidInput from './ValidInput';
 import ImageButton from './ImageButton';
 import { MAX_NUMBER_OF_UNUSED_ADDRESS_PER_ACCOUNT } from '../utils/constants';
-import { rgbToHex } from '../utils/utils';
 
 export default class EditWallet extends React.Component {
     constructor(props) {
@@ -301,10 +300,9 @@ export default class EditWallet extends React.Component {
                         <div className='d-flex flex-row align-items-center col-sm'>
                             <input type="text"
                                 id="walletName"
-                                className="form-control"
                                 onChange={e => this.setWalletName(e.target.value)}
                                 value={this.state.walletName}
-                                className={this.state.isValidWalletName ? "validInput m-1" : "invalidInput m-1"}
+                                className={this.state.isValidWalletName ? "form-control validInput m-1" : "form-control invalidInput m-1"}
                             />
                             <ValidInput id="isValidWalletName" isValid={this.state.isValidWalletName} validMessage="OK" invalidMessage={this.state.invalidWalletMessage} />
                             &nbsp;
@@ -381,10 +379,9 @@ export default class EditWallet extends React.Component {
                                             < input type="text"
                                                 size="55"
                                                 id={"addressToAdd"}
-                                                className="form-control"
                                                 onChange={e => this.setAddressToAdd(e.target.value)}
                                                 value={this.state.addressToAdd}
-                                                className={this.state.isValidAddressToAdd ? "validInput m-1" : "invalidInput m-1"}
+                                                className={this.state.isValidAddressToAdd ? "form-control validInput m-1" : "form-control invalidInput m-1"}
                                             />
                                             <ValidInput id={"isValidAddressToAdd"}
                                                 isValid={this.state.isValidAddressToAdd}
@@ -416,10 +413,9 @@ export default class EditWallet extends React.Component {
                                             <div className='d-flex flex-row'>
                                                 <input type="password"
                                                     id="passwordOld"
-                                                    className="form-control "
                                                     onChange={e => this.setPasswordOld(e.target.value)}
                                                     value={this.state.passwordOld}
-                                                    className={this.state.isValidPasswordOld ? "validInput m-1" : "invalidInput m-1"}
+                                                    className={this.state.isValidPasswordOld ? "form-control validInput m-1" : "form-control invalidInput m-1"}
                                                 />
                                                 <ValidInput
                                                     id="isValidPasswordOld"
@@ -436,20 +432,18 @@ export default class EditWallet extends React.Component {
                                                 <div className='d-flex flex-row align-items-center'>
                                                     <input type="password"
                                                         id="password1"
-                                                        className="form-control "
                                                         onChange={e => this.setPassword1(e.target.value)}
                                                         value={this.state.password1}
-                                                        className={this.state.isValidPassword1 ? "validInput m-1" : "invalidInput m-1"}
+                                                        className={this.state.isValidPassword1 ? "form-control validInput m-1" : "form-control invalidInput m-1"}
                                                     />
                                                     <ValidInput id="isValidPassword1" isValid={this.state.isValidPassword1} validMessage="OK" invalidMessage={this.state.invalidPassword1Message} />
                                                 </div>
                                                 <div className='d-flex flex-row align-items-center'>
                                                     <input type="password"
                                                         id="password2"
-                                                        className="form-control "
                                                         onChange={e => this.setPassword2(e.target.value)}
                                                         value={this.state.password2}
-                                                        className={this.state.isValidPassword2 ? "validInput m-1" : "invalidInput m-1"}
+                                                        className={this.state.isValidPassword2 ? "form-control validInput m-1" : "form-control invalidInput m-1"}
                                                     />
                                                     <ValidInput id="isValidPassword2" isValid={this.state.isValidPassword2} validMessage="OK" invalidMessage={this.state.invalidPassword2Message} />
                                                     <button className="btn btn-outline-info"

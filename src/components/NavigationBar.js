@@ -71,7 +71,7 @@ export default function NavigationBar(props) {
                         data-tip
                         data-for="GitLinkId"
                     >
-                        <a href="https://github.com/ThierryM1212/SAFEW" target="_blank">
+                        <a href="https://github.com/ThierryM1212/SAFEW" target="_blank" rel="noreferrer">
                             <img alt="GitLink" src={GitLogo} width={30} height={30} />
                         </a>
                     </span>

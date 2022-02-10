@@ -1,4 +1,4 @@
-import { boxByBoxId, boxById, currentHeight, getTokenBoxV1 } from "./explorer";
+import { boxByBoxId, currentHeight, getTokenBoxV1 } from "./explorer";
 import { encodeContract, ergoTreeToAddress } from "./serializer";
 
 /* global BigInt */
@@ -352,7 +352,7 @@ function buildBalance(inputBal, outputBal) {
     //console.log("buildBalance1", inputBal, outputBal)
     const balValue = parseInt(outputBal.value.toString()) - parseInt(inputBal.value.toString());
     var balTokens = [];
-    const tokenList = [... new Set([inputBal.tokens.map(tok => tok.tokenId), outputBal.tokens.map(tok => tok.tokenId)].flat())];
+    const tokenList = [...new Set([inputBal.tokens.map(tok => tok.tokenId), outputBal.tokens.map(tok => tok.tokenId)].flat())];
     for (const tokId of tokenList) {
 
         var tokAmount = 0, decimals = 0, tokenName = '';

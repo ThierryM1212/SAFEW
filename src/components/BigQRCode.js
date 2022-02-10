@@ -54,6 +54,7 @@ export default class BigQRCode extends React.Component {
                         <img src={this.state.QRCodeTx}
                             width={this.state.size}
                             height={this.state.size}
+                            alt="Ergopay reduced transaction"
                         />
                     </span>
                     <ReactTooltip id="BigQRCode" html={true} delayShow={400}>

@@ -100,10 +100,10 @@ export default class AddWallet extends React.Component {
             });
             return;
         }
-        var swal = waitingAlert("Searching existing addresses...");
+        waitingAlert("Searching existing addresses...");
         addNewWallet(this.state.walletName, this.state.mnemonic, this.state.password1, this.state.color).then((numWal) => {
             console.log("saveWallet", this.state.mnemonic)
-            swal = displayMnemonic(this.state.mnemonic).then(res => {
+            displayMnemonic(this.state.mnemonic).then(res => {
                 this.props.setPage('home');
             });
         });
@@ -134,10 +134,9 @@ export default class AddWallet extends React.Component {
                 <div className='d-flex flex-row align-items-center col-sm'>
                     <input type="text"
                         id="address"
-                        className="form-control"
                         onChange={e => this.setAddress(e.target.value)}
                         value={this.state.address}
-                        className={this.state.isValidAddress ? "validInput m-1" : "invalidInput m-1"}
+                        className={this.state.isValidAddress ? "form-control validInput m-1" : "form-control invalidInput m-1"}
                     />
                     <ValidInput id="isValidAddress" isValid={this.state.isValidAddress} validMessage="OK" invalidMessage={this.state.invalidAddressMessage} />
                 </div>
@@ -180,20 +179,18 @@ export default class AddWallet extends React.Component {
                         <div className='d-flex flex-row align-items-center'>
                             <input type="password"
                                 id="password1"
-                                className="form-control "
                                 onChange={e => this.setPassword1(e.target.value)}
                                 value={this.state.password1}
-                                className={this.state.isValidPassword1 ? "validInput m-1" : "invalidInput m-1"}
+                                className={this.state.isValidPassword1 ? "form-control validInput m-1" : "form-control invalidInput m-1"}
                             />
                             <ValidInput id="isValidPassword1" isValid={this.state.isValidPassword1} validMessage="OK" invalidMessage={this.state.invalidPassword1Message} />
                         </div>
                         <div className='d-flex flex-row align-items-center'>
                             <input type="password"
                                 id="password2"
-                                className="form-control "
                                 onChange={e => this.setPassword2(e.target.value)}
                                 value={this.state.password2}
-                                className={this.state.isValidPassword2 ? "validInput m-1" : "invalidInput m-1"}
+                                className={this.state.isValidPassword2 ? "form-control validInput m-1" : "form-control invalidInput m-1"}
                             />
                             <ValidInput id="isValidPassword2" isValid={this.state.isValidPassword2} validMessage="OK" invalidMessage={this.state.invalidPassword2Message} />
                         </div>
@@ -218,10 +215,9 @@ export default class AddWallet extends React.Component {
                             <div className='d-flex flex-row align-items-center col-sm-4'>
                                 <input type="text"
                                     id="walletName"
-                                    className="form-control"
                                     onChange={e => this.setWalletName(e.target.value)}
                                     value={this.state.walletName}
-                                    className={this.state.isValidWalletName ? "validInput m-1" : "invalidInput m-1"}
+                                    className={this.state.isValidWalletName ? "form-control validInput m-1" : "form-control invalidInput m-1"}
                                 />
                                 <ValidInput id="isValidWalletName" isValid={this.state.isValidWalletName} validMessage="OK" invalidMessage={this.state.invalidWalletMessage} />
                             </div>

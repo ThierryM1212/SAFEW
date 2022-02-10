@@ -9,7 +9,6 @@ import { DEFAULT_EXPLORER_API_ADDRESS, DEFAULT_EXPLORER_WEBUI_ADDRESS, DEFAULT_M
 import SendTransaction from './components/SendTransaction';
 import TransactionList from './components/TransactionList';
 import SignPopup from './components/SignPopup';
-import { isMixerAvailable } from './ergo-related/mixer';
 import ConnectWalletPopup from './components/ConnectWalletPopup';
 import DisconnectWallet from './components/DisconnectWallet';
 import Mixer from './components/Mixer';
@@ -45,12 +44,6 @@ export default class App extends React.Component {
         localStorage.setItem('walletList', localStorage.getItem('walletList') ?? JSON.stringify([]));
         localStorage.setItem('expertMode', localStorage.getItem('expertMode') ?? "false");
         localStorage.setItem('hideUsedEmptyAddress', localStorage.getItem('hideUsedEmptyAddress') ?? "true");
-        let walletList = localStorage.getItem('walletList');
-        try {
-            walletList = JSON.parse(walletList);
-        } catch (e) {
-            localStorage.setItem('walletList', JSON.stringify([]));
-        }
         // handle wallet version and upgrade
         if (isUpgradeWalletRequired()) {
             upgradeWallets();
@@ -69,10 +62,6 @@ export default class App extends React.Component {
             setPageParam: setPageParam,
         });
     };
-
-    //componentDidUpdate(prevProps, prevState) {
-    //    console.log("App componentDidUpdate", prevProps, prevState, this.props, this.state);
-    //}
 
     componentDidMount() {
         if (!this.state.disclaimerAccepted) {
@@ -98,42 +87,43 @@ export default class App extends React.Component {
         switch (this.state.page) {
             case 'home':
                 page = <WalletList setPage={this.setPage} />
-                break
+                break;
             case 'add':
                 page = <AddWallet ergoPayOnly={false} setPage={this.setPage} />
-                break
+                break;
             case 'addErgoPay':
                 page = <AddWallet ergoPayOnly={true} setPage={this.setPage} />
-                break
+                break;
             case 'edit':
                 page = <EditWallet setPage={this.setPage} walletId={this.state.walletId} />
-                break
+                break;
             case 'send':
                 page = <SendTransaction setPage={this.setPage} walletId={this.state.walletId} iniTran={this.state.setPageParam}/>
-                break
+                break;
             case 'transactions':
                 page = <TransactionList setPage={this.setPage} walletId={this.state.walletId} />
-                break
+                break;
             case 'config':
                 page = <Config setPage={this.setPage} />
-                break
+                break;
             case 'disconnect':
                 page = <DisconnectWallet />
-                break
+                break;
             case 'mixer':
                 page = <Mixer setPage={this.setPage} />
-                break
+                break;
             case 'connectPopup':
                 page = <ConnectWalletPopup />
-                break
+                break;
             case 'signPopup':
                 page = <SignPopup />
-                break
+                break;
             case 'empty':
                 page = null;
+                break;
             default:
                 page = null;
-                break
+                break;
         }
 
         return (

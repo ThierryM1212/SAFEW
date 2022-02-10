@@ -6,7 +6,6 @@ import ImageButton from './ImageButton';
 import Account from './Account';
 import Address from './Address';
 import { errorAlert, promptPassword } from '../utils/Alerts';
-import { rgbToHex } from '../utils/utils';
 
 export default class Wallet extends React.Component {
     constructor(props) {
@@ -76,10 +75,6 @@ export default class Wallet extends React.Component {
     }
 
     render() {
-        var addressList = [];
-        if (this.state.addressContentList !== undefined) {
-            addressList = this.state.addressContentList.map(addrContent => addrContent.address);
-        }
         const walletAddressList = this.state.wallet.accounts.map(account => account.addresses).flat();
         const walletColor = this.state.wallet.color;
         return (

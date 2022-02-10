@@ -71,7 +71,6 @@ export default class Mixer extends React.Component {
     }
 
     render() {
-        const selectedWallet = this.state.walletList[this.state.selectedWalletId];
         return (
             <Fragment >
                 <div className='container card w-75 m-2 p-2 '>
@@ -88,7 +87,7 @@ export default class Mixer extends React.Component {
                     {
                         this.state.mixerAvailable ?
                             <div className='d-flex flex-column'>
-                                <div>ErgoMixer available at: <a href={this.state.mixerAddress} target='_blank'>
+                                <div>ErgoMixer available at: <a href={this.state.mixerAddress} target='_blank' rel="noreferrer" >
                                     {this.state.mixerAddress}</a>
                                 </div>
                                 <div className='d-flex flex-column'>
@@ -139,7 +138,7 @@ export default class Mixer extends React.Component {
                                 <div>Ergo mixer not found at: {this.state.mixerAddress}</div>
                                 <div>
                                     It can be downloaded at:&nbsp;
-                                    <a href='https://github.com/ergoMixer/ergoMixBack/releases' target='_blank'>
+                                    <a href='https://github.com/ergoMixer/ergoMixBack/releases' target='_blank' rel="noreferrer">
                                         https://github.com/ergoMixer/ergoMixBack/releases
                                     </a>
                                 </div>

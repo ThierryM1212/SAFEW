@@ -7,14 +7,14 @@ export function rgbToHex(r, g, b) {
 
 function componentToHex(c) {
     var hex = c.toString(16);
-    return hex.length == 1 ? "0" + hex : hex;
+    return parseInt(hex.length) === parseInt(1) ? "0" + hex : hex;
 }
 
 export function hexToRgbA(hex){
     var c;
     if(/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)){
         c= hex.substring(1).split('');
-        if(c.length== 3){
+        if(parseInt(c.length) === parseInt(3)){
             c= [c[0], c[0], c[1], c[1], c[2], c[2]];
         }
         c= '0x'+c.join('');
