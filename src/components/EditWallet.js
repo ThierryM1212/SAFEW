@@ -1,5 +1,5 @@
 import React, { Fragment } from 'react';
-import { decryptMnemonic, getWalletById, getWalletNames, isValidPassword, passwordIsValid, updateWallet, changePassword, setChangeAddress, getWalletAddressList, deleteWallet } from "../utils/walletUtils";
+import { decryptMnemonic, getWalletById, getWalletNames, isValidPassword, passwordIsValid, updateWallet, changePassword, setChangeAddress, getWalletAddressList, deleteWallet, convertToErgoPay } from "../utils/walletUtils";
 import { INVALID_PASSWORD_LENGTH_MSG, INVALID_NAME_LENGTH_MSG } from '../utils/walletUtils';
 import { confirmAlert, displayMnemonic, errorAlert, promptPassword, successAlert, waitingAlert } from '../utils/Alerts';
 import { discoverAddresses } from '../ergo-related/ergolibUtils';
@@ -44,6 +44,7 @@ export default class EditWallet extends React.Component {
         this.searchAddresses = this.searchAddresses.bind(this);
         this.showMnemonic = this.showMnemonic.bind(this);
         this.deleteWallet = this.deleteWallet.bind(this);
+        this.deleteMnemonic = this.deleteMnemonic.bind(this);
     }
 
     setWalletName = (name) => {
@@ -189,6 +190,21 @@ export default class EditWallet extends React.Component {
         }
     }
 
+    async deleteMnemonic() {
+        var message = "You will still be able to sign the transactions using ErgoPay.<br/>";
+        message += "Using the same wallet from the iOS or Android wallet v1.6+.<br/>";
+        message += "You won't be able to sign transactions in SAFEW anymore.";
+        confirmAlert("Delete the mnemonic for " + this.state.walletName + "?",
+            message,
+            "Delete")
+            .then(res => {
+                if (res.isConfirmed) {
+                    convertToErgoPay(this.state.walletId);
+                    this.state.setPage('home');
+                }
+            })
+    }
+
     async deleteWallet() {
         confirmAlert("Delete the wallet " + this.state.walletName + "?",
             "The wallet will be deleted from the application but will stay in the Ergo blockchain.<br/>It can be restored at any time with the mnemonic.",
@@ -230,7 +246,7 @@ export default class EditWallet extends React.Component {
                         borderColor: `rgba(${this.state.color.r},${this.state.color.g},${this.state.color.b}, 0.95)`,
                     }}>
                     <div className='d-flex flex-row justify-content-between editWalletCard'>
-                        <h4>Update an Ergo{ wallet.ergoPayOnly ? 'Pay': null } wallet - {this.state.walletName}</h4>
+                        <h4>Update an Ergo{wallet.ergoPayOnly ? 'Pay' : null} wallet - {this.state.walletName}</h4>
 
                         <ImageButton
                             id={"backToWalletList"}
@@ -371,6 +387,16 @@ export default class EditWallet extends React.Component {
                                             <button className="btn btn-outline-info"
                                                 onClick={this.showMnemonic}
                                             >Show Mnemonic</button>
+                                        </div>
+                                    </div>
+                                    <br />
+
+                                    <h5 >Convert to Ergopay (delete mnemonic)</h5>
+                                    <div className='d-flex flex-column'>
+                                        <div>
+                                            <button className="btn btn-outline-info"
+                                                onClick={this.deleteMnemonic}
+                                            >Convert to Ergopay wallet</button>
                                         </div>
                                     </div>
                                     <br />

@@ -120,6 +120,12 @@ export function changePassword(encryptedMnemonic, oldPassword, newPassword) {
     return CryptoJS.AES.encrypt(CryptoJS.AES.decrypt(encryptedMnemonic, oldPassword + PASSWORD_SALT).toString(CryptoJS.enc.Utf8), newPassword + PASSWORD_SALT).toString();
 }
 
+export function convertToErgoPay(walletId) {
+    var wallet = getWalletById(walletId);
+    wallet.mnemonic = "";
+    wallet.ergoPayOnly = true;
+    updateWallet(wallet, walletId);
+}
 
 
 // return formatted token amount like 6,222,444.420
