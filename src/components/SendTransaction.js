@@ -203,7 +203,12 @@ export default class SendTransaction extends React.Component {
         if (tokAmountStr.indexOf('.') > -1) {
             var str = tokAmountStr.split(".");
             str[1] = str[1].replace(/0+$/g, ""); //remove trailing 0
-            tokenAmount = parseInt(str[0]) * Math.pow(10, tokenDecimals) + parseInt(str[1] + '0'.repeat(tokenDecimals - str[1].length));
+            console.log("validateTokenAmount2",str[1].length)
+            if (str[1].length > tokenDecimals) {
+                return false;
+            } else {
+                tokenAmount = parseInt(str[0]) * Math.pow(10, tokenDecimals) + parseInt(str[1] + '0'.repeat(tokenDecimals - str[1].length));
+            }
         } else {
             tokenAmount = parseInt(tokAmount.toString()) * Math.pow(10, tokenDecimals);
         }
