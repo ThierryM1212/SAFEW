@@ -39,6 +39,19 @@ export default class MixBox extends React.Component {
         });
     }
 
+    componentDidUpdate(prevProps, prevState) {
+        if (prevProps.box.status !== this.props.box.status
+            || prevProps.box.withdrawStatus !== this.props.box.withdrawStatus
+            || prevProps.box.withdrawTxId !== this.props.box.withdrawTxId
+            || prevProps.box.lastMixTime !== this.props.box.lastMixTime
+            || prevProps.box.rounds !== this.props.box.rounds)
+            {
+                this.setState({
+                    box: this.props.box,
+                });
+            }
+    }
+
     async setWithdrawAddress() {
         await setBoxWithdrawAddress(this.state.box.id, this.state.address);
         await this.state.updateBoxes();
