@@ -13,7 +13,7 @@ async function postRequest(url, body = {}) {
     try {
         const res = await post(mixerURL + url, body)
         return { data: res };
-    } catch(err) {
+    } catch (err) {
         console.log("postRequest", err);
         return { data: err.toString() }
     }
@@ -54,20 +54,71 @@ export async function getMixBoxes(mixId) {
     }
 }
 
-export async function setBoxWithdrawAddress (boxId, address) {
+export async function setBoxWithdrawAddress(boxId, address) {
     return await postRequest('mix/withdraw', {
-            "nonStayAtMix": false,
-            "withdrawAddress": address,
-            "mixId": boxId,
-          }
+        "nonStayAtMix": false,
+        "withdrawAddress": address,
+        "mixId": boxId,
+    }
     )
 }
 
-export async function withdrawBox (boxId, address) {
+export async function withdrawBox(boxId, address) {
     return await postRequest('mix/withdraw', {
-            "nonStayAtMix": true,
-            "withdrawAddress": address,
-            "mixId": boxId,
-          }
+        "nonStayAtMix": true,
+        "withdrawAddress": address,
+        "mixId": boxId,
+    }
     )
+}
+
+export async function getCovertAddresses() {
+    try {
+        const res = await getRequest('covert/list');
+        console.log("getCovertAddresses", res.data);
+        return res.data;
+    } catch (e) {
+        console.log(e);
+        return [];
+    }
+}
+
+export async function addCovertAddress(name, numround, addressList) {
+    return await postRequest('covert', {
+        "addresses": addressList,
+        "numRounds": numround,
+        "nameCovert": name
+    }
+    )
+}
+
+export async function updateCoverName(covertId, name) {
+    return await postRequest('covert/' + covertId + '/name', {
+        "nameCovert": name
+    }
+    )
+}
+
+export async function updateCoverRingAmount(covertId, tokenId, amount) {
+    return await postRequest('covert/' + covertId + '/asset', {
+        "tokenId": tokenId,
+        "ring": amount
+    })
+}
+
+export async function getCovertWithdrawAddresses(covertId) {
+    try {
+        const res = await getRequest('covert/' + covertId + '/address');
+        console.log("getCovertWithdrawAddresses", res.data);
+        return res.data;
+    } catch (e) {
+        console.log(e);
+        return [];
+    }
+}
+
+export async function setCovertWithdrawAddresses(covertId, addressList) {
+    return await postRequest('covert/' + covertId + '/address', {
+        "addresses": addressList
+    })
 }
