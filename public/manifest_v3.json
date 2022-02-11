@@ -2,7 +2,7 @@
 {
     "short_name": "SAFEW",
     "name": "Simple And Fast Ergo Wallet",
-    "version": "0.1",
+    "version": "0.3",
     "action": {},
 
     "background": {
@@ -15,7 +15,7 @@
     "manifest_version": 3,
     "web_accessible_resources": [{
       "resources": [
-          "8652f0726f5673c6bedb.module.wasm",
+          "b06b9eebf7a559982588.module.wasm",
           "index.html",
           "contentScript.js"
          ],
