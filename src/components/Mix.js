@@ -163,26 +163,30 @@ export default class Mix extends React.Component {
                                         }
                                     </div>
 
+                                    {
+                                        selectedWallet ?
+                                            <div className='card m-1 p-1 d-flex align-items_center'
+                                                style={{
+                                                    borderColor: `rgba(${selectedWallet.color.r},${selectedWallet.color.g},${selectedWallet.color.b}, 0.95)`,
+                                                    backgroundColor: `rgba(${selectedWallet.color.r},${selectedWallet.color.g},${selectedWallet.color.b}, 0.10)`
+                                                }}>
+                                                <ImageButton
+                                                    id={"mixTransaction"}
+                                                    color={"white"}
+                                                    icon={"send"}
+                                                    tips={"Deposit - Start mix"}
+                                                    onClick={() => this.state.setPage('send', this.state.walletId,
+                                                        {
+                                                            address: mix.deposit,
+                                                            amount: Math.max(0, mix.amount - mix.doneDeposit),
+                                                            tokens: mixTokens
+                                                        }
+                                                    )}
+                                                />
+                                            </div>
+                                            : null
+                                    }
 
-                                    <div className='card m-1 p-1 d-flex align-items_center'
-                                        style={{
-                                            borderColor: `rgba(${selectedWallet.color.r},${selectedWallet.color.g},${selectedWallet.color.b}, 0.95)`,
-                                            backgroundColor: `rgba(${selectedWallet.color.r},${selectedWallet.color.g},${selectedWallet.color.b}, 0.10)`
-                                        }}>
-                                        <ImageButton
-                                            id={"mixTransaction"}
-                                            color={"white"}
-                                            icon={"send"}
-                                            tips={"Deposit - Start mix"}
-                                            onClick={() => this.state.setPage('send', this.state.walletId,
-                                                {
-                                                    address: mix.deposit,
-                                                    amount: Math.max(0, mix.amount - mix.doneDeposit),
-                                                    tokens: mixTokens
-                                                }
-                                            )}
-                                        />
-                                    </div>
                                 </div>
                             </div>
                             :

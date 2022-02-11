@@ -25,19 +25,23 @@ export default function SelectWallet(props) {
     return (
         <Fragment>
             <div>
-                <div className='d-flex flex-row '>
-                    <Select className='selectReact'
-                        value={{
-                            value: props.selectedWalletId,
-                            label: selectedWallet.name
-                        }}
-                        onChange={(wallet) => props.setWallet(wallet.value)}
-                        options={optionWalletList}
-                        isSearchable={false}
-                        isMulti={false}
-                        styles={customStyles(selectedWallet)}
-                    />
-                </div>
+                {
+                    selectedWallet ?
+                        <div className='d-flex flex-row '>
+                            <Select className='selectReact'
+                                value={{
+                                    value: props.selectedWalletId,
+                                    label: selectedWallet.name
+                                }}
+                                onChange={(wallet) => props.setWallet(wallet.value)}
+                                options={optionWalletList}
+                                isSearchable={false}
+                                isMulti={false}
+                                styles={customStyles(selectedWallet)}
+                            />
+                        </div>
+                        : null
+                }
             </div>
         </Fragment>
     )

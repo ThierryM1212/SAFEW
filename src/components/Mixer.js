@@ -15,9 +15,9 @@ export default class Mixer extends React.Component {
             mixerAvailable: false,
             mixerAddress: localStorage.getItem('mixerAddress') ?? DEFAULT_MIXER_ADDRESS,
             availableMixes: [],
-            showAvailableMixes: true,
+            showAvailableMixes: false,
             availableCoverts: [],
-            showAvailableCovert: true,
+            showAvailableCovert: false,
             mixedTokenInfo: {},
             walletList: JSON.parse(localStorage.getItem('walletList')) ?? [],
             selectedWalletId: 0,
@@ -154,9 +154,6 @@ export default class Mixer extends React.Component {
                                     <br />
 
                                     <h4>Covert addresses</h4>
-
-                                    <h5>Create new covert address</h5>
-                                    <AddCovertAddress updateCoverList={this.updateMixList} />
                                     <div className='d-flex flex-row'>
                                         <ImageButton
                                             id={"availableCovertAddressesToggle"}
@@ -177,7 +174,6 @@ export default class Mixer extends React.Component {
                                             }}
                                         />
                                     </div>
-
                                     {
                                         this.state.showAvailableCovert ?
                                             this.state.availableCoverts.map(availableCovert =>
@@ -191,6 +187,8 @@ export default class Mixer extends React.Component {
                                             )
                                             : null
                                     }
+                                    <h5>Create new covert address</h5>
+                                    <AddCovertAddress updateCoverList={this.updateMixList} />
                                 </div>
                             </div>
                             :

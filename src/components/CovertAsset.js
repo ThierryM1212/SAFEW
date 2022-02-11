@@ -112,32 +112,36 @@ export default class CovertAsset extends React.Component {
                             Deposit amount: {asset.tokenId === "" ? formatERGAmount(asset.need) : formatTokenAmount(asset.need, mixedTokenInfo[asset.tokenId].decimals)}
                             &nbsp;(done {asset.tokenId === "" ? formatERGAmount(asset.confirmedDeposit) : formatTokenAmount(asset.confirmedDeposit, mixedTokenInfo[asset.tokenId].decimals)})
                         </div>
-                        <div className='card m-1 p-1 d-flex align-items_center'
-                            style={{
-                                borderColor: `rgba(${selectedWallet.color.r},${selectedWallet.color.g},${selectedWallet.color.b}, 0.95)`,
-                                backgroundColor: `rgba(${selectedWallet.color.r},${selectedWallet.color.g},${selectedWallet.color.b}, 0.10)`
-                            }}>
-                            <ImageButton
-                                id={"mixTransaction"}
-                                color={"white"}
-                                icon={"send"}
-                                tips={"Send to covert address"}
-                                onClick={() => this.state.setPage('send', this.state.walletId,
-                                    {
-                                        address: this.state.covert.deposit,
-                                        amount: Math.max(0, asset.need - asset.confirmedDeposit),
-                                        tokens: asset.tokenId
-                                    }
-                                )}
-                            />
-                        </div>
+                        {
+                            selectedWallet ?
+                                <div className='card m-1 p-1 d-flex align-items_center'
+                                    style={{
+                                        borderColor: `rgba(${selectedWallet.color.r},${selectedWallet.color.g},${selectedWallet.color.b}, 0.95)`,
+                                        backgroundColor: `rgba(${selectedWallet.color.r},${selectedWallet.color.g},${selectedWallet.color.b}, 0.10)`
+                                    }}>
+                                    <ImageButton
+                                        id={"mixTransaction"}
+                                        color={"white"}
+                                        icon={"send"}
+                                        tips={"Send to covert address"}
+                                        onClick={() => this.state.setPage('send', this.state.walletId,
+                                            {
+                                                address: this.state.covert.deposit,
+                                                amount: Math.max(0, asset.need - asset.confirmedDeposit),
+                                                tokens: asset.tokenId
+                                            }
+                                        )}
+                                    />
+                                </div>
+                                : null
+                        }
                     </div>
-                    <div className='d-flex flex-row'>
+                    <div className='d-flex flex-row justify-content-between align-items-center'>
                         <div className='d-flex flex-row'>
                             Mixing amount: {asset.tokenId === "" ? formatERGAmount(asset.currentMixingAmount) : formatTokenAmount(asset.currentMixingAmount, mixedTokenInfo[asset.tokenId].decimals)}
                         </div>
                         <div className='d-flex flex-row'>
-                            
+
                         </div>
                     </div>
 

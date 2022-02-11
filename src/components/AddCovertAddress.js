@@ -100,9 +100,10 @@ export default class AddCovertAddress extends React.Component {
                     </div>
 
                     <div className='d-flex flex-row m-1 align-items-center'>
-                        <div className='d-flex flex-row col-sm-6'>
+                        <div>Add withdraw address:</div>
+                        <div className='d-flex flex-row'>
                             < input type="text"
-                                size="55"
+                                size="50"
                                 id={"addressToAdd"}
                                 onChange={e => this.setAddressToAdd(e.target.value)}
                                 value={this.state.addressToAdd}

@@ -54,7 +54,12 @@ export default class CovertAddress extends React.Component {
         const covert = this.state.covert;
         return (
             <Fragment>
-                <div key={covert.id} className='card m-1 p-1 d-flex flex-column'>
+                <div key={covert.id} className='card m-1 p-1 d-flex flex-column'
+                style={{
+                    border: "1px solid",
+                    borderColor: "#FFAAAA"
+                }}>
+                
                     <div className='d-flex flex-row justify-content-between align-items-center'>
                         <div className='d-flex flex-row align-items-center'>
                             <h5><div className='d-flex flex-row align-items-center'>
@@ -131,7 +136,8 @@ export default class CovertAddress extends React.Component {
                         </div>
                         {
                             covert.assets.map(asset =>
-                                <CovertAsset covert={covert}
+                                <CovertAsset key={"CovertAsset" + asset.tokenId}
+                                    covert={covert}
                                     asset={asset}
                                     mixedTokenInfo={mixedTokenInfo}
                                     walletId={this.state.walletId}
