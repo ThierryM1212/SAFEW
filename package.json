@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@coinbarn/ergo-ts": "^0.3.0",
+    "@ledgerhq/hw-transport-webhid": "^6.24.1",
     "@sweetalert2/theme-dark": "^5.0.8",
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
