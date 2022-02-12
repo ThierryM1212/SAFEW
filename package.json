@@ -12,6 +12,7 @@
     "crypto-js": "^4.1.1",
     "ergo-lib-wasm-browser": "^0.15.0-alpha-fde64ae",
     "json-bigint": "^1.0.0",
+    "ledgerjs-hw-app-ergo": "^0.0.13",
     "qrcode": "^1.5.0",
     "qrcode.react": "^1.0.1",
     "react": "^17.0.2",

@@ -253,7 +253,7 @@ export default class SendTransaction extends React.Component {
         const jsonUnsignedTx = JSON.parse(unsignedTransaction.to_json());
         //console.log("sendTransaction unsignedTransaction", jsonUnsignedTx);
 
-        if (wallet.ergoPayOnly) {
+        if (wallet.type === "ergopay") {
             const [txId, txReducedB64safe] = await getTxReducedB64Safe(jsonUnsignedTx, selectedUtxos);
             var intervalId = setInterval(this.timer, 3000);
             this.setState({
@@ -536,7 +536,7 @@ export default class SendTransaction extends React.Component {
                                         && this.state.isValidErgToSend
                                         && this.state.isValidTokenAmountToSend.every(Boolean)
                                         && this.state.isValidTxFee)}
-                                >{wallet.ergoPayOnly ? "Ergopay" : "Send transaction"}</button>
+                                >{wallet.type === "ergopay" ? "Ergopay" : "Send transaction"}</button>
                             </div>
                             : null
                         }

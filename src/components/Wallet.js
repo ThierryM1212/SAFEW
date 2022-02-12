@@ -18,7 +18,7 @@ export default class Wallet extends React.Component {
             showAccounts: false,
             updateWalletList: props.updateWalletList,
             expertMode: (localStorage.getItem('expertMode') === 'true') ?? false,
-            ergoPayOnly: props.wallet.ergoPayOnly ?? false,
+            ergoPayOnly: props.wallet.type === "ergopay"  ?? false,
         };
         console.log("Wallet constructor", props.wallet, props.addressContentList, JSON.stringify(props.addressContentList));
         this.addNewAccount = this.addNewAccount.bind(this);

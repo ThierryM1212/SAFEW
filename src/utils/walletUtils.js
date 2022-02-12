@@ -23,24 +23,24 @@ export function isValidPassword(password) {
 
 export async function addErgoPayWallet(name, address, color) {
     const walletAccounts = [{ id: 0, addresses: [{ id: 0, address, used: true }], name }];
-    return _addNewWallet(name, walletAccounts, color, " ", " ", true)
+    return _addNewWallet(name, walletAccounts, color, " ", " ", "ergopay")
 }
 
 export async function addNewWallet(name, mnemonic, password, color) {
     const walletAccounts = await discoverAddresses(mnemonic);
-    return _addNewWallet(name, walletAccounts, color, mnemonic, password, false)
+    return _addNewWallet(name, walletAccounts, color, mnemonic, password, "mnemonic")
 }
 
-function _addNewWallet(name, walletAccounts, color, mnemonic, password, ergoPayOnly) {
+function _addNewWallet(name, walletAccounts, color, mnemonic, password, type) {
     var newWallet = {
         name: name,
         accounts: walletAccounts,
         color: color,
         changeAddress: walletAccounts[0].addresses[0].address,
-        ergoPayOnly: ergoPayOnly,
+        type: type,
         version: WALLET_VERSION,
     };
-    if (ergoPayOnly) {
+    if (type === "ergopay") {
         newWallet["mnemonic"] = "";
     } else {
         newWallet["mnemonic"] = CryptoJS.AES.encrypt(mnemonic, password + PASSWORD_SALT).toString();
@@ -76,6 +76,14 @@ export function upgradeWallet(wallet) {
                 address["used"] = false;
             }
         }
+    }
+    if (Object.keys(upgradedWallet).includes("version") && upgradedWallet["version"] < 2) {
+        if (upgradedWallet["ergoPayOnly"]) {
+            upgradedWallet["type"] = "ergopay";
+        } else {
+            upgradedWallet["type"] = "mnemonic";
+        }
+        delete upgradedWallet["ergoPayOnly"];
     }
     upgradedWallet["version"] = WALLET_VERSION;
     return upgradedWallet;
@@ -123,7 +131,7 @@ export function changePassword(encryptedMnemonic, oldPassword, newPassword) {
 export function convertToErgoPay(walletId) {
     var wallet = getWalletById(walletId);
     wallet.mnemonic = "";
-    wallet.ergoPayOnly = true;
+    wallet.type = 'ergopay';
     updateWallet(wallet, walletId);
 }
 

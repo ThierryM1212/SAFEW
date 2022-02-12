@@ -38,7 +38,7 @@ export const VERIFIED_TOKENS = {
   }
 
 // wallet version to handle upgrades (integer)
-export const WALLET_VERSION = 1;
+export const WALLET_VERSION = 2;
 
 export const DISCLAIMER_TEXT = `
 <div align="left">

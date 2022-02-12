@@ -116,7 +116,7 @@ export default class SignPopup extends React.Component {
         this.setState({
             txBalance: txBalance,
         });
-        if (this.state.wallet.ergoPayOnly) {
+        if (this.state.wallet.type === "ergopay") {
             await this.showTxReduced();
         }
     }
@@ -253,7 +253,7 @@ export default class SignPopup extends React.Component {
                     </div>
 
                     {
-                        this.state.wallet.ergoPayOnly ? null :
+                        this.state.wallet.type === "ergopay" ? null :
                             <Fragment>
                                 <div className='card m-1 p-1 d-flex flex-column'>
                                     <label htmlFor="walletPassword" >Spending password for {this.state.wallet.name}</label>

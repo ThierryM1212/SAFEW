@@ -285,7 +285,7 @@ export default class EditWallet extends React.Component {
                         borderColor: `rgba(${this.state.color.r},${this.state.color.g},${this.state.color.b}, 0.95)`,
                     }}>
                     <div className='d-flex flex-row justify-content-between editWalletCard'>
-                        <h4>Update an Ergo{wallet.ergoPayOnly ? 'Pay' : null} wallet - {this.state.walletName}</h4>
+                        <h4>Update an Ergo{wallet.type === "ergopay" ? 'Pay' : null} wallet - {this.state.walletName}</h4>
 
                         <ImageButton
                             id={"backToWalletList"}
@@ -345,7 +345,7 @@ export default class EditWallet extends React.Component {
                         </div>
                         <br />
                         {
-                            wallet.ergoPayOnly ?
+                            wallet.type === "ergopay" ?
                                 <Fragment >
                                     <h5 >Wallet addresses</h5>
                                     <div className='d-flex flex-column'>
