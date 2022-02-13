@@ -106,6 +106,11 @@ export default class ConnectWalletPopup extends React.Component {
                                 </div>
                             )
                         }
+                        {
+                            parseInt(this.state.walletList.length) === parseInt(0) ?
+                            <div>No wallet found, restore or create a new wallet</div>
+                            : null
+                        }
                         <div className="form-group d-flex flex-row justify-content-between align-items-center">
                             <div></div><div></div>
                             <button className="btn btn-outline-info" type="submit" disabled={this.state.selectedOption === ""}>

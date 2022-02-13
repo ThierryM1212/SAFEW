@@ -10,8 +10,8 @@ let ergolib = import('ergo-lib-wasm-browser');
 const deriveSecretKey = (rootSecret, path) =>
     rootSecret.derive(path);
 
-const nextPath = (rootSecret, lastPath) =>
-    rootSecret.derive(lastPath).path().next();
+//const nextPath = (rootSecret, lastPath) =>
+//    rootSecret.derive(lastPath).path().next();
 
 export async function getMainAddress(mnemonic) {
     return getAddress(mnemonic, 0, 0);
@@ -119,10 +119,6 @@ export async function isValidErgAddress(address) {
         console.log("isValidErgAddress catch", e);
         return false;
     }
-}
-
-const findBoxWithToken = (tok,index,array) => {
-    
 }
 
 // Address list

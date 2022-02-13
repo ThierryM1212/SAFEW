@@ -1,4 +1,4 @@
-import { boxByBoxId, boxById, currentHeight, getTokenBoxV1 } from "./explorer";
+import { boxByBoxId, currentHeight, getTokenBoxV1 } from "./explorer";
 import { encodeContract, ergoTreeToAddress } from "./serializer";
 
 /* global BigInt */
@@ -333,18 +333,18 @@ function getUtxoContentForAddressList2(utxos, addressList) {
 
 
 export async function getUtxoBalanceForAddressList(inputs, outputs, addressList) {
-    console.log("getUtxoBalanceForAddressList params", inputs, outputs, addressList);
+    //console.log("getUtxoBalanceForAddressList params", inputs, outputs, addressList);
     const inputBal = await getUtxoContentForAddressList(inputs, addressList);
     const outputBal = await getUtxoContentForAddressList(outputs, addressList);
-    console.log("getUtxoBalanceForAddressList", inputBal, outputBal, addressList);
+    //console.log("getUtxoBalanceForAddressList", inputBal, outputBal, addressList);
     return buildBalance(inputBal, outputBal);
 }
 
 export function getUtxoBalanceForAddressList2(inputs, outputs, addressList) {
-    console.log("getUtxoBalanceForAddressList2 params", inputs, outputs, addressList);
+    //console.log("getUtxoBalanceForAddressList2 params", inputs, outputs, addressList);
     const inputBal = getUtxoContentForAddressList2(inputs, addressList);
     const outputBal = getUtxoContentForAddressList2(outputs, addressList);
-    console.log("getUtxoBalanceForAddressList2", inputBal, outputBal, addressList);
+    //console.log("getUtxoBalanceForAddressList2", inputBal, outputBal, addressList);
     return buildBalance(inputBal, outputBal);
 }
 
@@ -352,7 +352,7 @@ function buildBalance(inputBal, outputBal) {
     //console.log("buildBalance1", inputBal, outputBal)
     const balValue = parseInt(outputBal.value.toString()) - parseInt(inputBal.value.toString());
     var balTokens = [];
-    const tokenList = [... new Set([inputBal.tokens.map(tok => tok.tokenId), outputBal.tokens.map(tok => tok.tokenId)].flat())];
+    const tokenList = [...new Set([inputBal.tokens.map(tok => tok.tokenId), outputBal.tokens.map(tok => tok.tokenId)].flat())];
     for (const tokId of tokenList) {
 
         var tokAmount = 0, decimals = 0, tokenName = '';

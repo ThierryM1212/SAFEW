@@ -15,14 +15,16 @@ import BigQRCode from './BigQRCode';
 export default class SendTransaction extends React.Component {
     constructor(props) {
         super(props);
+
         this.state = {
             walletId: props.walletId,
             setPage: props.setPage,
-            sendToAddress: '',
+            iniTran: props.iniTran,
+            sendToAddress: props.iniTran.address,
             isValidSendToAddress: false,
             tokens: [],
             nanoErgs: [],
-            ergsToSend: 0,
+            ergsToSend: props.iniTran.amount / NANOERG_TO_ERG,
             isValidErgToSend: false,
             tokenAmountToSend: [],
             isValidTokenAmountToSend: [],
@@ -42,7 +44,6 @@ export default class SendTransaction extends React.Component {
         this.setTokenToSend = this.setTokenToSend.bind(this);
         this.validateTokenAmount = this.validateTokenAmount.bind(this);
         this.setSendAll = this.setSendAll.bind(this);
-        this.updateWalletContent = this.updateWalletContent.bind(this);
         this.timer = this.timer.bind(this);
     }
 
@@ -59,24 +60,23 @@ export default class SendTransaction extends React.Component {
         this.setState(prevState => ({ viewSelectAddress: !prevState.viewSelectAddress }))
     }
 
-    selectUnselectAddresses = (id) => {
+    async selectUnselectAddresses(id) {
         const nextSelectedAddresses = [
             ...this.state.selectedAddresses.slice(0, id),
             !this.state.selectedAddresses[id],
             ...this.state.selectedAddresses.slice(id + 1)
         ]
-        console.log("selectUnselectAddresses", this.state.addressContentList);
         const [nanoErgs, tokens] = getSummaryFromSelectedAddressListContent(this.state.walletAddressList, this.state.addressContentList, nextSelectedAddresses);
         this.setState({
             selectedAddresses: nextSelectedAddresses,
             tokens: tokens,
             nanoErgs: nanoErgs,
-            tokenAmountToSend: new Array(tokens.length).fill(0.0),
-            isValidTokenAmountToSend: new Array(tokens.length).fill(true),
+            ergsToSend: this.state.ergsToSend,
+            isValidErgToSend: this.validateErgAmount(this.state.ergsToSend, this.state.txFee, nanoErgs),
         })
     }
 
-    async updateWalletContent() {
+    async componentDidMount() {
         const wallet = getWalletById(this.state.walletId);
         var walletAddressList = getWalletUsedAddressList(wallet);
         var addressContentList = await getAddressListContent(walletAddressList);
@@ -92,23 +92,50 @@ export default class SendTransaction extends React.Component {
         this.setState({
             tokens: tokens,
             nanoErgs: nanoErgs,
-            ergsToSend: 0,
             tokenAmountToSend: new Array(tokens.length).fill(0.0),
             isValidTokenAmountToSend: new Array(tokens.length).fill(true),
             selectedAddresses: new Array(walletAddressList.length).fill(true),
             addressContentList: addressContentList,
             walletAddressList: walletAddressList,
         });
-    }
 
-    async componentDidMount() {
-        await this.updateWalletContent();
+        // init the transaction from iniTran param
+        this.setErgsToSend(this.state.ergsToSend);
+        this.setSendToAddress(this.state.sendToAddress);
+        if (Object.keys(this.state.iniTran).includes("tokens")) {
+            //console.log("componentDidMount", this.state.addressContentList, this.state.walletAddressList);
+            // add the tokens requested by the transaction with 0 amount if missing
+            var newTokens = [...this.state.tokens], newTokenAmountToSend = [...this.state.tokenAmountToSend];
+            for (const requestedToken of this.state.iniTran.tokens) {
+                const tokIndex = newTokens.findIndex(tok => tok.tokenId === requestedToken.tokenId);
+                const tokDisplayAmount = requestedToken.amount / Math.pow(10, requestedToken.decimals);
+                //console.log("componentDidMount2", tokIndex, tokDisplayAmount, newTokens);
+                if (tokIndex < 0) {
+                    newTokens.push({
+                        tokenId: requestedToken.tokenId,
+                        amount: 0,
+                        name: requestedToken.name,
+                        decimals: requestedToken.decimals,
+                    })
+                    newTokenAmountToSend.push(tokDisplayAmount);
+                } else {
+                    newTokenAmountToSend[tokIndex] = tokDisplayAmount;
+                }
+            }
+            this.setState({
+                tokens: newTokens,
+                tokenAmountToSend: newTokenAmountToSend,
+            });
+            this.setState({
+                isValidTokenAmountToSend: newTokenAmountToSend.map((amount, index) => this.validateTokenAmount(index, amount)),
+            });
+        }
     }
 
     setErgsToSend = (ergAmount) => {
         this.setState({
             ergsToSend: ergAmount,
-            isValidErgToSend: this.validateErgAmount(ergAmount),
+            isValidErgToSend: this.validateErgAmount(ergAmount, this.state.txFee),
         })
     }
 
@@ -132,11 +159,8 @@ export default class SendTransaction extends React.Component {
         } else {
             this.setState(prevState => ({
                 isSendAll: !prevState.isSendAll,
-
             }))
         }
-
-
     }
 
     setTokenToSend = (index, tokAmount) => {
@@ -161,29 +185,33 @@ export default class SendTransaction extends React.Component {
         return (txFee >= SUGGESTED_TRANSACTION_FEE / NANOERG_TO_ERG && txFee <= 0.1);
     }
 
-    validateErgAmount = (ergAmount, txFee = 0) => {
+    validateErgAmount = (ergAmount, txFee = 0, nanoErgs = this.state.nanoErgs) => {
         const ergAmountFloat = parseFloat(ergAmount);
-        if (txFee === 0) { txFee = this.state.txFee }
-        console.log(ergAmountFloat, txFee, this.state.nanoErgs / NANOERG_TO_ERG, ergAmount + txFee)
-        return (ergAmount >= 0.001 && (ergAmountFloat + parseFloat(txFee)) <= (this.state.nanoErgs / NANOERG_TO_ERG));
+        if (txFee === 0) { txFee = parseFloat(this.state.txFee) }
+        //console.log("validateErgAmount", ergAmountFloat, txFee, this.state.nanoErgs / NANOERG_TO_ERG, ergAmount + txFee)
+        //console.log("validateErgAmount2", ergAmountFloat >= 0.001, txFee, ergAmountFloat + parseFloat(txFee), this.state.nanoErgs / NANOERG_TO_ERG)
+        return (ergAmountFloat >= 0.001 && (ergAmountFloat + parseFloat(txFee)) <= (nanoErgs / NANOERG_TO_ERG));
     }
 
     validateTokenAmount = (index, tokAmount) => {
         if (tokAmount === '' || tokAmount === undefined) { return true; };
         const token = this.state.tokens[index];
         const tokenDecimals = parseInt(token.decimals);
-        console.log("validateTokenAmount", tokAmount)
+        console.log("validateTokenAmount", token, tokenDecimals, tokAmount)
         const tokAmountStr = tokAmount.toString();
         var tokenAmount = 0;
         if (tokAmountStr.indexOf('.') > -1) {
             var str = tokAmountStr.split(".");
             str[1] = str[1].replace(/0+$/g, ""); //remove trailing 0
-
-            tokenAmount = parseInt(str[0]) * Math.pow(10, tokenDecimals) + parseInt(str[1] + '0'.repeat(tokenDecimals - str[1].length));
+            console.log("validateTokenAmount2",str[1].length)
+            if (str[1].length > tokenDecimals) {
+                return false;
+            } else {
+                tokenAmount = parseInt(str[0]) * Math.pow(10, tokenDecimals) + parseInt(str[1] + '0'.repeat(tokenDecimals - str[1].length));
+            }
         } else {
             tokenAmount = parseInt(tokAmount.toString()) * Math.pow(10, tokenDecimals);
         }
-
         return (tokenAmount >= 0 && tokenAmount <= parseInt(token.amount));
     }
 
@@ -200,7 +228,7 @@ export default class SendTransaction extends React.Component {
         if (ourTx.length > 0) {
             var fixedTx = parseSignedTx(ourTx[0]);
             fixedTx.id = this.state.txId;
-            console.log("fixedTx", fixedTx);
+            //console.log("fixedTx", fixedTx);
             clearInterval(this.state.intervalId);
             this.state.setPage('transactions', this.state.walletId);
         }
@@ -214,16 +242,16 @@ export default class SendTransaction extends React.Component {
         const selectedAddresses = this.state.walletAddressList.filter((addr, id) => this.state.selectedAddresses[id]);
         const selectedUtxos = await getUtxosForSelectedInputs(selectedAddresses,
             totalAmountToSendFloat, this.state.tokens, this.state.tokenAmountToSend);
-        console.log("this.state.tokenAmountToSend", this.state.tokenAmountToSend)
+        //console.log("this.state.tokenAmountToSend", this.state.tokenAmountToSend)
         const tokenAmountToSendInt = this.state.tokenAmountToSend.map((amountFloat, id) =>
             Math.round(parseFloat(amountFloat.toString()) * Math.pow(10, parseInt(this.state.tokens[id].decimals))));
-        console.log("sendTransaction", amountToSendFloat, feeFloat, wallet);
+        //console.log("sendTransaction", amountToSendFloat, feeFloat, wallet);
         const outputCandidates = await createTxOutputs(selectedUtxos, this.state.sendToAddress, wallet.changeAddress,
             amountToSendFloat, feeFloat, this.state.tokens, tokenAmountToSendInt);
 
         const unsignedTransaction = await createUnsignedTransaction(selectedUtxos, outputCandidates);
         const jsonUnsignedTx = JSON.parse(unsignedTransaction.to_json());
-        console.log("sendTransaction unsignedTransaction", jsonUnsignedTx);
+        //console.log("sendTransaction unsignedTransaction", jsonUnsignedTx);
 
         if (wallet.ergoPayOnly) {
             const [txId, txReducedB64safe] = await getTxReducedB64Safe(jsonUnsignedTx, selectedUtxos);
@@ -236,7 +264,7 @@ export default class SendTransaction extends React.Component {
         } else {
             const txBalance = await getUtxoBalanceForAddressList(jsonUnsignedTx.inputs, jsonUnsignedTx.outputs, selectedAddresses);
             const txBalanceReceiver = await getUtxoBalanceForAddressList(jsonUnsignedTx.inputs, jsonUnsignedTx.outputs, [this.state.sendToAddress]);
-            console.log("sendTransaction txBalance", txBalance, txBalanceReceiver);
+            //console.log("sendTransaction txBalance", txBalance, txBalanceReceiver);
 
             var txSummaryHtml = "<div class='card m-1 p-1'><table class='txSummarry'><tbody>";
             txSummaryHtml += "<thead><th colspan='2'>Sending to: &nbsp;" + formatLongString(this.state.sendToAddress, 10) + "</th></thead>";
@@ -264,7 +292,7 @@ export default class SendTransaction extends React.Component {
                 return;
             }
             const signingWallet = await getWalletForAddresses(mnemonic, selectedAddresses);
-            console.log("signingWallet", signingWallet);
+            //console.log("signingWallet", signingWallet);
             var signedTx = {};
 
             try {
@@ -274,7 +302,7 @@ export default class SendTransaction extends React.Component {
                 errorAlert("Failed to sign transaction", e);
                 return;
             }
-            const res = await sendTx(signedTx);
+            await sendTx(signedTx);
             //await delay(3000);
             this.state.setPage('transactions', this.state.walletId);
         }
@@ -282,27 +310,14 @@ export default class SendTransaction extends React.Component {
 
     render() {
         const wallet = getWalletById(this.state.walletId);
-        console.log("isSendAll", this.state.isSendAll)
         return (
             <Fragment>
-                <div className='container card m-1 p-1 d-flex flex-column w-75' style={{ borderColor: wallet.color }}>
+                <div className='container card m-1 p-1 d-flex flex-column w-75'
+                    style={{ borderColor: `rgba(${wallet.color.r},${wallet.color.g},${wallet.color.b}, 0.95)`, }}
+                >
                     <div className='d-flex flex-row justify-content-between align-items-center'>
                         <h5>Send ERGs and tokens - Wallet {wallet.name}</h5>
                         <div className='d-flex flex-row '>
-                            <ImageButton
-                                id={"backToWalletList"}
-                                color={"blue"}
-                                icon={"arrow_back"}
-                                tips={"Wallet list"}
-                                onClick={() => this.state.setPage('home')}
-                            />
-                            <ImageButton
-                                id={"refreshTransactionPage"}
-                                color={"blue"}
-                                icon={"refresh"}
-                                tips={"Refresh wallet content"}
-                                onClick={this.updateWalletContent}
-                            />
                         </div>
                     </div>
                     <div className='d-flex flex-row justify-content-left align-items-center card m-1 p-1'>
@@ -499,7 +514,7 @@ export default class SendTransaction extends React.Component {
                             this.state.ergoPayTxId === "" ? null :
                                 <div className='d-flex flex-column'>
                                     <div className='d-flex flex-row '>
-                                    Ergopay transaction
+                                        Ergopay transaction
                                         <ImageButton
                                             id={"ergoTxInfo"}
                                             color={"white"}
@@ -508,7 +523,7 @@ export default class SendTransaction extends React.Component {
                                         />
                                     </div>
                                     <div className='d-flex flex-row justify-content-center'>
-                                    <BigQRCode QRCodeTx={this.state.ergoPayUnsignedTx} />
+                                        <BigQRCode QRCodeTx={this.state.ergoPayUnsignedTx} />
                                     </div>
                                 </div>
                         }

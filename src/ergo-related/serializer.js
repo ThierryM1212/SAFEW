@@ -141,8 +141,8 @@ export async function signTxReduced(txReducedB64, mnemonic, address) {
 const deriveSecretKey = (rootSecret, path) =>
     rootSecret.derive(path); 
 
-const nextPath = (rootSecret, lastPath) => 
-    rootSecret.derive(lastPath).path().next();
+//const nextPath = (rootSecret, lastPath) => 
+//    rootSecret.derive(lastPath).path().next();
 
 
 export async function signTxWithMnemonic(json, inputs, dataInputs, mnemonic, address) {

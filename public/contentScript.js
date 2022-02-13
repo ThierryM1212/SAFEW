@@ -9,7 +9,7 @@ function injectScript(script) {
 }
 
 const ergoInitialAPIFunctions = `
-  request_read_access() {
+  connect() {
       return new Promise(function (resolve, reject) {
           window.dispatchEvent(
               new CustomEvent('safew_injected_script_message', {
@@ -22,7 +22,7 @@ const ergoInitialAPIFunctions = `
       });
   }
   
-  check_read_access() {
+  isConnected() {
       if (typeof ergo !== "undefined") {
           try {
               return (typeof ergo.get_balance !== "undefined");
@@ -44,15 +44,26 @@ const injected_script_1 = `
   class ErgoAPIini {
     ${ergoInitialAPIFunctions}
   }
-  var ergo = Object.freeze(new ErgoAPIini());
+  if (ergoConnector !== undefined) {
+    ergoConnector = {
+      ...ergoConnector,
+      safew: Object.freeze(new ErgoAPIini())
+    };
+  } else {
+    var ergoConnector = {
+      safew: Object.freeze(new ErgoAPIini())
+    };
+  }
 
   // for compatibility with existing dApp
   window.ergo_request_read_access = function () {
-      return ergo.request_read_access();
+      console.warn("deprecated auth method, use ergoConnector.safew.connect()")
+      return ergoConnector.safew.connect();
   }
 
   window.ergo_check_read_access = function () {
-      return ergo.check_read_access();
+      console.warn("deprecated auth method, use ergoConnector.safew.isConnected()")
+      return ergoConnector.safew.isConnected();
   }
   
   window.addEventListener("safew_contentscript_message", function (event) {
@@ -138,7 +149,7 @@ const injected_script_2 = `
           });
       }
   }
-  ergo = Object.freeze(new ErgoAPI());
+  const ergo = Object.freeze(new ErgoAPI());
   `
 
 injectScript(injected_script_1);

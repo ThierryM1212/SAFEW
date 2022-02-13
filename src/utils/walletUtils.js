@@ -83,11 +83,11 @@ export function upgradeWallet(wallet) {
 export function isUpgradeWalletRequired() {
     const walletList = JSON.parse(localStorage.getItem('walletList'));
     // if a wallet miss the version field, upgrade is required
-    if(walletList.filter(wallet => !Object.keys(wallet).includes("version")).length > 0){
+    if (walletList.filter(wallet => !Object.keys(wallet).includes("version")).length > 0) {
         return true;
     }
     // if a wallet has an older version than the current one
-    if(walletList.filter(wallet => wallet.version < WALLET_VERSION).length > 0){
+    if (walletList.filter(wallet => wallet.version < WALLET_VERSION).length > 0) {
         return true;
     }
     return false;
@@ -120,6 +120,56 @@ export function changePassword(encryptedMnemonic, oldPassword, newPassword) {
     return CryptoJS.AES.encrypt(CryptoJS.AES.decrypt(encryptedMnemonic, oldPassword + PASSWORD_SALT).toString(CryptoJS.enc.Utf8), newPassword + PASSWORD_SALT).toString();
 }
 
+export function convertToErgoPay(walletId) {
+    var wallet = getWalletById(walletId);
+    wallet.mnemonic = "";
+    wallet.ergoPayOnly = true;
+    updateWallet(wallet, walletId);
+}
+
+export function deleteWalletAddress(walletId, address) {
+    console.log("deleteWalletAddress", address);
+    var newWallet = getWalletById(walletId);
+    var newAccounts = [];
+    for (var i in newWallet.accounts) {
+        var account = newWallet.accounts[i];
+        var newAddresses = [];
+        for (var j in account.addresses) {
+            var addr = account.addresses[j];
+            if (addr.address !== address) {
+                newAddresses.push(account.addresses[j]);
+            }
+        }
+        account.addresses = newAddresses;
+        newAccounts.push(account);
+    }
+    newWallet.accounts = newAccounts;
+    updateWallet(newWallet, walletId);
+}
+
+export async function addWalletAddress(walletId, address) {
+    // used for ErgoPay wallet, add to account 0
+    console.log("addWalletAddress", address);
+    var newWallet = getWalletById(walletId);
+    var newAccounts = [];
+    for (var i in newWallet.accounts) {
+        var account = newWallet.accounts[i];
+        var newAddresses = [...account.addresses];
+        if (parseInt(i) === parseInt(0)) {
+            newAddresses.push(
+                {
+                    "id": account.addresses.length,
+                    "address": address,
+                    "used": (await addressHasTransactions(address)),
+                }
+            );
+        }
+        account["addresses"] = newAddresses;
+        newAccounts.push(account);
+    }
+    newWallet["accounts"] = newAccounts;
+    updateWallet(newWallet, walletId);
+}
 
 
 // return formatted token amount like 6,222,444.420
@@ -289,7 +339,7 @@ export function passwordIsValid(mnemonicCrypted, password) {
 export function setAccountName(walletId, accountId, accountName) {
     console.log("setAccountName", walletId, accountId, accountName);
     var wallet = getWalletById(walletId);
-    wallet.accounts.find(account => account.id == accountId)["name"] = accountName;
+    wallet.accounts.find(account => parseInt(account.id) === parseInt(accountId))["name"] = accountName;
     updateWallet(wallet, walletId);
 }
 
@@ -391,18 +441,17 @@ export function getSummaryFromAddressListContent(addressContentList) {
 }
 
 export function getSummaryFromSelectedAddressListContent(addressList, addressContentList, selectedAddressList) {
-    var nanoErgs = 0, tokens = [], nanoErgsUnconfirmed = 0, tokensUnconfirmed = [];
+    var nanoErgs = 0, tokens = [];
     //console.log("getSummaryFromSelectedAddressListContent0", addressList, addressContentList, selectedAddressList)
     for (const i in addressList) {
         if (selectedAddressList[i]) {
             const addrInfo = { ...addressContentList[i].content };
-            //const addrUnconfirmedInfo = {...addressContentList[i].unconfirmed};
             //console.log("getSummaryFromSelectedAddressListContent adding", addressList[i], addrInfo)
-
             nanoErgs += addrInfo.nanoErgs;
             //nanoErgsUnconfirmed += addrUnconfirmedInfo.nanoErgs;
             if (Array.isArray(addrInfo.tokens)) {
-                for (var token of addrInfo.tokens) {
+                for (const i in addrInfo.tokens) {
+                    const token = {...addrInfo.tokens[i]};
                     //if (addressList.includes(addrInfo.address)) {
                     const tokIndex = tokens.findIndex(e => (e.tokenId === token.tokenId));
                     if (tokIndex >= 0) {
@@ -411,21 +460,8 @@ export function getSummaryFromSelectedAddressListContent(addressList, addressCon
                     } else {
                         tokens.push({ ...token });
                     }
-                    //}
                 }
             }
-            //console.log("getSummaryFromSelectedAddressListContent", JSON.stringify(addressContentList[i],null,2));
-            //if (Array.isArray(addrUnconfirmedInfo.tokens)) {
-            //    for (var token of addrUnconfirmedInfo.tokens) {
-            //        const tokIndex = tokensUnconfirmed.findIndex(e => (e.tokenId === token.tokenId));
-            //        if (tokIndex >= 0) {
-            //            tokensUnconfirmed[tokIndex].amount += token.amount;
-            //        } else {
-            //            tokensUnconfirmed.push(token);
-            //        }
-            //    }
-            //}
-            //console.log("getSummaryFromSelectedAddressListContent2", JSON.stringify(addressContentList[i], null, 2));
         }
     }
     //console.log("getSummaryFromSelectedAddressListContent3", nanoErgs, tokens, JSON.stringify(addressContentList));

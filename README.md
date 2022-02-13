@@ -12,13 +12,15 @@ Wallet features:
  - View wallet transactions confirmed and unconfirmed
  - Display unconfirmed balances per wallet, account and address
  - Configure Explorer, Node and Explorer UI addresses used by the wallet
- - ErgoPay wallet and signing (only the public address is provided, signing is delegated to ErgoPay EIP-19)
+ - ErgoPay wallet and signing (only the public address are provided, signing is delegated to ErgoPay EIP-19 with iOS or Android wallet v1.6+)
+ - ErgoMixer access: interact with ErgoMixer directly from the wallet (still incomplete)
 
 ## Security
 The wallets are stored in the local storage of the SAFEW browser extension.<br/>
 The mnemonic is encrypted (AES-256) with the spending password, that is not stored in the application.<br/>
 The password will be required to spend funds or to add or discover new addresses.<br/>
 You can use ErgoPay wallet to keep your secrets on a mobile device (beta on iOS wallet, soon on Android)<br/>
+ErgoPay wallets are available to sign remotely the transaction using iOS or Android wallet v1.6+, to avoid to store the encryted mnemonic in your browser extension local storage.<br/>
 
 ## Privacy
 The address discovery can be launched at any time to generate unused addresses in the wallets.<br/>
@@ -26,6 +28,10 @@ Non connected sites have no access to the information of your wallet.<br/>
 Connected sites can read the wallet content.<br/>
 The explorer and node used to interact with Ergo blockchain are configurable.<br/>
 ErgoPay wallets allow you to keep the content of your wallet hidden..<br/>
+ErgoMixer integration ease the usage of privacy tools.<br/>
+
+## Reliability
+The transaction balance displayed when sending funds using SAFEW is computed from the unsigned transaction, not from the UI inputs.<br/>
 
 ## Build the project
 > git clone https://github.com/ThierryM1212/SAFEW.git<br/>
@@ -35,7 +41,7 @@ ErgoPay wallets allow you to keep the content of your wallet hidden..<br/>
 <br/>
 Load the unpacked extension as described at: https://developer.chrome.com/docs/extensions/mv3/getstarted/ <br/>
 <br/>
-It requires to disable Yoroi extension to use the dApp connector.<br/>
+It requires to disable Yoroi or Nautilus extension to use the dApp connector.<br/>
 
 ## debug
 set the key "debug" = "true" in the local storage to display dApp connector popups buttons
@@ -48,10 +54,17 @@ Same ergo_request_read_access and ergo_check_read_access than Yoroi method are d
 
 ## Next steps ?
 Publish on Chrome Web Store (currently blocked by https://bugs.chromium.org/p/chromium/issues/detail?id=1173354 and the requirement to publish the new extensions with manifest v3)<br/>
-Publish on Opera Addons<br/>
+Publish on Opera Addons (available on Opera beta store waiting for validation)<br/>
 Build for Firefox<br/>
-Ergo mixer integration: https://github.com/ergoMixer/ergoMixBack<br/>
+Ledger signing<br/>
 Transaction builder integration: https://transaction-builder.ergo.ga/<br/>
 Display NFT images ?<br/>
-Ledger integration ?<br/>
 <br/>
+
+## Release note
+v0.3
+- ErgoPay improvement: allow to delete mnemonic to convert a wallet to an ErgoPay wallet, add/remove addresses from Ergopay wallets, add ErgoPay button for mobile users
+- ErgoMixer integration: Display available Mixes, send mix transactions from the wallet, manage covert addresses
+- Update dApp connector functions to allow future Wallet selector in dApps
+- Update dependencies, cleanup lint
+

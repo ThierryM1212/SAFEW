@@ -35,16 +35,14 @@ export default function NavigationBar(props) {
                     tips={"Disconnect wallets"}
                     onClick={() => { props.setPage('disconnect') }}
                 />
-                { // hide mixer
-                    true ? null :
-                        <ImageButton
-                            id={"ergoMixer"}
-                            color={"blue"}
-                            icon={"blender"}
-                            tips={"Ergo mixer"}
-                            onClick={() => { props.setPage('mixer') }}
-                        />
-                }
+                <ImageButton
+                    id={"ergoMixer"}
+                    color={"blue"}
+                    icon={"blender"}
+                    tips={"Ergo mixer"}
+                    onClick={() => { props.setPage('mixer') }}
+                />
+
                 {
                     debug ?
                         <Fragment>
@@ -73,7 +71,7 @@ export default function NavigationBar(props) {
                         data-tip
                         data-for="GitLinkId"
                     >
-                        <a href="https://github.com/ThierryM1212/SAFEW" target="_blank">
+                        <a href="https://github.com/ThierryM1212/SAFEW" target="_blank" rel="noreferrer">
                             <img alt="GitLink" src={GitLogo} width={30} height={30} />
                         </a>
                     </span>

@@ -1,14 +1,13 @@
 import React, { Fragment } from 'react';
-import { decryptMnemonic, getWalletById, getWalletNames, isValidPassword, passwordIsValid, updateWallet, changePassword, setChangeAddress, getWalletAddressList, deleteWallet } from "../utils/walletUtils";
+import { decryptMnemonic, getWalletById, getWalletNames, isValidPassword, passwordIsValid, updateWallet, changePassword, setChangeAddress, getWalletAddressList, deleteWallet, convertToErgoPay, deleteWalletAddress, addWalletAddress } from "../utils/walletUtils";
 import { INVALID_PASSWORD_LENGTH_MSG, INVALID_NAME_LENGTH_MSG } from '../utils/walletUtils';
 import { confirmAlert, displayMnemonic, errorAlert, promptPassword, successAlert, waitingAlert } from '../utils/Alerts';
-import { discoverAddresses } from '../ergo-related/ergolibUtils';
+import { discoverAddresses, isValidErgAddress } from '../ergo-related/ergolibUtils';
 import { SketchPicker } from 'react-color';
 import Select from 'react-select';
 import ValidInput from './ValidInput';
 import ImageButton from './ImageButton';
 import { MAX_NUMBER_OF_UNUSED_ADDRESS_PER_ACCOUNT } from '../utils/constants';
-import { rgbToHex } from '../utils/utils';
 
 export default class EditWallet extends React.Component {
     constructor(props) {
@@ -17,6 +16,7 @@ export default class EditWallet extends React.Component {
             walletId: props.walletId,
             setPage: props.setPage,
             walletName: '',
+            walletAddressList: [],
             isValidWalletName: false,
             invalidWalletMessage: 'Not changed',
             mnemonic: '',
@@ -32,6 +32,8 @@ export default class EditWallet extends React.Component {
             walletColor: { r: 141, g: 140, b: 143, a: 1 },
             color: { r: 141, g: 140, b: 143, a: 1 },
             selectedChangeAddress: '',
+            isValidAddressToAdd: false,
+            addressToAdd: '',
         };
         this.updateWalletName = this.updateWalletName.bind(this);
         this.updateWalletColor = this.updateWalletColor.bind(this);
@@ -44,6 +46,8 @@ export default class EditWallet extends React.Component {
         this.searchAddresses = this.searchAddresses.bind(this);
         this.showMnemonic = this.showMnemonic.bind(this);
         this.deleteWallet = this.deleteWallet.bind(this);
+        this.deleteMnemonic = this.deleteMnemonic.bind(this);
+        this.addAddress = this.addAddress.bind(this);
     }
 
     setWalletName = (name) => {
@@ -145,6 +149,20 @@ export default class EditWallet extends React.Component {
             invalidPassword2Message: validPasswordMessage,
         }));
     };
+    setAddressToAdd = (address) => {
+        this.setState({
+            addressToAdd: address
+        });
+        const wallet = getWalletById(this.state.walletId);
+        const walletAddressList = getWalletAddressList(wallet);
+        if (walletAddressList.includes(address)) {
+            this.setState({ isValidAddressToAdd: false });
+        } else {
+            isValidErgAddress(address).then(isValidAddressToAdd => {
+                this.setState({ isValidAddressToAdd: isValidAddressToAdd });
+            })
+        }
+    };
 
     isValidColor = () => {
         console.log("isValidColor", this.state.color, this.state.walletColor)
@@ -153,12 +171,14 @@ export default class EditWallet extends React.Component {
 
     componentDidMount() {
         const wallet = getWalletById(this.state.walletId);
+        const walletAddressList = getWalletAddressList(wallet);
         console.log("EditWallet componentDidMount wallet", wallet);
         this.setState({
             walletName: wallet.name,
             walletColor: wallet.color,
             color: wallet.color,
             selectedChangeAddress: wallet.changeAddress,
+            walletAddressList: walletAddressList,
         })
     }
 
@@ -189,6 +209,21 @@ export default class EditWallet extends React.Component {
         }
     }
 
+    async deleteMnemonic() {
+        var message = "You will still be able to sign the transactions using ErgoPay.<br/>";
+        message += "Using the same wallet from the iOS or Android wallet v1.6+.<br/>";
+        message += "You won't be able to sign transactions in SAFEW anymore.";
+        confirmAlert("Delete the mnemonic for " + this.state.walletName + "?",
+            message,
+            "Delete")
+            .then(res => {
+                if (res.isConfirmed) {
+                    convertToErgoPay(this.state.walletId);
+                    this.state.setPage('home');
+                }
+            })
+    }
+
     async deleteWallet() {
         confirmAlert("Delete the wallet " + this.state.walletName + "?",
             "The wallet will be deleted from the application but will stay in the Ergo blockchain.<br/>It can be restored at any time with the mnemonic.",
@@ -206,6 +241,26 @@ export default class EditWallet extends React.Component {
             })
     }
 
+    deleteAddress = (address) => {
+        deleteWalletAddress(this.state.walletId, address);
+        const wallet = getWalletById(this.state.walletId);
+        this.setState({
+            walletAddressList: getWalletAddressList(wallet),
+        });
+    }
+
+    async addAddress() {
+        if (this.state.isValidAddressToAdd) {
+            await addWalletAddress(this.state.walletId, this.state.addressToAdd);
+            const wallet = getWalletById(this.state.walletId);
+            this.setState({
+                walletAddressList: getWalletAddressList(wallet),
+                addressToAdd: '',
+                isValidAddressToAdd: false,
+            });
+        }
+    }
+
     backupWallet = () => {
         const wallet = getWalletById(this.state.walletId);
         var _myArray = JSON.stringify(wallet, null, 4);
@@ -220,7 +275,7 @@ export default class EditWallet extends React.Component {
 
     render() {
         const wallet = getWalletById(this.state.walletId);
-        const walletAddressList = getWalletAddressList(wallet);
+        const walletAddressList = this.state.walletAddressList;
         var optionsChangeAdresses = walletAddressList.map(address => ({ value: address, label: address }));
 
         return (
@@ -230,7 +285,7 @@ export default class EditWallet extends React.Component {
                         borderColor: `rgba(${this.state.color.r},${this.state.color.g},${this.state.color.b}, 0.95)`,
                     }}>
                     <div className='d-flex flex-row justify-content-between editWalletCard'>
-                        <h4>Update an Ergo{ wallet.ergoPayOnly ? 'Pay': null } wallet - {this.state.walletName}</h4>
+                        <h4>Update an Ergo{wallet.ergoPayOnly ? 'Pay' : null} wallet - {this.state.walletName}</h4>
 
                         <ImageButton
                             id={"backToWalletList"}
@@ -245,10 +300,9 @@ export default class EditWallet extends React.Component {
                         <div className='d-flex flex-row align-items-center col-sm'>
                             <input type="text"
                                 id="walletName"
-                                className="form-control"
                                 onChange={e => this.setWalletName(e.target.value)}
                                 value={this.state.walletName}
-                                className={this.state.isValidWalletName ? "validInput m-1" : "invalidInput m-1"}
+                                className={this.state.isValidWalletName ? "form-control validInput m-1" : "form-control invalidInput m-1"}
                             />
                             <ValidInput id="isValidWalletName" isValid={this.state.isValidWalletName} validMessage="OK" invalidMessage={this.state.invalidWalletMessage} />
                             &nbsp;
@@ -278,21 +332,80 @@ export default class EditWallet extends React.Component {
                             </div>
                         </div>
                         <br />
+
+                        <h5 >Select change address</h5>
+                        <div className='d-flex flex-row'>
+                            <Select className='selectReact'
+                                value={{ value: this.state.selectedChangeAddress, label: this.state.selectedChangeAddress }}
+                                onChange={this.setChangeAddress}
+                                options={optionsChangeAdresses}
+                                isSearchable={false}
+                                isMulti={false}
+                            />
+                        </div>
+                        <br />
                         {
-                            wallet.ergoPayOnly ? null :
+                            wallet.ergoPayOnly ?
                                 <Fragment >
-                                    <h5 >Select change address</h5>
-                                    <div className='d-flex flex-row'>
-                                        <Select className='selectReact'
-                                            value={{ value: this.state.selectedChangeAddress, label: this.state.selectedChangeAddress }}
-                                            onChange={this.setChangeAddress}
-                                            options={optionsChangeAdresses}
-                                            isSearchable={false}
-                                            isMulti={false}
-                                        />
+                                    <h5 >Wallet addresses</h5>
+                                    <div className='d-flex flex-column'>
+                                        {
+                                            walletAddressList.map(address =>
+                                                <div key={"address_" + address}
+                                                    className='d-flex flex-row align-items-center'
+                                                >
+                                                    {address}
+                                                    <ImageButton
+                                                        id={"openAddressExplorer" + address}
+                                                        color={"blue"}
+                                                        icon={"open_in_new"}
+                                                        tips={"Open in Explorer"}
+                                                        onClick={() => {
+                                                            const url = localStorage.getItem('explorerWebUIAddress') + 'en/addresses/' + address;
+                                                            window.open(url, '_blank').focus();
+                                                        }}
+                                                    />
+                                                    <ImageButton
+                                                        id={"deleteAddress_" + address}
+                                                        color={"red"}
+                                                        icon={"delete"}
+                                                        tips={"Remove the address from the wallet"}
+                                                        onClick={() => this.deleteAddress(address)}
+                                                    />
+                                                </div>
+                                            )
+                                        }
+                                        <div className='d-flex flex-row'>
+                                            < input type="text"
+                                                size="55"
+                                                id={"addressToAdd"}
+                                                onChange={e => this.setAddressToAdd(e.target.value)}
+                                                value={this.state.addressToAdd}
+                                                className={this.state.isValidAddressToAdd ? "form-control validInput m-1" : "form-control invalidInput m-1"}
+                                            />
+                                            <ValidInput id={"isValidAddressToAdd"}
+                                                isValid={this.state.isValidAddressToAdd}
+                                                validMessage="OK"
+                                                invalidMessage="Invalid address" />
+
+                                            {
+                                                this.state.isValidAddressToAdd ?
+                                                    <ImageButton
+                                                        id={"addAddress"}
+                                                        color={"green"}
+                                                        icon={"add"}
+                                                        tips={"Add new address"}
+                                                        onClick={this.addAddress}
+                                                    />
+                                                    : null
+                                            }
+
+                                        </div>
                                     </div>
                                     <br />
-
+                                </Fragment >
+                                :
+                                <Fragment >
                                     <h5 >Spending password</h5>
                                     <div className='d-flex flex-column'>
                                         <label htmlFor="walletPassword" >Password</label>
@@ -300,10 +413,9 @@ export default class EditWallet extends React.Component {
                                             <div className='d-flex flex-row'>
                                                 <input type="password"
                                                     id="passwordOld"
-                                                    className="form-control "
                                                     onChange={e => this.setPasswordOld(e.target.value)}
                                                     value={this.state.passwordOld}
-                                                    className={this.state.isValidPasswordOld ? "validInput m-1" : "invalidInput m-1"}
+                                                    className={this.state.isValidPasswordOld ? "form-control validInput m-1" : "form-control invalidInput m-1"}
                                                 />
                                                 <ValidInput
                                                     id="isValidPasswordOld"
@@ -320,20 +432,18 @@ export default class EditWallet extends React.Component {
                                                 <div className='d-flex flex-row align-items-center'>
                                                     <input type="password"
                                                         id="password1"
-                                                        className="form-control "
                                                         onChange={e => this.setPassword1(e.target.value)}
                                                         value={this.state.password1}
-                                                        className={this.state.isValidPassword1 ? "validInput m-1" : "invalidInput m-1"}
+                                                        className={this.state.isValidPassword1 ? "form-control validInput m-1" : "form-control invalidInput m-1"}
                                                     />
                                                     <ValidInput id="isValidPassword1" isValid={this.state.isValidPassword1} validMessage="OK" invalidMessage={this.state.invalidPassword1Message} />
                                                 </div>
                                                 <div className='d-flex flex-row align-items-center'>
                                                     <input type="password"
                                                         id="password2"
-                                                        className="form-control "
                                                         onChange={e => this.setPassword2(e.target.value)}
                                                         value={this.state.password2}
-                                                        className={this.state.isValidPassword2 ? "validInput m-1" : "invalidInput m-1"}
+                                                        className={this.state.isValidPassword2 ? "form-control validInput m-1" : "form-control invalidInput m-1"}
                                                     />
                                                     <ValidInput id="isValidPassword2" isValid={this.state.isValidPassword2} validMessage="OK" invalidMessage={this.state.invalidPassword2Message} />
                                                     <button className="btn btn-outline-info"
@@ -371,6 +481,16 @@ export default class EditWallet extends React.Component {
                                             <button className="btn btn-outline-info"
                                                 onClick={this.showMnemonic}
                                             >Show Mnemonic</button>
+                                        </div>
+                                    </div>
+                                    <br />
+
+                                    <h5 >Convert to Ergopay (delete mnemonic)</h5>
+                                    <div className='d-flex flex-column'>
+                                        <div>
+                                            <button className="btn btn-outline-info"
+                                                onClick={this.deleteMnemonic}
+                                            >Convert to Ergopay wallet</button>
                                         </div>
                                     </div>
                                     <br />

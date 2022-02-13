@@ -8,6 +8,7 @@ import erdogeLogo from '../resources/tokens/token-erdoge.svg';
 import ergopadLogo from '../resources/tokens/token-ergopad.svg';
 import lunadogLogo from '../resources/tokens/token-lunadog.svg';
 import netaLogo from '../resources/tokens/token-neta.svg';
+import unknown from '../resources/tokens/token-unknown.png';
 
 
 export default class VerifiedTokenImage extends React.Component {
@@ -37,13 +38,13 @@ export default class VerifiedTokenImage extends React.Component {
             case TOKENID_NETA:
                 return netaLogo;
             default:
-                return 'foo';
+                return unknown;
         }
     }
 
     render() {
         return (
-            <img src={this.renderSwitch(this.state.tokenId)} />
+            <img src={this.renderSwitch(this.state.tokenId)} alt={this.state.tokenId}/>
         )
     }
 }

@@ -107,7 +107,7 @@ export default class WalletList extends React.Component {
                                 id={"newErgoPayWallet"}
                                 color={"orange"}
                                 icon={"add_card"}
-                                tips={"Add new ergo pay wallet"}
+                                tips={"Add new ErgoPay wallet<br/>Sign using iOS or Android wallet"}
                                 onClick={() => this.state.setPage('addErgoPay')}
                             />
                             <ImageButton

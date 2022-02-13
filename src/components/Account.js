@@ -95,7 +95,6 @@ export default class Account extends React.Component {
     }
 
     render() {
-        const addressList = this.state.addressContentList.map(addrContent => addrContent.address);
         const wallet = getWalletById(this.state.walletId);
         const walletAddressList = wallet.accounts.map(account => account.addresses).flat();
         //console.log("Account", this.state.account);
