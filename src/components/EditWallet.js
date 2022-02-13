@@ -7,7 +7,7 @@ import { SketchPicker } from 'react-color';
 import Select from 'react-select';
 import ValidInput from './ValidInput';
 import ImageButton from './ImageButton';
-import { MAX_NUMBER_OF_UNUSED_ADDRESS_PER_ACCOUNT } from '../utils/constants';
+import { DEFAULT_NUMBER_OF_UNUSED_ADDRESS_PER_ACCOUNT } from '../utils/constants';
 
 export default class EditWallet extends React.Component {
     constructor(props) {
@@ -405,96 +405,98 @@ export default class EditWallet extends React.Component {
                                     <br />
                                 </Fragment >
                                 :
-                                <Fragment >
-                                    <h5 >Spending password</h5>
-                                    <div className='d-flex flex-column'>
-                                        <label htmlFor="walletPassword" >Password</label>
-                                        <div className='d-flex flex-row align-items-center col-sm'>
-                                            <div className='d-flex flex-row'>
-                                                <input type="password"
-                                                    id="passwordOld"
-                                                    onChange={e => this.setPasswordOld(e.target.value)}
-                                                    value={this.state.passwordOld}
-                                                    className={this.state.isValidPasswordOld ? "form-control validInput m-1" : "form-control invalidInput m-1"}
-                                                />
-                                                <ValidInput
-                                                    id="isValidPasswordOld"
-                                                    isValid={this.state.isValidPasswordOld}
-                                                    validMessage="OK"
-                                                    invalidMessage={this.state.invalidPasswordOldMessage}
-                                                />
-                                            </div>
-                                        </div>
-
+                                wallet.type === "mnemonic" ?
+                                    <Fragment >
+                                        <h5 >Spending password</h5>
                                         <div className='d-flex flex-column'>
-                                            <label htmlFor="password1" >New password</label>
-                                            <div className='d-flex flex-column col-sm'>
-                                                <div className='d-flex flex-row align-items-center'>
+                                            <label htmlFor="walletPassword" >Password</label>
+                                            <div className='d-flex flex-row align-items-center col-sm'>
+                                                <div className='d-flex flex-row'>
                                                     <input type="password"
-                                                        id="password1"
-                                                        onChange={e => this.setPassword1(e.target.value)}
-                                                        value={this.state.password1}
-                                                        className={this.state.isValidPassword1 ? "form-control validInput m-1" : "form-control invalidInput m-1"}
+                                                        id="passwordOld"
+                                                        onChange={e => this.setPasswordOld(e.target.value)}
+                                                        value={this.state.passwordOld}
+                                                        className={this.state.isValidPasswordOld ? "form-control validInput m-1" : "form-control invalidInput m-1"}
                                                     />
-                                                    <ValidInput id="isValidPassword1" isValid={this.state.isValidPassword1} validMessage="OK" invalidMessage={this.state.invalidPassword1Message} />
-                                                </div>
-                                                <div className='d-flex flex-row align-items-center'>
-                                                    <input type="password"
-                                                        id="password2"
-                                                        onChange={e => this.setPassword2(e.target.value)}
-                                                        value={this.state.password2}
-                                                        className={this.state.isValidPassword2 ? "form-control validInput m-1" : "form-control invalidInput m-1"}
+                                                    <ValidInput
+                                                        id="isValidPasswordOld"
+                                                        isValid={this.state.isValidPasswordOld}
+                                                        validMessage="OK"
+                                                        invalidMessage={this.state.invalidPasswordOldMessage}
                                                     />
-                                                    <ValidInput id="isValidPassword2" isValid={this.state.isValidPassword2} validMessage="OK" invalidMessage={this.state.invalidPassword2Message} />
-                                                    <button className="btn btn-outline-info"
-                                                        onClick={this.updateWalletPassword}
-                                                        disabled={!(this.state.isValidPasswordOld && this.state.isValidPassword1 && this.state.isValidPassword2)}
-                                                    >Update password</button>
                                                 </div>
-                                                <div >
+                                            </div>
+
+                                            <div className='d-flex flex-column'>
+                                                <label htmlFor="password1" >New password</label>
+                                                <div className='d-flex flex-column col-sm'>
+                                                    <div className='d-flex flex-row align-items-center'>
+                                                        <input type="password"
+                                                            id="password1"
+                                                            onChange={e => this.setPassword1(e.target.value)}
+                                                            value={this.state.password1}
+                                                            className={this.state.isValidPassword1 ? "form-control validInput m-1" : "form-control invalidInput m-1"}
+                                                        />
+                                                        <ValidInput id="isValidPassword1" isValid={this.state.isValidPassword1} validMessage="OK" invalidMessage={this.state.invalidPassword1Message} />
+                                                    </div>
+                                                    <div className='d-flex flex-row align-items-center'>
+                                                        <input type="password"
+                                                            id="password2"
+                                                            onChange={e => this.setPassword2(e.target.value)}
+                                                            value={this.state.password2}
+                                                            className={this.state.isValidPassword2 ? "form-control validInput m-1" : "form-control invalidInput m-1"}
+                                                        />
+                                                        <ValidInput id="isValidPassword2" isValid={this.state.isValidPassword2} validMessage="OK" invalidMessage={this.state.invalidPassword2Message} />
+                                                        <button className="btn btn-outline-info"
+                                                            onClick={this.updateWalletPassword}
+                                                            disabled={!(this.state.isValidPasswordOld && this.state.isValidPassword1 && this.state.isValidPassword2)}
+                                                        >Update password</button>
+                                                    </div>
+                                                    <div >
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                    <br />
-                                    <div className='d-flex flex-row align-items-baseline'>
-                                        <h5 >Addresses</h5>
-                                        <ImageButton
-                                            id={"searchAddressesInfo"}
-                                            color={"white"}
-                                            icon={"info"}
-                                            tips={"Refresh wallet addresses, add up to " + MAX_NUMBER_OF_UNUSED_ADDRESS_PER_ACCOUNT + " unused addresses to active accounts"}
-                                        />
-                                    </div>
-                                    <div className='d-flex flex-column'>
-                                        <div>
-                                            <button className="btn btn-outline-info"
-                                                onClick={this.searchAddresses}
-                                            >Search used addresses</button>
+                                        <br />
+                                        <div className='d-flex flex-row align-items-baseline'>
+                                            <h5 >Addresses</h5>
+                                            <ImageButton
+                                                id={"searchAddressesInfo"}
+                                                color={"white"}
+                                                icon={"info"}
+                                                tips={"Refresh wallet addresses, add up to " + DEFAULT_NUMBER_OF_UNUSED_ADDRESS_PER_ACCOUNT + " unused addresses to active accounts"}
+                                            />
                                         </div>
-                                    </div>
-                                    <br />
+                                        <div className='d-flex flex-column'>
+                                            <div>
+                                                <button className="btn btn-outline-info"
+                                                    onClick={this.searchAddresses}
+                                                >Search used addresses</button>
+                                            </div>
+                                        </div>
+                                        <br />
 
-                                    <h5 >Mnemonic</h5>
-                                    <div className='d-flex flex-column'>
-                                        <div>
-                                            <button className="btn btn-outline-info"
-                                                onClick={this.showMnemonic}
-                                            >Show Mnemonic</button>
+                                        <h5 >Mnemonic</h5>
+                                        <div className='d-flex flex-column'>
+                                            <div>
+                                                <button className="btn btn-outline-info"
+                                                    onClick={this.showMnemonic}
+                                                >Show Mnemonic</button>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <br />
+                                        <br />
 
-                                    <h5 >Convert to Ergopay (delete mnemonic)</h5>
-                                    <div className='d-flex flex-column'>
-                                        <div>
-                                            <button className="btn btn-outline-info"
-                                                onClick={this.deleteMnemonic}
-                                            >Convert to Ergopay wallet</button>
+                                        <h5 >Convert to Ergopay (delete mnemonic)</h5>
+                                        <div className='d-flex flex-column'>
+                                            <div>
+                                                <button className="btn btn-outline-info"
+                                                    onClick={this.deleteMnemonic}
+                                                >Convert to Ergopay wallet</button>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <br />
-                                </Fragment>
+                                        <br />
+                                    </Fragment>
+                                    : null
                         }
                         <h5 >Backup {this.state.walletName}</h5>
                         <div className='d-flex flex-column'>

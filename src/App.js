@@ -14,6 +14,7 @@ import DisconnectWallet from './components/DisconnectWallet';
 import Mixer from './components/Mixer';
 import { confirmAlert } from './utils/Alerts';
 import { isUpgradeWalletRequired, upgradeWallets } from './utils/walletUtils';
+import AddLedgerWallet from './components/AddLedgerWallet';
 
 export default class App extends React.Component {
     constructor(props) {
@@ -21,7 +22,7 @@ export default class App extends React.Component {
         var iniPage = 'empty';
         const disclaimerAccepted = (localStorage.getItem('disclaimerAccepted') === "true") ?? false;
         if (disclaimerAccepted) iniPage = 'home';
-        console.log("App ini",disclaimerAccepted,iniPage);
+        console.log("App ini", disclaimerAccepted, iniPage);
         this.state = {
             page: iniPage,
             walletId: 0,
@@ -68,7 +69,7 @@ export default class App extends React.Component {
             confirmAlert("Disclaimer", DISCLAIMER_TEXT, "Use SAFEW", "Refuse").then(res => {
                 if (res.isConfirmed) {
                     localStorage.setItem('disclaimerAccepted', "true");
-                    this.setState({disclaimerAccepted: true});
+                    this.setState({ disclaimerAccepted: true });
                     this.setPage('home');
                 } else {
                     window.close();
@@ -94,11 +95,14 @@ export default class App extends React.Component {
             case 'addErgoPay':
                 page = <AddWallet ergoPayOnly={true} setPage={this.setPage} />
                 break;
+            case 'addLedgerWallet':
+                page = <AddLedgerWallet setPage={this.setPage} />
+                break;
             case 'edit':
                 page = <EditWallet setPage={this.setPage} walletId={this.state.walletId} />
                 break;
             case 'send':
-                page = <SendTransaction setPage={this.setPage} walletId={this.state.walletId} iniTran={this.state.setPageParam}/>
+                page = <SendTransaction setPage={this.setPage} walletId={this.state.walletId} iniTran={this.state.setPageParam} />
                 break;
             case 'transactions':
                 page = <TransactionList setPage={this.setPage} walletId={this.state.walletId} />

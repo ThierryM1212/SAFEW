@@ -100,7 +100,7 @@ export default class WalletList extends React.Component {
                                 id={"newWallet"}
                                 color={"green"}
                                 icon={"add_card"}
-                                tips={"Add new wallet"}
+                                tips={"Add new wallet from mnemonic"}
                                 onClick={() => this.state.setPage('add')}
                             />
                             <ImageButton
@@ -109,6 +109,13 @@ export default class WalletList extends React.Component {
                                 icon={"add_card"}
                                 tips={"Add new ErgoPay wallet<br/>Sign using iOS or Android wallet"}
                                 onClick={() => this.state.setPage('addErgoPay')}
+                            />
+                            <ImageButton
+                                id={"newLedgerWallet"}
+                                color={"orange"}
+                                icon={"vpn_key"}
+                                tips={"Add new ledger wallet<br/>Sign using ledger Nano S/X"}
+                                onClick={() => this.state.setPage('addLedgerWallet')}
                             />
                             <ImageButton
                                 id={"refreshWalletList"}

@@ -26,6 +26,10 @@ export async function addErgoPayWallet(name, address, color) {
     return _addNewWallet(name, walletAccounts, color, " ", " ", "ergopay")
 }
 
+export function addLedgerWallet(name, accounts, color) {
+    return _addNewWallet(name, accounts, color, " ", " ", "ledger")
+}
+
 export async function addNewWallet(name, mnemonic, password, color) {
     const walletAccounts = await discoverAddresses(mnemonic);
     return _addNewWallet(name, walletAccounts, color, mnemonic, password, "mnemonic")

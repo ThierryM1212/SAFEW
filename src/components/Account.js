@@ -8,6 +8,8 @@ import { MAX_NUMBER_OF_UNUSED_ADDRESS_PER_ACCOUNT } from '../utils/constants';
 import { addressHasTransactions } from '../ergo-related/explorer';
 import { errorAlert, promptPassword, successAlert } from '../utils/Alerts';
 import { getAddress } from '../ergo-related/ergolibUtils';
+import { getNewAddress } from '../ergo-related/ledger';
+import { DeviceError } from 'ledgerjs-hw-app-ergo';
 
 export default class Account extends React.Component {
     constructor(props) {
@@ -43,21 +45,45 @@ export default class Account extends React.Component {
         //console.log("addNewAddress",unusedAddresses,maxAddrIndex)
         if (unusedAddresses < MAX_NUMBER_OF_UNUSED_ADDRESS_PER_ACCOUNT){
             if (usedAddresses > 0) {
-                const password = await promptPassword("Spending password for<br/>" + wallet.name, "", "Search");
-                const mnemonic = decryptMnemonic(wallet.mnemonic, password);
-                if (mnemonic !== '') {
-                    const newAddr = await getAddress(mnemonic, accountId, maxAddrIndex + 1);
-                    console.log("newAddr", newAddr);
-                    wallet.accounts[accountId].addresses = [...wallet.accounts[accountId].addresses, { id: maxAddrIndex + 1, address: newAddr, used: false }];
-                    updateWallet(wallet, this.state.walletId);
-                    successAlert("Address " + newAddr + " added")
-                    .then(res=>{
-                        window.location.reload();
-                    });
-                } else {
-                    errorAlert("Failed to decrypt Mnemonic", "incorrect password");
-                    return -1;
+                if (wallet.type === 'mnemonic') {
+                    const password = await promptPassword("Spending password for<br/>" + wallet.name, "", "Search");
+                    const mnemonic = decryptMnemonic(wallet.mnemonic, password);
+                    if (mnemonic !== '') {
+                        const newAddr = await getAddress(mnemonic, accountId, maxAddrIndex + 1);
+                        console.log("newAddr", newAddr);
+                        wallet.accounts[accountId].addresses = [...wallet.accounts[accountId].addresses, { id: maxAddrIndex + 1, address: newAddr, used: false }];
+                        updateWallet(wallet, this.state.walletId);
+                        successAlert("Address " + newAddr + " added")
+                        .then(res=>{
+                            window.location.reload();
+                        });
+                    } else {
+                        errorAlert("Failed to decrypt Mnemonic", "incorrect password");
+                        return -1;
+                    }
                 }
+                if (wallet.type === 'ledger') {
+                    try {
+                        const newAddress = await getNewAddress(wallet, accountId);
+                        console.log('ledger',wallet.accounts[accountId]);
+                        wallet.accounts[accountId].addresses = [...wallet.accounts[accountId].addresses, newAddress];
+                        updateWallet(wallet, this.state.walletId);
+                        successAlert("Address " + newAddress.address + " added")
+                        .then(res=>{
+                            window.location.reload();
+                        });
+                    } catch (e) {
+                        console.log("getLedgerAddresses catch", e);
+                        if (e instanceof DeviceError) {
+                            errorAlert("Cannot connect Ledger ergo application, unlock the ledger and start the Ergo applicaiton on the ledger.");
+                        } else {
+                            if (e instanceof Error) {
+                                errorAlert(e.message);
+                            }
+                        }
+                    }
+                }
+                
             } else {
                 errorAlert("Failed to create new address", "No used address in the account")
                 return -1;

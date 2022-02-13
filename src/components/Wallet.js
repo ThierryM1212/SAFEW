@@ -6,6 +6,8 @@ import ImageButton from './ImageButton';
 import Account from './Account';
 import Address from './Address';
 import { errorAlert, promptPassword } from '../utils/Alerts';
+import { getNewAccount } from '../ergo-related/ledger';
+import { DeviceError } from 'ledgerjs-hw-app-ergo';
 
 export default class Wallet extends React.Component {
     constructor(props) {
@@ -18,7 +20,6 @@ export default class Wallet extends React.Component {
             showAccounts: false,
             updateWalletList: props.updateWalletList,
             expertMode: (localStorage.getItem('expertMode') === 'true') ?? false,
-            ergoPayOnly: props.wallet.type === "ergopay"  ?? false,
         };
         console.log("Wallet constructor", props.wallet, props.addressContentList, JSON.stringify(props.addressContentList));
         this.addNewAccount = this.addNewAccount.bind(this);
@@ -28,25 +29,47 @@ export default class Wallet extends React.Component {
     async addNewAccount() {
         const txFound = await lastAccountHasTransaction(this.state.wallet);
         if (txFound) {
-            const password = await promptPassword("Spending password for <br/>" + this.state.wallet.name, "", "Add account");
-            const mnemonic = decryptMnemonic(this.state.wallet.mnemonic, password);
-            if (mnemonic !== '') {
-                var newWallet = { ...this.state.wallet };
-                const lastAccountId = getLastAccountId(this.state.wallet);
-                const newAddr = await getAddress(mnemonic, lastAccountId + 1, 0);
-                newWallet.accounts = [...newWallet.accounts, {
-                    id: lastAccountId + 1,
-                    name: "Account_" + (lastAccountId + 1).toString(),
-                    addresses: [{ id: 0, address: newAddr, used: false }]
-                }];
-                //console.log("addNewAccount", newWallet);
-                updateWallet(newWallet, this.state.id);
-                window.location.reload();
-                //this.setState({wallet: {...newWallet}});
-            } else {
-                errorAlert("Failed to decrypt mnemonic for " + this.state.wallet.name, "Invalid password");
-                return;
+            if (this.state.wallet.type === 'mnemonic') {
+                const password = await promptPassword("Spending password for <br/>" + this.state.wallet.name, "", "Add account");
+                const mnemonic = decryptMnemonic(this.state.wallet.mnemonic, password);
+                if (mnemonic !== '') {
+                    var newWallet = { ...this.state.wallet };
+                    const lastAccountId = getLastAccountId(this.state.wallet);
+                    const newAddr = await getAddress(mnemonic, lastAccountId + 1, 0);
+                    newWallet.accounts = [...newWallet.accounts, {
+                        id: lastAccountId + 1,
+                        name: "Account_" + (lastAccountId + 1).toString(),
+                        addresses: [{ id: 0, address: newAddr, used: false }]
+                    }];
+                    //console.log("addNewAccount", newWallet);
+                    updateWallet(newWallet, this.state.id);
+                    window.location.reload();
+                    //this.setState({wallet: {...newWallet}});
+                } else {
+                    errorAlert("Failed to decrypt mnemonic for " + this.state.wallet.name, "Invalid password");
+                    return;
+                }
             }
+            if (this.state.wallet.type === 'ledger') {
+                var newWallet = { ...this.state.wallet };
+                try {
+                    const newAccount = await getNewAccount(newWallet);
+                    newWallet.accounts = [...newWallet.accounts, newAccount];
+                    updateWallet(newWallet, this.state.id);
+                    window.location.reload();
+                } catch (e) {
+                    console.log("getLedgerAddresses catch", e);
+                    if (e instanceof DeviceError) {
+                        errorAlert("Cannot connect Ledger ergo application, unlock the ledger and start the Ergo applicaiton on the ledger.");
+                    } else {
+                        if (e instanceof Error) {
+                            errorAlert(e.message);
+                        }
+                    }
+                }
+            }
+
+
         } else {
             errorAlert("Last account has no transaction.", "Cannot create new account (BIP-44)");
             return;
@@ -116,15 +139,22 @@ export default class Wallet extends React.Component {
                             />&nbsp;
                             <h5>{this.state.wallet.name}</h5>
                             {
-
-                                this.state.ergoPayOnly ?
+                                this.state.wallet.type === "ergopay" ?
                                     <ImageButton
                                         id={"ergopayWallet"}
                                         color={"white"}
                                         icon={"phone_android"}
                                         tips={"ErgoPay wallet"} />
                                     : null
-
+                            }
+                            {
+                                this.state.wallet.type === "ledger" ?
+                                    <ImageButton
+                                        id={"ledgerWallet"}
+                                        color={"white"}
+                                        icon={"vpn_key"}
+                                        tips={"Ledger wallet"} />
+                                    : null
                             }
                         </div>
                         {
@@ -138,7 +168,7 @@ export default class Wallet extends React.Component {
                     {
                         this.state.showAccounts ?
 
-                            this.state.expertMode && !this.state.ergoPayOnly ?
+                            this.state.expertMode && this.state.wallet !== "ergopay" ?
                                 <div>
                                     <div className='d-flex flex-row align-items-center'>
                                         <div className='d-flex flex-row'>&nbsp;Accounts</div>
@@ -176,9 +206,7 @@ export default class Wallet extends React.Component {
                                                     used={walletAddressList.find(addressW => addressW.address === address.address).used}
                                                 />
                                             )
-
                                     }
-
                                 </div>
                             : null
                     }

@@ -1,6 +1,6 @@
-import { MAX_NUMBER_OF_UNUSED_ADDRESS_PER_ACCOUNT, NANOERG_TO_ERG } from '../utils/constants';
+import { DEFAULT_NUMBER_OF_UNUSED_ADDRESS_PER_ACCOUNT, NANOERG_TO_ERG } from '../utils/constants';
 import { addressHasTransactions, currentHeight, unspentBoxesFor } from './explorer';
-import { byteArrayToBase64, getErgoStateContext } from './serializer';
+import { byteArrayToBase64, decodeString, getErgoStateContext } from './serializer';
 import JSONBigInt from 'json-bigint';
 import { getTokenListFromUtxos, getUtxosListValue, parseUtxos } from './utxos';
 let ergolib = import('ergo-lib-wasm-browser');
@@ -40,7 +40,7 @@ export async function discoverAddresses(mnemonic) {
     const seed = (await ergolib).Mnemonic.to_seed(mnemonic, "");
     const rootSecret = (await ergolib).ExtSecretKey.derive_master(seed);
     let accountId = 0, txForAccountFound = true, accounts = [], unusedAddresses = [];
-    const numberOfUnusedAddress = MAX_NUMBER_OF_UNUSED_ADDRESS_PER_ACCOUNT;
+    const numberOfUnusedAddress = DEFAULT_NUMBER_OF_UNUSED_ADDRESS_PER_ACCOUNT;
     while (txForAccountFound) {
         let index = 0, indexMax = 20, accountAddrressList = [];
         txForAccountFound = false;
@@ -79,6 +79,12 @@ export async function discoverAddresses(mnemonic) {
             accounts.push({
                 id: accountId,
                 addresses: accountAddrressList,
+                name: "Account_" + accountId.toString(),
+            });
+        } else { // no used addresses in the account add only the first one
+            accounts.push({
+                id: accountId,
+                addresses: [accountAddrressList[0]],
                 name: "Account_" + accountId.toString(),
             });
         }
