@@ -11,6 +11,8 @@ import { sendTx } from '../ergo-related/node';
 import { getUtxoBalanceForAddressList, parseSignedTx } from '../ergo-related/utxos';
 import VerifiedTokenImage from './VerifiedTokenImage';
 import BigQRCode from './BigQRCode';
+import { signTxLedger } from '../ergo-related/ledger';
+import { DeviceError } from 'ledgerjs-hw-app-ergo';
 
 export default class SendTransaction extends React.Component {
     constructor(props) {
@@ -203,7 +205,7 @@ export default class SendTransaction extends React.Component {
         if (tokAmountStr.indexOf('.') > -1) {
             var str = tokAmountStr.split(".");
             str[1] = str[1].replace(/0+$/g, ""); //remove trailing 0
-            console.log("validateTokenAmount2",str[1].length)
+            console.log("validateTokenAmount2", str[1].length)
             if (str[1].length > tokenDecimals) {
                 return false;
             } else {
@@ -281,30 +283,44 @@ export default class SendTransaction extends React.Component {
                 txSummaryHtml += "</tbody></table></div>";
             }
 
-            const password = await promptPassword("Sign transaction for<br/>" + wallet.name, txSummaryHtml, "Sign");
-            //console.log("sendTransaction password", password);
-            const mnemonic = decryptMnemonic(wallet.mnemonic, password);
-            if (mnemonic === null) {
-                return;
-            }
-            if (mnemonic === '' || mnemonic === undefined) {
-                errorAlert("Failed to decrypt Mnemonic", "Wrong password ?");
-                return;
-            }
-            const signingWallet = await getWalletForAddresses(mnemonic, selectedAddresses);
-            //console.log("signingWallet", signingWallet);
             var signedTx = {};
-
-            try {
-                signedTx = JSON.parse(await signTransaction(jsonUnsignedTx, selectedUtxos, [], signingWallet));
-                console.log("signedTx", signedTx);
-            } catch (e) {
-                errorAlert("Failed to sign transaction", e);
-                return;
+            if (wallet.type === "mnemonic") {
+                const password = await promptPassword("Sign transaction for<br/>" + wallet.name, txSummaryHtml, "Sign");
+                //console.log("sendTransaction password", password);
+                const mnemonic = decryptMnemonic(wallet.mnemonic, password);
+                if (mnemonic === null) {
+                    return;
+                }
+                if (mnemonic === '' || mnemonic === undefined) {
+                    errorAlert("Failed to decrypt Mnemonic", "Wrong password ?");
+                    return;
+                }
+                const signingWallet = await getWalletForAddresses(mnemonic, selectedAddresses);
+                //console.log("signingWallet", signingWallet);
+                try {
+                    signedTx = JSON.parse(await signTransaction(jsonUnsignedTx, selectedUtxos, [], signingWallet));
+                    console.log("signedTx", signedTx);
+                } catch (e) {
+                    errorAlert("Failed to sign transaction", e);
+                    return;
+                }
+                console.log("signedTx", signedTx)
+                await sendTx(signedTx);
+                this.state.setPage('transactions', this.state.walletId);
             }
-            await sendTx(signedTx);
-            //await delay(3000);
-            this.state.setPage('transactions', this.state.walletId);
+            if (wallet.type === "ledger") {
+                try {
+                    signedTx = JSON.parse(await signTxLedger(wallet, unsignedTransaction, selectedUtxos, txSummaryHtml));
+                    console.log("signedTx", signedTx)
+                    await sendTx(signedTx);
+                    this.state.setPage('transactions', this.state.walletId);
+                } catch (e) {
+                    console.log("getLedgerAddresses catch", e);
+                    if (e instanceof DeviceError) {
+                        errorAlert("Cannot connect Ledger ergo application, unlock the ledger and start the Ergo applicaiton on the ledger.")
+                    }
+                }
+            }
         }
     }
 

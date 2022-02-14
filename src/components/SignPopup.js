@@ -1,7 +1,9 @@
+import { DeviceError } from 'ledgerjs-hw-app-ergo';
 import React, { Fragment } from 'react';
 import ReactJson from 'react-json-view';
-import { getTxReducedB64Safe } from '../ergo-related/ergolibUtils';
+import { getTxReducedB64Safe, getUnsignedTransaction } from '../ergo-related/ergolibUtils';
 import { boxByBoxId } from '../ergo-related/explorer';
+import { signTxLedger } from '../ergo-related/ledger';
 import { getWalletForAddresses, signTransaction } from '../ergo-related/serializer';
 import { getUtxoBalanceForAddressList, parseSignedTx, parseUnsignedTx, parseUtxos } from '../ergo-related/utxos';
 import { errorAlert } from '../utils/Alerts';
@@ -123,25 +125,41 @@ export default class SignPopup extends React.Component {
 
     async signTx() {
         console.log("signTx", this.state)
-        const walletAddressList = getWalletUsedAddressList(this.state.wallet);
-        const mnemonic = decryptMnemonic(this.state.wallet.mnemonic, this.state.password);
-        if (mnemonic === null) {
-            return;
-        }
-        if (mnemonic === '' || mnemonic === undefined) {
-            errorAlert("Failed to decrypt Mnemonic", "Wrong password ?");
-            return;
-        }
+        var signedTx = {};
         try {
-            const signingWallet = await getWalletForAddresses(mnemonic, walletAddressList);
             const inputsDetails = parseUtxos(await Promise.all(this.state.unSignedTx.inputs.map(async (box) => {
                 return await boxByBoxId(box.boxId);
             })));
             const dataInputsDetails = parseUtxos(await Promise.all(this.state.unSignedTx.dataInputs.map(async (box) => {
                 return await boxByBoxId(box.boxId);
             })));
-            var signedTx = {};
-            signedTx = await signTransaction(this.state.unSignedTx, inputsDetails, dataInputsDetails, signingWallet);
+            if (this.state.wallet.type === "mnemonic") {
+                const walletAddressList = getWalletUsedAddressList(this.state.wallet);
+                const mnemonic = decryptMnemonic(this.state.wallet.mnemonic, this.state.password);
+                if (mnemonic === null) {
+                    return;
+                }
+                if (mnemonic === '' || mnemonic === undefined) {
+                    errorAlert("Failed to decrypt Mnemonic", "Wrong password ?");
+                    return;
+                }
+                const signingWallet = await getWalletForAddresses(mnemonic, walletAddressList);
+                signedTx = await signTransaction(this.state.unSignedTx, inputsDetails, dataInputsDetails, signingWallet);
+            }
+            if (this.state.wallet.type === "ledger") {
+                console.log("signTx ledger", this.state)
+                try {
+                    const unSignedTx = await getUnsignedTransaction(this.state.unSignedTx);
+                    console.log("signTx getUnsignedTransaction", unSignedTx);
+                    signedTx = await signTxLedger(this.state.wallet, unSignedTx, inputsDetails, null);
+                    console.log("signTx signedTx", signedTx);
+                } catch (e) {
+                    console.log("signTxLedger catch", e);
+                    if (e instanceof DeviceError) {
+                        errorAlert("Cannot connect Ledger ergo application, unlock the ledger and start the Ergo applicaiton on the ledger.")
+                    }
+                }
+            }
             console.log("signedTx", signedTx);
         } catch (e) {
             chrome.runtime.sendMessage({
@@ -235,26 +253,28 @@ export default class SignPopup extends React.Component {
                             </div>
                             : null
                     }
-
-                    <div className='card m-1 p-1 d-flex flex-column'>
-                        <h6>ErgoPay transaction</h6>
-                        {this.state.txId === "" ?
-                            <div className='d-flex flex-row justify-content-center'>
-                                <button className="btn btn-outline-info"
-                                    onClick={this.showTxReduced}>
-                                    Show ErgoPay transaction
-                                </button>
-                            </div>
-                            :
-                            <div className='d-flex flex-row justify-content-center'>
-                                <BigQRCode QRCodeTx={this.state.txReducedB64safe} />
-                            </div>
-                        }
-                    </div>
-
                     {
-                        this.state.wallet.type === "ergopay" ? null :
-                            <Fragment>
+                        this.state.wallet.type === "ergopay" ?
+                            <div className='card m-1 p-1 d-flex flex-column'>
+                                <h6>ErgoPay transaction</h6>
+                                {this.state.txId === "" ?
+                                    <div className='d-flex flex-row justify-content-center'>
+                                        <button className="btn btn-outline-info"
+                                            onClick={this.showTxReduced}>
+                                            Show ErgoPay transaction
+                                        </button>
+                                    </div>
+                                    :
+                                    <div className='d-flex flex-row justify-content-center'>
+                                        <BigQRCode QRCodeTx={this.state.txReducedB64safe} />
+                                    </div>
+                                }
+                            </div>
+                            : null
+                    }
+                    <Fragment>
+                        {
+                            this.state.wallet.type === "mnemonic" ?
                                 <div className='card m-1 p-1 d-flex flex-column'>
                                     <label htmlFor="walletPassword" >Spending password for {this.state.wallet.name}</label>
                                     <input type="password"
@@ -264,21 +284,23 @@ export default class SignPopup extends React.Component {
                                         value={this.state.password}
                                     />
                                 </div>
-                                <div className='d-flex flex-row justify-content-between'>
-                                    <div></div>
+                                : null
+                        }
+                        <div className='d-flex flex-row justify-content-between'>
+                            <div></div>
 
-                                    <button className="btn btn-outline-info"
-                                        onClick={this.signTx}>
-                                        Sign
-                                    </button>
-                                    <button className="btn btn-outline-info"
-                                        onClick={this.cancelSigning}>
-                                        Cancel
-                                    </button>
-                                    <div></div>
-                                </div>
-                            </Fragment>
-                    }
+                            <button className="btn btn-outline-info"
+                                onClick={this.signTx}>
+                                Sign
+                            </button>
+                            <button className="btn btn-outline-info"
+                                onClick={this.cancelSigning}>
+                                Cancel
+                            </button>
+                            <div></div>
+                        </div>
+                    </Fragment>
+
                     <br />
                 </div>
             </Fragment>

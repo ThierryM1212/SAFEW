@@ -249,6 +249,11 @@ export async function createUnsignedTransaction(selectedUtxos, outputCandidates)
     return unsignedTx;
 }
 
+export async function getUnsignedTransaction(unsignedTxJson) {
+    console.log("getUnsignedTransaction", unsignedTxJson);
+    return (await ergolib).UnsignedTransaction.from_json(JSONBigInt.stringify(unsignedTxJson));
+}
+
 // https://github.com/ergoplatform/eips/pull/37 ergopay:<txBase64safe>
 export async function getTxReducedB64Safe(json, inputs, dataInputs = []) {
     console.log("getTxReducedB64Safe", json, inputs, dataInputs);

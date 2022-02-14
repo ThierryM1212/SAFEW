@@ -2,15 +2,11 @@ import HidTransport from "@ledgerhq/hw-transport-webhid";
 import { ErgoLedgerApp } from 'ledgerjs-hw-app-ergo';
 import { waitingAlert } from "../utils/Alerts";
 import { DEFAULT_NUMBER_OF_UNUSED_ADDRESS_PER_ACCOUNT } from "../utils/constants";
+import { convertToHex, hexToBytes } from "../utils/utils";
+import { getWalletAddressesPathMap } from "../utils/walletUtils";
 import { addressHasTransactions } from "./explorer";
 let ergolib = import('ergo-lib-wasm-browser');
 
-
-function hexToBytes(hex) {
-    for (var bytes = [], c = 0; c < hex.length; c += 2)
-        bytes.push(parseInt(hex.substr(c, 2), 16));
-    return bytes;
-}
 
 async function getLedgerAddresses(pubKey, chain_code, accountId, index) {
     let path = (await ergolib).DerivationPath.new(accountId, new Uint32Array([index]));
@@ -67,6 +63,90 @@ export async function getNewAddress(wallet, accountId) {
         alert.close();
         ledgerApp.transport.close();
     }
+}
+
+export async function signTxLedger(wallet, unsignedTx, selectedUtxos, txSummaryHtml) {
+    var alert = waitingAlert("Waiting transaction signing with ledger", txSummaryHtml);
+    console.log("signTxLedger", wallet, unsignedTx, selectedUtxos, txSummaryHtml);
+
+    const ledgerApp = new ErgoLedgerApp(await HidTransport.create());
+    try {
+        const inputs = [];
+        const outputs = [];
+        const inputBoxes = (await ergolib).ErgoBoxes.from_boxes_json(selectedUtxos);
+        for (let i = 0; i < unsignedTx.inputs().len(); i++) {
+            const input = unsignedTx.inputs().get(i);
+            const box = selectedUtxos.find((b) => b.boxId === input.box_id().to_str());
+            const wasmBox = findBox(inputBoxes, input.box_id().to_str());
+            if (!wasmBox || !box) {
+                throw Error(`Input ${input.box_id().to_str()} not found in unspent boxes.`);
+            }
+            inputs.push({
+                txId: box.transactionId,
+                index: box.index,
+                value: wasmBox.value().as_i64().to_str(),
+                ergoTree: Buffer.from(wasmBox.ergo_tree().sigma_serialize_bytes()),
+                creationHeight: wasmBox.creation_height(),
+                tokens: mapTokens(wasmBox.tokens()),
+                additionalRegisters: Buffer.from(wasmBox.serialized_additional_registers()),
+                extension: Buffer.from(input.extension().sigma_serialize_bytes())
+            });
+        }
+        for (let i = 0; i < unsignedTx.output_candidates().len(); i++) {
+            const wasmOutput = unsignedTx.output_candidates().get(i);
+            const wasmOutputBox = unsignedTx.output_candidates().get(i)
+            outputs.push({
+                value: wasmOutput.value().as_i64().to_str(),
+                ergoTree: Buffer.from(wasmOutput.ergo_tree().sigma_serialize_bytes()),
+                creationHeight: wasmOutput.creation_height(),
+                tokens: mapTokens(wasmOutput.tokens()),
+                registers: Buffer.from([]) // todo: try to find out the right way to do that
+            });
+        }
+        const addressPathMap = getWalletAddressesPathMap(wallet);
+        const changeAddress = wallet.changeAddress;
+        
+        const signatures = await ledgerApp.signTx(
+            {
+                inputs,
+                dataInputs: [],
+                outputs,
+                changeMap: {
+                    address: convertToHex(wallet.changeAddress),
+                    path: addressPathMap[changeAddress]
+                },
+                signPaths: Object.values(addressPathMap),
+            },
+            true
+        );
+        alert = waitingAlert("Sending the transaction...", null);
+        return (await ergolib).Transaction.from_unsigned_tx(
+            unsignedTx,
+            signatures.map((s) => Buffer.from(s.signature, "hex"))
+        ).to_json();
+    } catch (e) {
+        throw e;
+    } finally {
+        ledgerApp.transport.close();
+    }
+}
+
+function findBox(wasmBoxes, boxId) {
+    for (let i = 0; i < wasmBoxes.len(); i++) {
+        if (wasmBoxes.get(i).box_id().to_str() === boxId) {
+            return wasmBoxes.get(i);
+        }
+    }
+}
+function mapTokens(wasmTokens) {
+    const tokens = [];
+    for (let i = 0; i < wasmTokens.len(); i++) {
+        tokens.push({
+            id: wasmTokens.get(i).id().to_str(),
+            amount: wasmTokens.get(i).amount().as_i64().to_str()
+        });
+    }
+    return tokens;
 }
 
 export async function discoverLedgerAddresses() {

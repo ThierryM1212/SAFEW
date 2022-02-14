@@ -301,6 +301,21 @@ export function getWalletListAddressList(walletList) {
     return walletListAddressList
 }
 
+export function getWalletAddressesPathMap(wallet) {
+    var addressPathMap = {}
+    for (const i in wallet.accounts) {
+        for (const j in wallet.accounts[i].addresses){
+            addressPathMap[wallet.accounts[i].addresses[j].address] = getDerivationPath(i, j);
+        }
+    }
+    return addressPathMap;
+}
+
+export function getDerivationPath(accountId, index) {
+    return `m/44'/429'/${accountId}'/0` + '/' + index;
+}
+
+
 export function getAccountAddressList(account) {
     return account.addresses.map((addr) => addr.address);
 }
@@ -374,7 +389,6 @@ export function setAddressUsed(addressToSet) {
 }
 
 export async function updateUnusedAddresses() {
-    var alert = waitingAlert("Searching new used addresses");
     var walletList = JSON.parse(localStorage.getItem('walletList'));
     for (var k in walletList) {
         var newWallet = { ...walletList[k] };
@@ -398,7 +412,6 @@ export async function updateUnusedAddresses() {
             }
         }
     }
-    alert.close();
 }
 
 export function setChangeAddress(walletId, address) {
@@ -463,7 +476,7 @@ export function getSummaryFromSelectedAddressListContent(addressList, addressCon
             //nanoErgsUnconfirmed += addrUnconfirmedInfo.nanoErgs;
             if (Array.isArray(addrInfo.tokens)) {
                 for (const i in addrInfo.tokens) {
-                    const token = {...addrInfo.tokens[i]};
+                    const token = { ...addrInfo.tokens[i] };
                     //if (addressList.includes(addrInfo.address)) {
                     const tokIndex = tokens.findIndex(e => (e.tokenId === token.tokenId));
                     if (tokIndex >= 0) {

@@ -23,3 +23,17 @@ export function hexToRgbA(hex){
     }
     throw new Error('Bad Hex');
 }
+
+export function hexToBytes(hex) {
+    for (var bytes = [], c = 0; c < hex.length; c += 2)
+        bytes.push(parseInt(hex.substr(c, 2), 16));
+    return bytes;
+}
+
+export function convertToHex(str) {
+    var hex = '';
+    for (var i = 0; i < str.length; i++) {
+        hex += '' + str.charCodeAt(i).toString(16);
+    }
+    return hex;
+}

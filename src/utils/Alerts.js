@@ -31,9 +31,10 @@ export function copySuccess() {
   })
 }
 
-export function waitingAlert(title) {
+export function waitingAlert(title, html = null) {
   return Swal.fire({
     title: title,
+    html: html,
     imageUrl: Spinner,
     showConfirmButton: false,
   });
