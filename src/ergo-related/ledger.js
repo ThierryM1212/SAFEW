@@ -66,7 +66,7 @@ export async function getNewAddress(wallet, accountId) {
 }
 
 export async function signTxLedger(wallet, unsignedTx, selectedUtxos, txSummaryHtml) {
-    var alert = waitingAlert("Waiting transaction signing with ledger", txSummaryHtml);
+    waitingAlert("Waiting transaction signing with ledger", txSummaryHtml);
     console.log("signTxLedger", wallet, unsignedTx, selectedUtxos, txSummaryHtml);
 
     const ledgerApp = new ErgoLedgerApp(await HidTransport.create());
@@ -94,7 +94,6 @@ export async function signTxLedger(wallet, unsignedTx, selectedUtxos, txSummaryH
         }
         for (let i = 0; i < unsignedTx.output_candidates().len(); i++) {
             const wasmOutput = unsignedTx.output_candidates().get(i);
-            const wasmOutputBox = unsignedTx.output_candidates().get(i)
             outputs.push({
                 value: wasmOutput.value().as_i64().to_str(),
                 ergoTree: Buffer.from(wasmOutput.ergo_tree().sigma_serialize_bytes()),
@@ -119,7 +118,7 @@ export async function signTxLedger(wallet, unsignedTx, selectedUtxos, txSummaryH
             },
             true
         );
-        alert = waitingAlert("Sending the transaction...", null);
+        waitingAlert("Sending the transaction...", null);
         return (await ergolib).Transaction.from_unsigned_tx(
             unsignedTx,
             signatures.map((s) => Buffer.from(s.signature, "hex"))

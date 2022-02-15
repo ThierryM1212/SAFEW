@@ -28,12 +28,12 @@ export default class Wallet extends React.Component {
 
     async addNewAccount() {
         const txFound = await lastAccountHasTransaction(this.state.wallet);
+        var newWallet = { ...this.state.wallet };
         if (txFound) {
             if (this.state.wallet.type === 'mnemonic') {
                 const password = await promptPassword("Spending password for <br/>" + this.state.wallet.name, "", "Add account");
                 const mnemonic = decryptMnemonic(this.state.wallet.mnemonic, password);
                 if (mnemonic !== '') {
-                    var newWallet = { ...this.state.wallet };
                     const lastAccountId = getLastAccountId(this.state.wallet);
                     const newAddr = await getAddress(mnemonic, lastAccountId + 1, 0);
                     newWallet.accounts = [...newWallet.accounts, {
@@ -51,7 +51,6 @@ export default class Wallet extends React.Component {
                 }
             }
             if (this.state.wallet.type === 'ledger') {
-                var newWallet = { ...this.state.wallet };
                 try {
                     const newAccount = await getNewAccount(newWallet);
                     newWallet.accounts = [...newWallet.accounts, newAccount];

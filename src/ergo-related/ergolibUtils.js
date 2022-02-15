@@ -1,6 +1,6 @@
 import { DEFAULT_NUMBER_OF_UNUSED_ADDRESS_PER_ACCOUNT, NANOERG_TO_ERG } from '../utils/constants';
 import { addressHasTransactions, currentHeight, unspentBoxesFor } from './explorer';
-import { byteArrayToBase64, decodeString, getErgoStateContext } from './serializer';
+import { byteArrayToBase64, getErgoStateContext } from './serializer';
 import JSONBigInt from 'json-bigint';
 import { getTokenListFromUtxos, getUtxosListValue, parseUtxos } from './utxos';
 let ergolib = import('ergo-lib-wasm-browser');

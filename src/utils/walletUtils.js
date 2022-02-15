@@ -4,7 +4,6 @@ import { NANOERG_TO_ERG, PASSWORD_SALT, WALLET_VERSION } from "./constants";
 import '@sweetalert2/theme-dark/dark.css';
 import { enrichUtxos } from "../ergo-related/utxos";
 import { hexToRgbA } from "./utils";
-import { waitingAlert } from "./Alerts";
 var CryptoJS = require("crypto-js");
 
 
@@ -312,7 +311,7 @@ export function getWalletAddressesPathMap(wallet) {
 }
 
 export function getDerivationPath(accountId, index) {
-    return `m/44'/429'/${accountId}'/0` + '/' + index;
+    return `m/44'/429'/${accountId}'/0/` + index;
 }
 
 

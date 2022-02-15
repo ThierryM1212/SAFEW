@@ -2,7 +2,7 @@ import { DeviceError } from 'ledgerjs-hw-app-ergo';
 import React, { Fragment } from 'react';
 import { SketchPicker } from 'react-color';
 import { discoverLedgerAddresses } from '../ergo-related/ledger';
-import { errorAlert, waitingAlert } from '../utils/Alerts';
+import { errorAlert } from '../utils/Alerts';
 import { addLedgerWallet, getWalletNames, INVALID_NAME_LENGTH_MSG } from '../utils/walletUtils';
 import ImageButton from './ImageButton';
 import ValidInput from './ValidInput';
