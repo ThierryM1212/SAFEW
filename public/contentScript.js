@@ -96,7 +96,7 @@ const injected_script_1 = `
 
 const injected_script_2 = `
   
-  class ErgoAPI {
+  class SafewErgoAPI {
       ${ergoInitialAPIFunctions}
 
       get_balance(token_id = 'ERG') {
@@ -149,7 +149,7 @@ const injected_script_2 = `
           });
       }
   }
-  const ergo = Object.freeze(new ErgoAPI());
+  const ergo = Object.freeze(new SafewErgoAPI());
   `
 
 injectScript(injected_script_1);
