@@ -191,6 +191,7 @@ export default class SignPopup extends React.Component {
         }
         return (
             <Fragment>
+                <br />
                 <div className='card w-75 m-1 p-1 d-flex flex-column'
                     style={{
                         borderColor: `rgba(${this.state.wallet.color.r},${this.state.wallet.color.g},${this.state.wallet.color.b}, 0.95)`,
