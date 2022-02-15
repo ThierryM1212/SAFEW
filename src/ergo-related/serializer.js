@@ -192,6 +192,7 @@ async function getSecretForAddress(mnemonic, address) {
 export async function getWalletForAddresses(mnemonic, addressList) {
     var secretKeys = new (await ergolib).SecretKeys();
     for (const addr of addressList) {
+        console.log("getWalletForAddresses", addr)
         const secret = await getSecretForAddress(mnemonic, addr);
         secretKeys.add(secret);
     }
@@ -201,12 +202,14 @@ export async function getWalletForAddresses(mnemonic, addressList) {
 async function getDerivationPathForAddress(rootSecret, address) {
     let path = (await ergolib).DerivationPath.new(0, new Uint32Array([0]));
     var subsequentsMaxes = [10, 100, 1000];
-    var i = 0, j = 0, found = false;
+    
     for (const max of subsequentsMaxes) {
+        var i = 0, j = 0, found = false;
         while (i<max && !found) {
             j = 0;
             while (j<max && !found) {
                 let path = (await ergolib).DerivationPath.new(i, new Uint32Array([j]));
+                //console.log("getDerivationPathForAddress", i, j, path.toString());
                 const changeSecretKey = deriveSecretKey(rootSecret, path);
                 const changePubKey = changeSecretKey.public_key();
                 const changeAddress = (await ergolib).NetworkAddress.new((await ergolib).NetworkPrefix.Mainnet, changePubKey.to_address()).to_base58();
