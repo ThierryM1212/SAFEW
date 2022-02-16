@@ -96,7 +96,7 @@ const injected_script_1 = `
 
 const injected_script_2 = `
   
-  class SafewErgoAPI {
+  class SafewErgoApi {
       ${ergoInitialAPIFunctions}
 
       get_balance(token_id = 'ERG') {
@@ -149,7 +149,7 @@ const injected_script_2 = `
           });
       }
   }
-  const ergo = Object.freeze(new SafewErgoAPI());
+  const ergo = Object.freeze(new SafewErgoApi());
   `
 
 injectScript(injected_script_1);
