@@ -1,4 +1,4 @@
-import { boxByBoxId, currentHeight, getTokenBoxV1 } from "./explorer";
+import { boxByBoxId, currentHeight, getTokenBoxV1, unspentBoxesForV1 } from "./explorer";
 import { encodeContract, ergoTreeToAddress } from "./serializer";
 
 /* global BigInt */
@@ -381,4 +381,15 @@ function buildBalance(inputBal, outputBal) {
     }
     //console.log("buildBalance2", inputBal, outputBal, balValue, balTokens);
     return { value: balValue, tokens: balTokens };
+}
+
+export async function getUnspentBoxesForAddressList(addressList) {
+    const boxList = await Promise.all(addressList.map(async (address) => {
+        const addressBoxes = await unspentBoxesForV1(address);
+        //console.log("getUnspentBoxesForAddressList", address, addressBoxes)
+        return addressBoxes;
+    }));
+    return boxList.flat().sort(function (a, b) {
+        return a.globalIndex - b.globalIndex;
+    });
 }

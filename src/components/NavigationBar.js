@@ -45,7 +45,7 @@ export default function NavigationBar(props) {
                 <ImageButton
                     id={"txbuilder"}
                     color={"blue"}
-                    icon={"blender"}
+                    icon={"construction"}
                     tips={"Transaction builder"}
                     onClick={() => { props.setPage('txbuilder') }}
                 />
