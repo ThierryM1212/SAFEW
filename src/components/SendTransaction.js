@@ -262,7 +262,7 @@ export default class SendTransaction extends React.Component {
                 intervalId: intervalId,
             })
         } else {
-            const txBalance = await getUtxoBalanceForAddressList(jsonUnsignedTx.inputs, jsonUnsignedTx.outputs, selectedAddresses);
+            const txBalance = await getUtxoBalanceForAddressList(jsonUnsignedTx.inputs, jsonUnsignedTx.outputs, this.state.walletAddressList);
             const txBalanceReceiver = await getUtxoBalanceForAddressList(jsonUnsignedTx.inputs, jsonUnsignedTx.outputs, [this.state.sendToAddress]);
             //console.log("sendTransaction txBalance", txBalance, txBalanceReceiver);
 

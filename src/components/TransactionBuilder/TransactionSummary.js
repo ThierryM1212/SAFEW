@@ -27,7 +27,7 @@ export default function TransactionSummary(props) {
                 <thead>
                     <tr><td><h6>Asset</h6></td>
                         <td><h6>Inputs</h6></td>
-                        <td><h6>Output</h6></td>
+                        <td><h6>Outputs</h6></td>
                         <td><h6>Check</h6></td>
                     </tr>
                 </thead>

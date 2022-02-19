@@ -25,7 +25,7 @@ export default class OutputBoxCreator extends React.Component {
             longArrayEncoded: '',
             addressContract: '',
             addressContractEncoded: '',
-
+            showConverter: false,
         };
 
         this.setLongEncoded = this.setLongEncoded.bind(this);
@@ -34,14 +34,17 @@ export default class OutputBoxCreator extends React.Component {
         this.setSigmaPropEncoded = this.setSigmaPropEncoded.bind(this);
         this.setCollByteEncoded = this.setCollByteEncoded.bind(this);
         this.setNanoErg = this.setNanoErg.bind(this);
+        this.setShowConverter = this.setShowConverter.bind(this);
         this.setAddressContractEncoded = this.setAddressContractEncoded.bind(this);
         //this.reset = this.reset.bind(this);
     }
 
     componentWillReceiveProps(nextProps) {
-        this.setState({
-            json: nextProps.json,
-        });
+        this.setState({ json: nextProps.json });
+    }
+
+    setShowConverter = () => {
+        this.setState(prevState => ({ showConverter: !prevState.showConverter }))
     }
 
     setLongArrayEncoded = (item) => {
@@ -154,90 +157,106 @@ export default class OutputBoxCreator extends React.Component {
         return (
             <div >
                 <div className="card p-1 m-1">
-                    
-                    <table >
-                        <thead>
-                            <tr><th><h6>Converter</h6></th><th>Value</th><th>Converted</th></tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>ERG &gt; NanoERG</td>
-                                <td>
-                                    <input className="grey-input" value={this.state.erg}
-                                        type="number"
-                                        step="0.000000001" min="0" max="10000000"
-                                        onChange={this.setNanoErg} />
-                                </td>
-                                <td>
-                                    <input className="w-100 grey-input" defaultValue={this.state.nanoErg} readOnly />
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Coll[byte]</td>
-                                <td>
-                                    <input className="grey-input" value={this.state.collByte}
-                                        onChange={this.setCollByteEncoded} />
-                                </td>
-                                <td>
-                                    <input className="w-100 grey-input" defaultValue={this.state.collByteEncoded} readOnly />
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>SigmaProp</td>
-                                <td>
-                                    <input className="grey-input" value={this.state.sigmaProp}
-                                        onChange={this.setSigmaPropEncoded} />
-                                </td>
-                                <td>
-                                    <input className="w-100 grey-input" defaultValue={this.state.sigmaPropEncoded} readOnly />
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Int</td>
-                                <td>
-                                    <input className="grey-input" value={this.state.int}
-                                        type="number"
-                                        step="1" min="0" max="100000000000000000"
-                                        onChange={this.setIntEncoded} />
-                                </td>
-                                <td>
-                                    <input className="w-100 grey-input" defaultValue={this.state.intEncoded} readOnly />
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Long</td>
-                                <td>
-                                    <input className="grey-input" value={this.state.long}
-                                        type="number"
-                                        step="1" min="0" max="100000000000000000"
-                                        onChange={this.setLongEncoded} />
-                                </td>
-                                <td>
-                                    <input className="w-100 grey-input" defaultValue={this.state.longEncoded} readOnly />
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Coll[Long]</td>
-                                <td>
-                                    <input className="grey-input" value={this.state.longArray}
-                                        onChange={this.setLongArrayEncoded} />
-                                </td>
-                                <td>
-                                    <input className="w-100 grey-input" defaultValue={this.state.longArrayEncoded} readOnly />
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Pay to address</td>
-                                <td>
-                                    <input className="grey-input" value={this.state.addressContract}
-                                        onChange={this.setAddressContractEncoded} />
-                                </td>
-                                <td>
-                                    <input className="w-100 grey-input" defaultValue={this.state.addressContractEncoded} readOnly />
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div className='d-flex flex-row align-items-center'>
+                    <ImageButton
+                        id={"showConverter"}
+                        color={"blue"}
+                        icon={this.state.showConverter ? "expand_more" : "expand_less"}
+                        tips={"Wallet details"}
+                        onClick={() => this.setShowConverter()}
+                    />
+                    <h6>Converter</h6>
+                    </div>
+
+                    {
+                        this.state.showConverter ?
+                            <table >
+                                <thead>
+                                    <tr><th><h6>Converter</h6></th><th>Value</th><th>Converted</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>ERG &gt; NanoERG</td>
+                                        <td>
+                                            <input className="grey-input" value={this.state.erg}
+                                                type="number"
+                                                step="0.000000001" min="0" max="10000000"
+                                                onChange={this.setNanoErg} />
+                                        </td>
+                                        <td>
+                                            <input className="w-100 grey-input" defaultValue={this.state.nanoErg} readOnly />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Coll[byte]</td>
+                                        <td>
+                                            <input className="grey-input" value={this.state.collByte}
+                                                onChange={this.setCollByteEncoded} />
+                                        </td>
+                                        <td>
+                                            <input className="w-100 grey-input" defaultValue={this.state.collByteEncoded} readOnly />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>SigmaProp</td>
+                                        <td>
+                                            <input className="grey-input" value={this.state.sigmaProp}
+                                                onChange={this.setSigmaPropEncoded} />
+                                        </td>
+                                        <td>
+                                            <input className="w-100 grey-input" defaultValue={this.state.sigmaPropEncoded} readOnly />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Int</td>
+                                        <td>
+                                            <input className="grey-input" value={this.state.int}
+                                                type="number"
+                                                step="1" min="0" max="100000000000000000"
+                                                onChange={this.setIntEncoded} />
+                                        </td>
+                                        <td>
+                                            <input className="w-100 grey-input" defaultValue={this.state.intEncoded} readOnly />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Long</td>
+                                        <td>
+                                            <input className="grey-input" value={this.state.long}
+                                                type="number"
+                                                step="1" min="0" max="100000000000000000"
+                                                onChange={this.setLongEncoded} />
+                                        </td>
+                                        <td>
+                                            <input className="w-100 grey-input" defaultValue={this.state.longEncoded} readOnly />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Coll[Long]</td>
+                                        <td>
+                                            <input className="grey-input" value={this.state.longArray}
+                                                onChange={this.setLongArrayEncoded} />
+                                        </td>
+                                        <td>
+                                            <input className="w-100 grey-input" defaultValue={this.state.longArrayEncoded} readOnly />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Pay to address</td>
+                                        <td>
+                                            <input className="grey-input" value={this.state.addressContract}
+                                                onChange={this.setAddressContractEncoded} />
+                                        </td>
+                                        <td>
+                                            <input className="w-100 grey-input" defaultValue={this.state.addressContractEncoded} readOnly />
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            : null
+                    }
+
+
                 </div>
 
                 <div className="card p-1 m-1">
@@ -247,7 +266,7 @@ export default class OutputBoxCreator extends React.Component {
                         <div className="d-flex flex-row">
                             <ImageButton id="reset" color="red" onClick={this.state.reset} icon="restart_alt" tips="Reset" />
                             <ImageButton id="fee" color="blue" onClick={this.state.fee} icon="monetization_on" tips="Setup transaction fee output box<br/>(default 0.002 ERG)" />
-                            <ImageButton id="balance" color="blue" onClick={this.state.balance} icon="balance" tips="Setup a change box to balance the transaction.<br/>Add not attribuated ERG and tokens in inputs to the box.<br/>Set the ergoTree to the configured address." />
+                            <ImageButton id="balance" color="blue" onClick={this.state.balance} icon="balance" tips="Setup a change box to balance the transaction.<br/>Add not attribuated ERG and tokens in inputs to the box.<br/>Set the ergoTree to the configured wallet change address." />
                             <ImageButton id="add" color="green" onClick={this.state.add} icon="add_box" tips="Add to transation output list" />
                         </div>
                     </div>

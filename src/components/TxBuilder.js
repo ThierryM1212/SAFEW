@@ -10,15 +10,15 @@ import ImageButtonLabeled from './TransactionBuilder/ImageButtonLabeled';
 import ReactJson from 'react-json-view';
 import { UtxoItem } from './TransactionBuilder/UtxoItem';
 import { unspentBoxesFor, boxById, unspentBoxesForV1, boxByBoxId, currentHeight } from '../ergo-related/explorer';
-import { parseUtxo, parseUtxos, generateSwaggerTx, enrichUtxos, buildBalanceBox, getUnspentBoxesForAddressList } from '../ergo-related/utxos';
-import { getTxJsonFromTxReduced, signTransaction, signTxReduced, signTxWithMnemonic } from '../ergo-related/serializer';
+import { parseUtxo, parseUtxos, generateSwaggerTx, enrichUtxos, buildBalanceBox, getUnspentBoxesForAddressList, parseSignedTx } from '../ergo-related/utxos';
+import { getTxJsonFromTxReduced, getWalletForAddresses, signTransaction, signTxReduced, signTxWithMnemonic } from '../ergo-related/serializer';
 import JSONBigInt from 'json-bigint';
-import { displayTransaction, errorAlert, waitingAlert } from '../utils/Alerts';
+import { displayTransaction, errorAlert, promptPassword, waitingAlert } from '../utils/Alerts';
 import { sendTx } from '../ergo-related/node';
 import { getTxReducedB64Safe } from '../ergo-related/ergolibUtils';
 import BigQRCode from './BigQRCode';
 import SelectWallet from './SelectWallet';
-import { getWalletAddressList, getWalletById } from '../utils/walletUtils';
+import { decryptMnemonic, getUnconfirmedTransactionsForAddressList, getWalletAddressList, getWalletById } from '../utils/walletUtils';
 /* global BigInt */
 
 var initCreateBox = {
@@ -45,6 +45,7 @@ export default class TxBuilder extends React.Component {
         super(props);
         this.state = {
             walletList: JSON.parse(localStorage.getItem('walletList')) ?? [],
+            setPage: props.setPage,
             selectedWalletId: 0,
             addressBoxList: [],
             searchAddress: '',
@@ -54,6 +55,10 @@ export default class TxBuilder extends React.Component {
             otherBoxList: [],
             outputList: [],
             outputCreateJson: initCreateBox,
+            ergoPayTxId: '',
+            ergoPayUnsignedTx: '',
+            intervalId: 0,
+            signedTransaction: '',
         };
         this.setWallet = this.setWallet.bind(this);
         this.setSearchAddress = this.setSearchAddress.bind(this);
@@ -72,6 +77,11 @@ export default class TxBuilder extends React.Component {
         this.moveOutputBoxUp = this.moveOutputBoxUp.bind(this);
         this.unSelectOutoutBox = this.unSelectOutoutBox.bind(this);
         this.setBalanceBoxJson = this.setBalanceBoxJson.bind(this);
+        this.signTx = this.signTx.bind(this);
+        this.signAndSendTx = this.signAndSendTx.bind(this);
+        this.setErgoPayTx = this.setErgoPayTx.bind(this);
+        this.resetTxReduced = this.resetTxReduced.bind(this);
+        this.timer = this.timer.bind(this);
     }
     setWallet = (walletId) => { this.setState({ selectedWalletId: walletId }); };
     setSearchAddress = (address) => { this.setState({ searchAddress: address }); };
@@ -81,7 +91,26 @@ export default class TxBuilder extends React.Component {
         const currentHeigth = await currentHeight();
         initCreateBox.creationHeight = currentHeigth;
         feeBox.creationHeight = currentHeigth;
-        this.setState({outputCreateJson: {...initCreateBox}})
+        this.setState({ outputCreateJson: { ...initCreateBox } })
+    }
+
+    componentWillUnmount() {
+        clearInterval(this.state.intervalId);
+    }
+
+    async timer() {
+        const wallet = getWalletById(this.state.selectedWalletId);
+        const walletAddressList = getWalletAddressList(wallet);
+        const unconfirmedTransactions = await getUnconfirmedTransactionsForAddressList(walletAddressList, false);
+        const unconfirmedTransactionsIdFiltered = unconfirmedTransactions.map(tx => tx.transactions).flat();
+        const ourTx = unconfirmedTransactionsIdFiltered.filter(tx => tx !== undefined && tx.id === this.state.ergoPayTxId);
+        if (ourTx.length > 0) {
+            var fixedTx = parseSignedTx(ourTx[0]);
+            fixedTx.id = this.state.txId;
+            //console.log("fixedTx", fixedTx);
+            clearInterval(this.state.intervalId);
+            this.state.setPage('transactions', this.state.selectedWalletId);
+        }
     }
 
     async fetchWalletBoxes() {
@@ -233,8 +262,82 @@ export default class TxBuilder extends React.Component {
         }
     }
 
+    getTransaction() {
+        return {
+            inputs: this.state.selectedBoxList,
+            outputs: this.state.outputList,
+            dataInputs: this.state.selectedDataBoxList,
+        };
+    }
+
+    async signTx() {
+        const wallet = getWalletById(this.state.selectedWalletId);
+        const walletAddressList = getWalletAddressList(wallet);
+        const password = await promptPassword("Sign transaction for<br/>" + wallet.name, null, "Sign");
+        //console.log("sendTransaction password", password);
+        const mnemonic = decryptMnemonic(wallet.mnemonic, password);
+        //console.log("mnemonic",mnemonic)
+        if (mnemonic === null) {
+            return;
+        }
+        if (mnemonic === '' || mnemonic === undefined) {
+            errorAlert("Failed to decrypt Mnemonic", "Wrong password ?");
+            return;
+        }
+        const signingWallet = await getWalletForAddresses(mnemonic, walletAddressList);
+        //console.log("signingWallet", signingWallet);
+        var signedTx = {};
+        try {
+            signedTx = JSON.parse(await signTransaction(this.getTransaction(), this.state.selectedBoxList, this.state.selectedDataBoxList, signingWallet));
+            console.log("signedTx", signedTx);
+            this.setState({signedTransaction: signedTx})
+        } catch (e) {
+            errorAlert("Failed to sign transaction", e);
+            return;
+        }
+        return signedTx;
+    }
+
+    async signAndSendTx() {
+        const signedTx = await this.signTx();
+        console.log("signAndSendTx signedTx", signedTx);
+        if (signedTx && signedTx.inputs) {
+            await sendTx(signedTx);
+            //await delay(3000);
+            this.state.setPage('transactions', this.state.selectedWalletId);
+        }
+
+    }
+
+    async setErgoPayTx() {
+        const wallet = getWalletById(this.state.selectedWalletId);
+        var txId = '', txReducedB64safe = '';
+        try {
+            [txId, txReducedB64safe] = await getTxReducedB64Safe(this.getTransaction(), this.state.selectedBoxList);
+            var intervalId = setInterval(this.timer, 3000);
+            this.setState({
+                ergoPayTxId: txId,
+                ergoPayUnsignedTx: txReducedB64safe,
+                intervalId: intervalId,
+            });
+        } catch (e) {
+            errorAlert(e.toString());
+        }
+    }
+    resetTxReduced = () => {
+        clearInterval(this.state.intervalId);
+        this.setState({
+            ergoPayTxId: '',
+            ergoPayUnsignedTx: '',
+            intervalId: 0,
+        }); 
+    }
+
     render() {
-        var appTips = "The application is intended to manipulate json of Ergo transaction to build smart contracts.<br />";
+        const txJson = this.getTransaction();
+        const selectedWallet = getWalletById(this.state.selectedWalletId);
+
+        var appTips = "The application is intended to manipulate json of Ergo transactions.<br />";
         appTips += "Features:<br />";
         appTips += " - View unspent boxes of wallets<br />";
         appTips += " - Get boxes by address or boxId to execute smart contracts<br />";
@@ -242,6 +345,12 @@ export default class TxBuilder extends React.Component {
         appTips += " - Sign the transaction<br />";
         appTips += " - Send the transaction<br />";
         appTips += "IF YOU DON'T KNOW WHAT YOU ARE DOING YOU SHOULD PROBABLY NOT USE IT !";
+
+        var swaggertips = "This transaction can be signed using your node wallet and swagger UI:<br />";
+        swaggertips += "- Unlock the wallet using: $SWAGGER/wallet/unlock/<br />";
+        swaggertips += "- Sign the transaction copying the Swagger json to $SWAGGER/wallet/transaction/sign<br />";
+        swaggertips += "- Send the transaction copying the signed json to $SWAGGER/transactions<br />";
+        swaggertips += "This should be used after having add the fee box.";
 
         return (
 
@@ -293,7 +402,7 @@ export default class TxBuilder extends React.Component {
                                 onChange={this.setSearchBoxId}
                                 onClick={this.fetchByBoxId}
                             />
-                            <InputString label="Search by script address"
+                            <InputString label="Search by address / script address"
                                 value={this.state.searchAddress}
                                 onChange={this.setSearchAddress}
                                 onClick={this.fetchByAddress}
@@ -393,6 +502,91 @@ export default class TxBuilder extends React.Component {
                             <UtxosSummary list={this.state.outputList} name="outputs" label="Outputs list" />
                         </div>
                     </div>
+
+                    <div className="w-100 container-xxl ">
+                        <div className="card p-1 m-2 w-100">
+                            <h5>Unsigned transaction</h5>
+                            <TransactionSummary json={txJson} />
+                            <div className="d-flex flex-row align-items-center justify-content-between">
+                                <div className="d-flex flex-row align-items-center ">
+                                    <h6>Sign transaction</h6>&nbsp;
+                                    {
+                                        selectedWallet.type === "ergopay" ? null :
+                                            <Fragment>
+                                                <div className='card m-1 p-1 d-flex align-items_center'
+                                                    style={{
+                                                        borderColor: `rgba(${selectedWallet.color.r},${selectedWallet.color.g},${selectedWallet.color.b}, 0.95)`,
+                                                        backgroundColor: `rgba(${selectedWallet.color.r},${selectedWallet.color.g},${selectedWallet.color.b}, 0.10)`
+                                                    }}>
+                                                    <ImageButton id="sign-and-send" color="blue" icon="send" tips="Sign and send transaction"
+                                                        onClick={() => { this.signAndSendTx(txJson); }} />
+                                                </div>
+                                                <div className='card m-1 p-1 d-flex align-items_center'
+                                                    style={{
+                                                        borderColor: `rgba(${selectedWallet.color.r},${selectedWallet.color.g},${selectedWallet.color.b}, 0.95)`,
+                                                        backgroundColor: `rgba(${selectedWallet.color.r},${selectedWallet.color.g},${selectedWallet.color.b}, 0.10)`
+                                                    }}>
+                                                    <ImageButton id="sign" color="blue" icon="border_color" tips="Sign transaction"
+                                                        onClick={() => { this.signTx(txJson); }} />
+                                                </div>
+                                            </Fragment>
+                                    }
+                                    <ImageButton id="help-swagger" icon="help_outline"
+                                        tips={swaggertips} />
+                                </div>
+                            </div>
+                            <ReactJson
+                                id="unsigned-tx-json"
+                                src={this.getTransaction()}
+                                theme="monokai"
+                                collapsed={true}
+                                name={false}
+                                collapseStringsAfterLength={60}
+                            />
+                            <div className="d-flex flex-column">
+                                <div className="d-flex flex-row">
+                                    <h6>ErgoPay transaction</h6> &nbsp;
+                                    <ImageButton id="get-reduced-tx" color="red" icon="restart_alt" tips="Reset ErgoPay transaction"
+                                        onClick={this.resetTxReduced} />
+                                    <ImageButton id="set-reduced-tx" color="blue" icon="calculate" tips="Get ErgoPay transaction"
+                                        onClick={this.setErgoPayTx} />
+                                </div>
+                                {
+                                    this.state.ergoPayTxId === '' ? null :
+                                        <div className='d-flex flex-row justify-content-center'>
+                                            <BigQRCode QRCodeTx={this.state.ergoPayUnsignedTx} />
+                                        </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    {
+                        this.state.signedTransaction === '' ? null :
+                            <div className="w-100 container-xxl ">
+                                <div className="card p-1 m-2 w-100">
+                                    <div className="d-flex flex-row">
+                                        <h5>Signed transaction</h5>&nbsp;
+                                        <ImageButton id="send-tx" color="blue" icon="send"
+                                            tips="Send"
+                                            onClick={this.sendSignedTx}
+                                        />
+                                    </div>
+                                    <div>
+                                        <ReactJson
+                                            id="signed-tx-json"
+                                            src={this.state.signedTransaction}
+                                            theme="monokai"
+                                            collapsed={true}
+                                            name={false}
+                                            collapseStringsAfterLength={60}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                    }
+
+
 
                     <br /><br /><br /><br />
 
