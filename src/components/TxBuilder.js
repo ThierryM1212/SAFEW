@@ -59,6 +59,7 @@ export default class TxBuilder extends React.Component {
             ergoPayUnsignedTx: '',
             intervalId: 0,
             signedTransaction: '',
+            txJsonRaw: '',
         };
         this.setWallet = this.setWallet.bind(this);
         this.setSearchAddress = this.setSearchAddress.bind(this);
@@ -82,10 +83,13 @@ export default class TxBuilder extends React.Component {
         this.setErgoPayTx = this.setErgoPayTx.bind(this);
         this.resetTxReduced = this.resetTxReduced.bind(this);
         this.timer = this.timer.bind(this);
+        this.setTxJsonRaw = this.setTxJsonRaw.bind(this);
+        this.loadTxFromJsonRaw = this.loadTxFromJsonRaw.bind(this);
     }
     setWallet = (walletId) => { this.setState({ selectedWalletId: walletId }); };
     setSearchAddress = (address) => { this.setState({ searchAddress: address }); };
     setSearchBoxId = (boxId) => { this.setState({ searchBoxId: boxId }); };
+    setTxJsonRaw = (textAreaInput) => { this.setState({ txJsonRaw: textAreaInput }); }
 
     async componentDidMount() {
         const currentHeigth = await currentHeight();
@@ -290,7 +294,7 @@ export default class TxBuilder extends React.Component {
         try {
             signedTx = JSON.parse(await signTransaction(this.getTransaction(), this.state.selectedBoxList, this.state.selectedDataBoxList, signingWallet));
             console.log("signedTx", signedTx);
-            this.setState({signedTransaction: signedTx})
+            this.setState({ signedTransaction: signedTx })
         } catch (e) {
             errorAlert("Failed to sign transaction", e);
             return;
@@ -330,7 +334,33 @@ export default class TxBuilder extends React.Component {
             ergoPayTxId: '',
             ergoPayUnsignedTx: '',
             intervalId: 0,
-        }); 
+        });
+    }
+
+    async loadTxFromJsonRaw() {
+        try {
+            const json = JSONBigInt.parse(this.state.txJsonRaw);
+            console.log("loadTxFromJsonRaw", json);
+            await this.loadTxFromJson(json);
+        } catch (e) {
+            console.log(e);
+            errorAlert("Failed to parse transaction json", e)
+        }
+    }
+
+    async loadTxFromJson(json) {
+        var jsonFixed = json;
+        if ("tx" in json) { jsonFixed = json.tx; }
+        var alert = waitingAlert("Loading input boxes...")
+        const inputs = await enrichUtxos(jsonFixed.inputs, true);
+        const dataInputs = await enrichUtxos(jsonFixed.dataInputs, true);
+        const outputs = parseUtxos(jsonFixed.outputs, true, 'output');
+        alert.close();
+        this.setState({
+            selectedBoxList: inputs,
+            selectedDataBoxList: dataInputs,
+            outputList: outputs,
+        });
     }
 
     render() {
@@ -544,7 +574,7 @@ export default class TxBuilder extends React.Component {
                                 collapseStringsAfterLength={60}
                             />
                             <div className="d-flex flex-column">
-                                <div className="d-flex flex-row">
+                                <div className="d-flex flex-row align-items-center">
                                     <h6>ErgoPay transaction</h6> &nbsp;
                                     <ImageButton id="get-reduced-tx" color="red" icon="restart_alt" tips="Reset ErgoPay transaction"
                                         onClick={this.resetTxReduced} />
@@ -585,6 +615,21 @@ export default class TxBuilder extends React.Component {
                                 </div>
                             </div>
                     }
+
+                    <div className="w-100 container-xxl ">
+                        <div className="card p-1 m-2 w-100">
+
+                            <h6>Transaction import/export</h6>
+                            <div className="d-flex flex-row p-1">
+                                <ImageButtonLabeled id="load-tx-json" color="blue" icon="upload"
+                                    label="Load transaction json" onClick={this.loadTxFromJsonRaw}
+                                />
+                            </div>
+                            <textarea value={this.state.txJsonRaw}
+                                onChange={(evn) => this.setTxJsonRaw(evn.target.value)} rows="5"/>
+
+                        </div>
+                    </div>
 
 
 

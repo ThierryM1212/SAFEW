@@ -6,6 +6,7 @@ import { Fragment } from "react";
 
 export default function NavigationBar(props) {
     const debug = (localStorage.getItem('debug') === 'true') ?? false;
+    const expertMode = (localStorage.getItem('expertMode') === 'true') ?? false;
     return (
         <div className="container d-flex flex-row justify-content-between w-75 m-1 p-1 align-items-center" >
             <div className="d-flex flex-row align-items-center" >
@@ -42,14 +43,17 @@ export default function NavigationBar(props) {
                     tips={"Ergo mixer"}
                     onClick={() => { props.setPage('mixer') }}
                 />
-                <ImageButton
-                    id={"txbuilder"}
-                    color={"blue"}
-                    icon={"construction"}
-                    tips={"Transaction builder"}
-                    onClick={() => { props.setPage('txbuilder') }}
-                />
-
+                {
+                    expertMode ?
+                        <ImageButton
+                            id={"txbuilder"}
+                            color={"blue"}
+                            icon={"construction"}
+                            tips={"Transaction builder"}
+                            onClick={() => { props.setPage('txbuilder') }}
+                        />
+                        : null
+                }
                 {
                     debug ?
                         <Fragment>

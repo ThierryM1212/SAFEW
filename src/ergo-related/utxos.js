@@ -55,7 +55,7 @@ export function parseUtxos(utxos, addExtention, mode = 'input') {
     return utxosFixed;
 }
 
-export async function enrichUtxos(utxos) {
+export async function enrichUtxos(utxos, addExtension = false) {
     var utxosFixed = [];
 
     for (const i in utxos) {
@@ -91,6 +91,9 @@ export async function enrichUtxos(utxos) {
             }
         } catch(e) {
             console.log(e)
+        }
+        if (addExtension && !Object.keys(newBox).includes("extension")) {
+            newBox["extension"] = {};
         }
         utxosFixed.push(newBox);
     }
