@@ -120,7 +120,7 @@ export default class App extends React.Component {
                 page = <SignPopup />
                 break;
             case 'txbuilder':
-                page = <TxBuilder setPage={this.setPage} />
+                page = <TxBuilder setPage={this.setPage} walletId={this.state.walletId} iniTran={this.state.setPageParam}/>
                 break;
             case 'empty':
                 page = null;

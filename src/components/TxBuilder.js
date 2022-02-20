@@ -1,6 +1,5 @@
 import React, { Fragment } from 'react';
 import InputString from './TransactionBuilder/InputString';
-import InputAddress from './TransactionBuilder/InputAddress';
 import UtxosSummary from './TransactionBuilder/UtxosSummary';
 import OutputBoxCreator from './TransactionBuilder/OutputBoxCreator';
 import OutputEditable from './TransactionBuilder/OutputEditable';
@@ -9,9 +8,9 @@ import ImageButton from './ImageButton';
 import ImageButtonLabeled from './TransactionBuilder/ImageButtonLabeled';
 import ReactJson from 'react-json-view';
 import { UtxoItem } from './TransactionBuilder/UtxoItem';
-import { unspentBoxesFor, boxById, unspentBoxesForV1, boxByBoxId, currentHeight } from '../ergo-related/explorer';
-import { parseUtxo, parseUtxos, generateSwaggerTx, enrichUtxos, buildBalanceBox, getUnspentBoxesForAddressList, parseSignedTx } from '../ergo-related/utxos';
-import { getTxJsonFromTxReduced, getWalletForAddresses, signTransaction, signTxReduced, signTxWithMnemonic } from '../ergo-related/serializer';
+import { unspentBoxesForV1, boxByBoxId, currentHeight } from '../ergo-related/explorer';
+import { parseUtxo, parseUtxos, enrichUtxos, buildBalanceBox, getUnspentBoxesForAddressList, parseSignedTx } from '../ergo-related/utxos';
+import { getWalletForAddresses, signTransaction } from '../ergo-related/serializer';
 import JSONBigInt from 'json-bigint';
 import { displayTransaction, errorAlert, promptPassword, waitingAlert } from '../utils/Alerts';
 import { sendTx } from '../ergo-related/node';
@@ -46,7 +45,8 @@ export default class TxBuilder extends React.Component {
         this.state = {
             walletList: JSON.parse(localStorage.getItem('walletList')) ?? [],
             setPage: props.setPage,
-            selectedWalletId: 0,
+            initTx: props.iniTran,
+            selectedWalletId: props.walletId,
             addressBoxList: [],
             searchAddress: '',
             searchBoxId: '',
@@ -95,7 +95,15 @@ export default class TxBuilder extends React.Component {
         const currentHeigth = await currentHeight();
         initCreateBox.creationHeight = currentHeigth;
         feeBox.creationHeight = currentHeigth;
-        this.setState({ outputCreateJson: { ...initCreateBox } })
+        this.setState({ outputCreateJson: { ...initCreateBox } });
+        const initTx = this.state.initTx;
+        if (initTx.inputs && initTx.outputs && initTx.dataInputs) {
+            try {
+                this.loadTxFromJson(initTx);
+            }catch(e){
+                errorAlert("failed to load transaction: "+e.toString());
+            }
+        }
     }
 
     componentWillUnmount() {
@@ -277,7 +285,7 @@ export default class TxBuilder extends React.Component {
     async signTx() {
         const wallet = getWalletById(this.state.selectedWalletId);
         const walletAddressList = getWalletAddressList(wallet);
-        const password = await promptPassword("Sign transaction for<br/>" + wallet.name, null, "Sign");
+        const password = await promptPassword("Sign transaction for<br/>" + wallet.name, '', "Sign");
         //console.log("sendTransaction password", password);
         const mnemonic = decryptMnemonic(wallet.mnemonic, password);
         //console.log("mnemonic",mnemonic)

@@ -3,7 +3,7 @@ import Address from './Address';
 import ValidInput from './ValidInput';
 import ImageButton from './ImageButton';
 import { NANOERG_TO_ERG, SUGGESTED_TRANSACTION_FEE, VERIFIED_TOKENS } from '../utils/constants';
-import { copySuccess, errorAlert, promptPassword } from '../utils/Alerts';
+import { copySuccess, errorAlert, promptPassword, waitingAlert } from '../utils/Alerts';
 import { getWalletById, getWalletAddressList, formatERGAmount, formatTokenAmount, getSummaryFromAddressListContent, getSummaryFromSelectedAddressListContent, getAddressListContent, decryptMnemonic, formatLongString, getWalletUsedAddressList, getUnconfirmedTransactionsForAddressList } from '../utils/walletUtils';
 import { createTxOutputs, createUnsignedTransaction, getTxReducedB64Safe, getUtxosForSelectedInputs, isValidErgAddress } from '../ergo-related/ergolibUtils';
 import { getWalletForAddresses, signTransaction } from '../ergo-related/serializer';
@@ -44,6 +44,8 @@ export default class SendTransaction extends React.Component {
         this.setTokenToSend = this.setTokenToSend.bind(this);
         this.validateTokenAmount = this.validateTokenAmount.bind(this);
         this.setSendAll = this.setSendAll.bind(this);
+        this.getTransactionJson = this.getTransactionJson.bind(this);
+        this.openInTxBuilder = this.openInTxBuilder.bind(this);
         this.timer = this.timer.bind(this);
     }
 
@@ -203,7 +205,7 @@ export default class SendTransaction extends React.Component {
         if (tokAmountStr.indexOf('.') > -1) {
             var str = tokAmountStr.split(".");
             str[1] = str[1].replace(/0+$/g, ""); //remove trailing 0
-            console.log("validateTokenAmount2",str[1].length)
+            console.log("validateTokenAmount2", str[1].length)
             if (str[1].length > tokenDecimals) {
                 return false;
             } else {
@@ -234,7 +236,7 @@ export default class SendTransaction extends React.Component {
         }
     }
 
-    async sendTransaction() {
+    async getTransactionJson() {
         const amountToSendFloat = parseFloat(this.state.ergsToSend);
         const feeFloat = parseFloat(this.state.txFee);
         const totalAmountToSendFloat = amountToSendFloat + feeFloat;
@@ -252,6 +254,16 @@ export default class SendTransaction extends React.Component {
         const unsignedTransaction = await createUnsignedTransaction(selectedUtxos, outputCandidates);
         const jsonUnsignedTx = JSON.parse(unsignedTransaction.to_json());
         //console.log("sendTransaction unsignedTransaction", jsonUnsignedTx);
+        return [jsonUnsignedTx, selectedUtxos];
+    }
+
+    async sendTransaction() {
+        var alert = waitingAlert("Preparing the transaction...");
+        const wallet = getWalletById(this.state.walletId);
+        const feeFloat = parseFloat(this.state.txFee);
+        const selectedAddresses = this.state.walletAddressList.filter((addr, id) => this.state.selectedAddresses[id]);
+        const [jsonUnsignedTx, selectedUtxos] = await this.getTransactionJson();
+        alert.close();
 
         if (wallet.ergoPayOnly) {
             const [txId, txReducedB64safe] = await getTxReducedB64Safe(jsonUnsignedTx, selectedUtxos);
@@ -308,8 +320,14 @@ export default class SendTransaction extends React.Component {
         }
     }
 
+    async openInTxBuilder() {
+        const [jsonUnsignedTx, selectedUtxos] = await this.getTransactionJson();
+        this.state.setPage('txbuilder', this.state.walletId, jsonUnsignedTx);
+    }
+
     render() {
         const wallet = getWalletById(this.state.walletId);
+        const expertMode = (localStorage.getItem('expertMode') === 'true') ?? false;
         return (
             <Fragment>
                 <div className='container card m-1 p-1 d-flex flex-column w-75'
@@ -536,10 +554,23 @@ export default class SendTransaction extends React.Component {
                                         && this.state.isValidErgToSend
                                         && this.state.isValidTokenAmountToSend.every(Boolean)
                                         && this.state.isValidTxFee)}
-                                >{wallet.ergoPayOnly ? "Ergopay" : "Send transaction"}</button>
+                                >{wallet.ergoPayOnly ? "Ergopay" : "Send transaction"}</button>&nbsp;
+                                {
+                                    expertMode ?
+
+                                        <button className="btn btn-outline-info"
+                                            onClick={this.openInTxBuilder}
+                                            disabled={!(this.state.isValidSendToAddress
+                                                && this.state.isValidErgToSend
+                                                && this.state.isValidTokenAmountToSend.every(Boolean)
+                                                && this.state.isValidTxFee)}
+                                        >Open in transaction builder</button>
+                                        : null
+                                }
                             </div>
                             : null
                         }
+
                     </div>
                 </div>
             </Fragment>
