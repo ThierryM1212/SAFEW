@@ -1,9 +1,12 @@
 import { getUtxosListValue, getTokenListFromUtxos } from '../../ergo-related/utxos';
+import { formatTokenAmount } from '../../utils/walletUtils';
+import TokenLabel from '../TokenLabel';
 
 export default function UtxosSummary(props) {
 
     const ergAmount = parseFloat(parseInt(getUtxosListValue(props.list)) / 1000000000).toFixed(4);
     const tokenDict = getTokenListFromUtxos(props.list);
+    const tokenInfo = props.tokenInfo;
     return (
         <div className="card m-1 p-1" >
             <div className="d-flex flex-row">
@@ -17,8 +20,11 @@ export default function UtxosSummary(props) {
                 </thead>
                 <tbody>
                     {
-                        Object.entries(tokenDict).map(([key, value]) => (
-                            <tr key={key}><td>{key}</td><td>{value}</td></tr>
+                        Object.entries(tokenDict).map(([tokenId, amount]) => (
+                            <tr key={tokenId}>
+                                <td><TokenLabel tokenId={tokenId} name={tokenInfo[tokenId] ? tokenInfo[tokenId][0] : false} /></td>
+                                <td>{tokenInfo[tokenId] ? formatTokenAmount(amount, tokenInfo[tokenId][2]) : amount}</td>
+                            </tr>
                         ))
                     }
                 </tbody>

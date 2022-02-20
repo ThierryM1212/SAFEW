@@ -1,3 +1,4 @@
+import { VERIFIED_TOKENS } from "../utils/constants";
 import { boxByBoxId, currentHeight, getTokenBoxV1, unspentBoxesForV1 } from "./explorer";
 import { encodeContract, ergoTreeToAddress } from "./serializer";
 
@@ -199,6 +200,23 @@ export function getTokenListFromUtxos(utxos) {
         }
     }
     return tokenList;
+}
+
+export function enrichTokenInfoFromUtxos(utxos, tokInfo) {
+    //[TOKENID_SIGUSD]: ['SigUSD', "token-sigusd.svg", 2],
+    var tokenInfo = {...tokInfo};
+    for (const i in utxos) {
+        for (const j in utxos[i].assets) {
+            if (!Object.keys(tokenInfo).includes()) {
+                if (Object.keys(VERIFIED_TOKENS).includes(utxos[i].assets[j].tokenId)) {
+                    tokenInfo[utxos[i].assets[j].tokenId] = VERIFIED_TOKENS[utxos[i].assets[j].tokenId];
+                } else {
+                    tokenInfo[utxos[i].assets[j].tokenId] = [utxos[i].assets[j].name, '', utxos[i].assets[j].decimals];
+                }
+            }
+        }
+    }
+    return tokenInfo;
 }
 
 export function getMissingErg(inputs, outputs) {

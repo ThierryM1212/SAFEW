@@ -11,6 +11,7 @@ import { sendTx } from '../ergo-related/node';
 import { getUtxoBalanceForAddressList, parseSignedTx } from '../ergo-related/utxos';
 import VerifiedTokenImage from './VerifiedTokenImage';
 import BigQRCode from './BigQRCode';
+import TokenLabel from './TokenLabel';
 
 export default class SendTransaction extends React.Component {
     constructor(props) {
@@ -433,38 +434,7 @@ export default class SendTransaction extends React.Component {
                                     this.state.tokens.map((tok, index) =>
                                         <tr key={index}>
                                             <td>
-                                                <div className='d-flex flex-row justify-content-between align-items-center'>
-                                                    <div className='d-flex flex-row align-items-center'>
-                                                        {tok.name}
-                                                        {
-                                                            Object.keys(VERIFIED_TOKENS).includes(tok.tokenId) ?
-                                                                <div>&nbsp;<VerifiedTokenImage tokenId={tok.tokenId} /></div>
-                                                                : null
-                                                        }
-                                                    </div>
-                                                    <div className='d-flex flex-row row-reverse'>
-                                                        <ImageButton
-                                                            id={"tokId" + tok.tokenId}
-                                                            color={"blue"}
-                                                            icon={"content_copy"}
-                                                            tips={"Copy tokenId - " + tok.tokenId}
-                                                            onClick={() => {
-                                                                navigator.clipboard.writeText(tok.tokenId);
-                                                                copySuccess();
-                                                            }}
-                                                        />
-                                                        <ImageButton
-                                                            id={"openAddressExplorer" + tok.tokenId}
-                                                            color={"blue"}
-                                                            icon={"open_in_new"}
-                                                            tips={"Open in Explorer"}
-                                                            onClick={() => {
-                                                                const url = localStorage.getItem('explorerWebUIAddress') + 'en/token/' + tok.tokenId;
-                                                                window.open(url, '_blank').focus();
-                                                            }}
-                                                        />
-                                                    </div>
-                                                </div>
+                                                <TokenLabel name={tok.name} tokenId={tok.tokenId} />
                                             </td>
                                             <td>{formatTokenAmount(tok.amount, tok.decimals, false)}</td>
                                             <td>

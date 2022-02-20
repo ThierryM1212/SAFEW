@@ -9,15 +9,16 @@ import ImageButtonLabeled from './TransactionBuilder/ImageButtonLabeled';
 import ReactJson from 'react-json-view';
 import { UtxoItem } from './TransactionBuilder/UtxoItem';
 import { unspentBoxesForV1, boxByBoxId, currentHeight } from '../ergo-related/explorer';
-import { parseUtxo, parseUtxos, enrichUtxos, buildBalanceBox, getUnspentBoxesForAddressList, parseSignedTx } from '../ergo-related/utxos';
+import { parseUtxo, parseUtxos, enrichUtxos, buildBalanceBox, getUnspentBoxesForAddressList, parseSignedTx, enrichTokenInfoFromUtxos } from '../ergo-related/utxos';
 import { getWalletForAddresses, signTransaction } from '../ergo-related/serializer';
 import JSONBigInt from 'json-bigint';
-import { displayTransaction, errorAlert, promptPassword, waitingAlert } from '../utils/Alerts';
+import { errorAlert, promptPassword, waitingAlert } from '../utils/Alerts';
 import { sendTx } from '../ergo-related/node';
 import { getTxReducedB64Safe } from '../ergo-related/ergolibUtils';
 import BigQRCode from './BigQRCode';
 import SelectWallet from './SelectWallet';
 import { decryptMnemonic, getUnconfirmedTransactionsForAddressList, getWalletAddressList, getWalletById } from '../utils/walletUtils';
+import { VERIFIED_TOKENS } from '../utils/constants';
 /* global BigInt */
 
 var initCreateBox = {
@@ -60,6 +61,7 @@ export default class TxBuilder extends React.Component {
             intervalId: 0,
             signedTransaction: '',
             txJsonRaw: '',
+            tokenInfo: VERIFIED_TOKENS,
         };
         this.setWallet = this.setWallet.bind(this);
         this.setSearchAddress = this.setSearchAddress.bind(this);
@@ -100,8 +102,8 @@ export default class TxBuilder extends React.Component {
         if (initTx.inputs && initTx.outputs && initTx.dataInputs) {
             try {
                 this.loadTxFromJson(initTx);
-            }catch(e){
-                errorAlert("failed to load transaction: "+e.toString());
+            } catch (e) {
+                errorAlert("failed to load transaction: " + e.toString());
             }
         }
     }
@@ -130,20 +132,27 @@ export default class TxBuilder extends React.Component {
         const addressList = getWalletAddressList(wallet);
         var alert = waitingAlert("Fetching wallet unspent boxes...")
         const utxos = await getUnspentBoxesForAddressList(addressList);
+        const newTokenInfo = enrichTokenInfoFromUtxos(utxos,this.state.tokenInfo);
         alert.close();
         this.setState({
-            addressBoxList: parseUtxos(utxos)
-        })
+            addressBoxList: parseUtxos(utxos),
+            tokenInfo: newTokenInfo,
+        });
     }
 
     async fetchByAddress() {
         const boxes = await unspentBoxesForV1(this.state.searchAddress);
+        const newTokenInfo = enrichTokenInfoFromUtxos(boxes,this.state.tokenInfo);
+        this.setState({
+            tokenInfo: newTokenInfo,
+        });
         const otherBoxListFixed = parseUtxos(boxes, true);
         for (const box of otherBoxListFixed) {
             this.setState(prevState => ({
                 otherBoxList: [...prevState.otherBoxList, box]
             }))
         }
+        
     }
 
     async fetchByBoxId() {
@@ -362,18 +371,21 @@ export default class TxBuilder extends React.Component {
         var alert = waitingAlert("Loading input boxes...")
         const inputs = await enrichUtxos(jsonFixed.inputs, true);
         const dataInputs = await enrichUtxos(jsonFixed.dataInputs, true);
+        const newTokenInfo = enrichTokenInfoFromUtxos([inputs,dataInputs].flat(),this.state.tokenInfo);
         const outputs = parseUtxos(jsonFixed.outputs, true, 'output');
         alert.close();
         this.setState({
             selectedBoxList: inputs,
             selectedDataBoxList: dataInputs,
             outputList: outputs,
+            tokenInfo: newTokenInfo,
         });
     }
 
     render() {
         const txJson = this.getTransaction();
         const selectedWallet = getWalletById(this.state.selectedWalletId);
+        const tokenInfo = this.state.tokenInfo;
 
         var appTips = "The application is intended to manipulate json of Ergo transactions.<br />";
         appTips += "Features:<br />";
@@ -503,7 +515,11 @@ export default class TxBuilder extends React.Component {
                                     </div>
                                 ))}
                             </div>
-                            <UtxosSummary list={this.state.selectedBoxList} name="inputs" label="Selected inputs list" />
+                            <UtxosSummary list={this.state.selectedBoxList}
+                                name="inputs"
+                                label="Selected inputs list"
+                                tokenInfo={tokenInfo}
+                            />
                         </div>
                     </div>
 
@@ -537,14 +553,19 @@ export default class TxBuilder extends React.Component {
                                     />
                                 ))}
                             </div>
-                            <UtxosSummary list={this.state.outputList} name="outputs" label="Outputs list" />
+                            <UtxosSummary
+                                list={this.state.outputList}
+                                name="outputs"
+                                label="Outputs list"
+                                tokenInfo={tokenInfo}
+                            />
                         </div>
                     </div>
 
                     <div className="w-100 container-xxl ">
                         <div className="card p-1 m-2 w-100">
                             <h5>Unsigned transaction</h5>
-                            <TransactionSummary json={txJson} />
+                            <TransactionSummary json={txJson} tokenInfo={tokenInfo} />
                             <div className="d-flex flex-row align-items-center justify-content-between">
                                 <div className="d-flex flex-row align-items-center ">
                                     <h6>Sign transaction</h6>&nbsp;
@@ -634,7 +655,7 @@ export default class TxBuilder extends React.Component {
                                 />
                             </div>
                             <textarea value={this.state.txJsonRaw}
-                                onChange={(evn) => this.setTxJsonRaw(evn.target.value)} rows="5"/>
+                                onChange={(evn) => this.setTxJsonRaw(evn.target.value)} rows="5" />
 
                         </div>
                     </div>
