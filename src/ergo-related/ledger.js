@@ -4,6 +4,7 @@ import { waitingAlert } from "../utils/Alerts";
 import { DEFAULT_NUMBER_OF_UNUSED_ADDRESS_PER_ACCOUNT } from "../utils/constants";
 import { convertToHex, hexToBytes } from "../utils/utils";
 import { getWalletAddressesPathMap } from "../utils/walletUtils";
+import { getUnsignedTransaction } from "./ergolibUtils";
 import { addressHasTransactions } from "./explorer";
 let ergolib = import('ergo-lib-wasm-browser');
 
@@ -66,16 +67,18 @@ export async function getNewAddress(wallet, accountId) {
 }
 
 export async function signTxLedger(wallet, unsignedTx, selectedUtxos, txSummaryHtml) {
-    waitingAlert("Waiting transaction signing with ledger", txSummaryHtml);
+    const alert = waitingAlert("Waiting transaction signing with ledger", txSummaryHtml);
     console.log("signTxLedger", wallet, unsignedTx, selectedUtxos, txSummaryHtml);
+    const unsignedTxWASM = await getUnsignedTransaction(unsignedTx);
 
     const ledgerApp = new ErgoLedgerApp(await HidTransport.create());
+    console.log("ledgerApp",ledgerApp);
     try {
         const inputs = [];
         const outputs = [];
         const inputBoxes = (await ergolib).ErgoBoxes.from_boxes_json(selectedUtxos);
-        for (let i = 0; i < unsignedTx.inputs().len(); i++) {
-            const input = unsignedTx.inputs().get(i);
+        for (let i = 0; i < unsignedTxWASM.inputs().len(); i++) {
+            const input = unsignedTxWASM.inputs().get(i);
             const box = selectedUtxos.find((b) => b.boxId === input.box_id().to_str());
             const wasmBox = findBox(inputBoxes, input.box_id().to_str());
             if (!wasmBox || !box) {
@@ -92,8 +95,8 @@ export async function signTxLedger(wallet, unsignedTx, selectedUtxos, txSummaryH
                 extension: Buffer.from(input.extension().sigma_serialize_bytes())
             });
         }
-        for (let i = 0; i < unsignedTx.output_candidates().len(); i++) {
-            const wasmOutput = unsignedTx.output_candidates().get(i);
+        for (let i = 0; i < unsignedTxWASM.output_candidates().len(); i++) {
+            const wasmOutput = unsignedTxWASM.output_candidates().get(i);
             outputs.push({
                 value: wasmOutput.value().as_i64().to_str(),
                 ergoTree: Buffer.from(wasmOutput.ergo_tree().sigma_serialize_bytes()),
@@ -118,14 +121,14 @@ export async function signTxLedger(wallet, unsignedTx, selectedUtxos, txSummaryH
             },
             true
         );
-        waitingAlert("Sending the transaction...", null);
         return (await ergolib).Transaction.from_unsigned_tx(
-            unsignedTx,
+            unsignedTxWASM,
             signatures.map((s) => Buffer.from(s.signature, "hex"))
         ).to_json();
     } catch (e) {
         throw e;
     } finally {
+        alert.close();
         ledgerApp.transport.close();
     }
 }

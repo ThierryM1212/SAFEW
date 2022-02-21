@@ -149,14 +149,16 @@ export default class SignPopup extends React.Component {
             if (this.state.wallet.type === "ledger") {
                 console.log("signTx ledger", this.state)
                 try {
-                    const unSignedTx = await getUnsignedTransaction(this.state.unSignedTx);
-                    console.log("signTx getUnsignedTransaction", unSignedTx);
-                    signedTx = await signTxLedger(this.state.wallet, unSignedTx, inputsDetails, null);
+                    signedTx = await signTxLedger(this.state.wallet, this.state.unSignedTx, inputsDetails, '');
                     console.log("signTx signedTx", signedTx);
                 } catch (e) {
                     console.log("signTxLedger catch", e);
                     if (e instanceof DeviceError) {
-                        errorAlert("Cannot connect Ledger ergo application, unlock the ledger and start the Ergo applicaiton on the ledger.")
+                        if (e.toString().includes("denied by user")) {
+                            errorAlert(e.toString())
+                        } else {
+                            errorAlert("Cannot connect Ledger ergo application, unlock the ledger and start the Ergo applicaiton on the ledger.")
+                        }
                     }
                 }
             }
@@ -209,6 +211,7 @@ export default class SignPopup extends React.Component {
         }
         return (
             <Fragment>
+                <br />
                 <div className='card w-75 m-1 p-1 d-flex flex-column'
                     style={{
                         borderColor: `rgba(${this.state.wallet.color.r},${this.state.wallet.color.g},${this.state.wallet.color.b}, 0.95)`,

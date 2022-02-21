@@ -47,11 +47,13 @@ const injected_script_1 = `
   if (ergoConnector !== undefined) {
     ergoConnector = {
       ...ergoConnector,
-      safew: Object.freeze(new ErgoAPIini())
+      safew: Object.freeze(new ErgoAPIini()),
+      nautilus: Object.freeze(new ErgoAPIini())
     };
   } else {
     var ergoConnector = {
-      safew: Object.freeze(new ErgoAPIini())
+      safew: Object.freeze(new ErgoAPIini()),
+      nautilus: Object.freeze(new ErgoAPIini())
     };
   }
 
@@ -96,7 +98,7 @@ const injected_script_1 = `
 
 const injected_script_2 = `
   
-  class SafewErgoAPI {
+  class NautilusErgoApi {
       ${ergoInitialAPIFunctions}
 
       get_balance(token_id = 'ERG') {
@@ -149,7 +151,7 @@ const injected_script_2 = `
           });
       }
   }
-  const ergo = Object.freeze(new SafewErgoAPI());
+  const ergo = Object.freeze(new NautilusErgoApi());
   `
 
 injectScript(injected_script_1);

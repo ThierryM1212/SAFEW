@@ -15,6 +15,8 @@ import Mixer from './components/Mixer';
 import { confirmAlert } from './utils/Alerts';
 import { isUpgradeWalletRequired, upgradeWallets } from './utils/walletUtils';
 import AddLedgerWallet from './components/AddLedgerWallet';
+import TxBuilder from './components/TxBuilder';
+
 
 export default class App extends React.Component {
     constructor(props) {
@@ -121,6 +123,9 @@ export default class App extends React.Component {
                 break;
             case 'signPopup':
                 page = <SignPopup />
+                break;
+            case 'txbuilder':
+                page = <TxBuilder setPage={this.setPage} walletId={this.state.walletId} iniTran={this.state.setPageParam}/>
                 break;
             case 'empty':
                 page = null;
