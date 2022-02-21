@@ -80,7 +80,7 @@ export default class SendTransaction extends React.Component {
 
     async componentDidMount() {
         const wallet = getWalletById(this.state.walletId);
-        var walletAddressList = getWalletUsedAddressList(wallet);
+        var walletAddressList = getWalletAddressList(wallet);
         var addressContentList = await getAddressListContent(walletAddressList);
         // remove 0 erg addresses
         var i = walletAddressList.length;
