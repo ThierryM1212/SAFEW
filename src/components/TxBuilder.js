@@ -82,6 +82,7 @@ export default class TxBuilder extends React.Component {
         this.setBalanceBoxJson = this.setBalanceBoxJson.bind(this);
         this.signTx = this.signTx.bind(this);
         this.signAndSendTx = this.signAndSendTx.bind(this);
+        this.sendSignedTx = this.sendSignedTx.bind(this);
         this.setErgoPayTx = this.setErgoPayTx.bind(this);
         this.resetTxReduced = this.resetTxReduced.bind(this);
         this.timer = this.timer.bind(this);
@@ -132,7 +133,7 @@ export default class TxBuilder extends React.Component {
         const addressList = getWalletAddressList(wallet);
         var alert = waitingAlert("Fetching wallet unspent boxes...")
         const utxos = await getUnspentBoxesForAddressList(addressList);
-        const newTokenInfo = enrichTokenInfoFromUtxos(utxos,this.state.tokenInfo);
+        const newTokenInfo = enrichTokenInfoFromUtxos(utxos, this.state.tokenInfo);
         alert.close();
         this.setState({
             addressBoxList: parseUtxos(utxos),
@@ -142,7 +143,7 @@ export default class TxBuilder extends React.Component {
 
     async fetchByAddress() {
         const boxes = await unspentBoxesForV1(this.state.searchAddress);
-        const newTokenInfo = enrichTokenInfoFromUtxos(boxes,this.state.tokenInfo);
+        const newTokenInfo = enrichTokenInfoFromUtxos(boxes, this.state.tokenInfo);
         this.setState({
             tokenInfo: newTokenInfo,
         });
@@ -152,7 +153,7 @@ export default class TxBuilder extends React.Component {
                 otherBoxList: [...prevState.otherBoxList, box]
             }))
         }
-        
+
     }
 
     async fetchByBoxId() {
@@ -341,7 +342,12 @@ export default class TxBuilder extends React.Component {
             //await delay(3000);
             this.state.setPage('transactions', this.state.selectedWalletId);
         }
+    }
 
+    async sendSignedTx() {
+        await sendTx(this.state.signedTransaction);
+        //await delay(3000);
+        this.state.setPage('transactions', this.state.selectedWalletId);
     }
 
     async setErgoPayTx() {
@@ -384,7 +390,7 @@ export default class TxBuilder extends React.Component {
         var alert = waitingAlert("Loading input boxes...")
         const inputs = await enrichUtxos(jsonFixed.inputs, true);
         const dataInputs = await enrichUtxos(jsonFixed.dataInputs, true);
-        const newTokenInfo = enrichTokenInfoFromUtxos([inputs,dataInputs].flat(),this.state.tokenInfo);
+        const newTokenInfo = enrichTokenInfoFromUtxos([inputs, dataInputs].flat(), this.state.tokenInfo);
         const outputs = parseUtxos(jsonFixed.outputs, true, 'output');
         alert.close();
         this.setState({
