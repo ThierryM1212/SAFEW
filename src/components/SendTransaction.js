@@ -2,15 +2,15 @@ import React, { Fragment } from 'react';
 import Address from './Address';
 import ValidInput from './ValidInput';
 import ImageButton from './ImageButton';
-import { NANOERG_TO_ERG, SUGGESTED_TRANSACTION_FEE, VERIFIED_TOKENS } from '../utils/constants';
-import { copySuccess, errorAlert, promptPassword } from '../utils/Alerts';
+import { NANOERG_TO_ERG, SUGGESTED_TRANSACTION_FEE } from '../utils/constants';
+import { errorAlert, promptPassword, waitingAlert } from '../utils/Alerts';
 import { getWalletById, getWalletAddressList, formatERGAmount, formatTokenAmount, getSummaryFromAddressListContent, getSummaryFromSelectedAddressListContent, getAddressListContent, decryptMnemonic, formatLongString, getWalletUsedAddressList, getUnconfirmedTransactionsForAddressList } from '../utils/walletUtils';
 import { createTxOutputs, createUnsignedTransaction, getTxReducedB64Safe, getUtxosForSelectedInputs, isValidErgAddress } from '../ergo-related/ergolibUtils';
 import { getWalletForAddresses, signTransaction } from '../ergo-related/serializer';
 import { sendTx } from '../ergo-related/node';
 import { getUtxoBalanceForAddressList, parseSignedTx } from '../ergo-related/utxos';
-import VerifiedTokenImage from './VerifiedTokenImage';
 import BigQRCode from './BigQRCode';
+import TokenLabel from './TokenLabel';
 
 export default class SendTransaction extends React.Component {
     constructor(props) {
@@ -44,6 +44,8 @@ export default class SendTransaction extends React.Component {
         this.setTokenToSend = this.setTokenToSend.bind(this);
         this.validateTokenAmount = this.validateTokenAmount.bind(this);
         this.setSendAll = this.setSendAll.bind(this);
+        this.getTransactionJson = this.getTransactionJson.bind(this);
+        this.openInTxBuilder = this.openInTxBuilder.bind(this);
         this.timer = this.timer.bind(this);
     }
 
@@ -203,7 +205,7 @@ export default class SendTransaction extends React.Component {
         if (tokAmountStr.indexOf('.') > -1) {
             var str = tokAmountStr.split(".");
             str[1] = str[1].replace(/0+$/g, ""); //remove trailing 0
-            console.log("validateTokenAmount2",str[1].length)
+            console.log("validateTokenAmount2", str[1].length)
             if (str[1].length > tokenDecimals) {
                 return false;
             } else {
@@ -234,7 +236,7 @@ export default class SendTransaction extends React.Component {
         }
     }
 
-    async sendTransaction() {
+    async getTransactionJson() {
         const amountToSendFloat = parseFloat(this.state.ergsToSend);
         const feeFloat = parseFloat(this.state.txFee);
         const totalAmountToSendFloat = amountToSendFloat + feeFloat;
@@ -252,6 +254,16 @@ export default class SendTransaction extends React.Component {
         const unsignedTransaction = await createUnsignedTransaction(selectedUtxos, outputCandidates);
         const jsonUnsignedTx = JSON.parse(unsignedTransaction.to_json());
         //console.log("sendTransaction unsignedTransaction", jsonUnsignedTx);
+        return [jsonUnsignedTx, selectedUtxos];
+    }
+
+    async sendTransaction() {
+        var alert = waitingAlert("Preparing the transaction...");
+        const wallet = getWalletById(this.state.walletId);
+        const feeFloat = parseFloat(this.state.txFee);
+        const selectedAddresses = this.state.walletAddressList.filter((addr, id) => this.state.selectedAddresses[id]);
+        const [jsonUnsignedTx, selectedUtxos] = await this.getTransactionJson();
+        alert.close();
 
         if (wallet.ergoPayOnly) {
             const [txId, txReducedB64safe] = await getTxReducedB64Safe(jsonUnsignedTx, selectedUtxos);
@@ -262,7 +274,7 @@ export default class SendTransaction extends React.Component {
                 intervalId: intervalId,
             })
         } else {
-            const txBalance = await getUtxoBalanceForAddressList(jsonUnsignedTx.inputs, jsonUnsignedTx.outputs, selectedAddresses);
+            const txBalance = await getUtxoBalanceForAddressList(jsonUnsignedTx.inputs, jsonUnsignedTx.outputs, getWalletAddressList(wallet));
             const txBalanceReceiver = await getUtxoBalanceForAddressList(jsonUnsignedTx.inputs, jsonUnsignedTx.outputs, [this.state.sendToAddress]);
             //console.log("sendTransaction txBalance", txBalance, txBalanceReceiver);
 
@@ -308,8 +320,14 @@ export default class SendTransaction extends React.Component {
         }
     }
 
+    async openInTxBuilder() {
+        const jsonUnsignedTx = (await this.getTransactionJson())[0];
+        this.state.setPage('txbuilder', this.state.walletId, jsonUnsignedTx);
+    }
+
     render() {
         const wallet = getWalletById(this.state.walletId);
+        const expertMode = (localStorage.getItem('expertMode') === 'true') ?? false;
         return (
             <Fragment>
                 <div className='container card m-1 p-1 d-flex flex-column w-75'
@@ -415,38 +433,7 @@ export default class SendTransaction extends React.Component {
                                     this.state.tokens.map((tok, index) =>
                                         <tr key={index}>
                                             <td>
-                                                <div className='d-flex flex-row justify-content-between align-items-center'>
-                                                    <div className='d-flex flex-row align-items-center'>
-                                                        {tok.name}
-                                                        {
-                                                            Object.keys(VERIFIED_TOKENS).includes(tok.tokenId) ?
-                                                                <div>&nbsp;<VerifiedTokenImage tokenId={tok.tokenId} /></div>
-                                                                : null
-                                                        }
-                                                    </div>
-                                                    <div className='d-flex flex-row row-reverse'>
-                                                        <ImageButton
-                                                            id={"tokId" + tok.tokenId}
-                                                            color={"blue"}
-                                                            icon={"content_copy"}
-                                                            tips={"Copy tokenId - " + tok.tokenId}
-                                                            onClick={() => {
-                                                                navigator.clipboard.writeText(tok.tokenId);
-                                                                copySuccess();
-                                                            }}
-                                                        />
-                                                        <ImageButton
-                                                            id={"openAddressExplorer" + tok.tokenId}
-                                                            color={"blue"}
-                                                            icon={"open_in_new"}
-                                                            tips={"Open in Explorer"}
-                                                            onClick={() => {
-                                                                const url = localStorage.getItem('explorerWebUIAddress') + 'en/token/' + tok.tokenId;
-                                                                window.open(url, '_blank').focus();
-                                                            }}
-                                                        />
-                                                    </div>
-                                                </div>
+                                                <TokenLabel name={tok.name} tokenId={tok.tokenId} />
                                             </td>
                                             <td>{formatTokenAmount(tok.amount, tok.decimals, false)}</td>
                                             <td>
@@ -536,10 +523,23 @@ export default class SendTransaction extends React.Component {
                                         && this.state.isValidErgToSend
                                         && this.state.isValidTokenAmountToSend.every(Boolean)
                                         && this.state.isValidTxFee)}
-                                >{wallet.ergoPayOnly ? "Ergopay" : "Send transaction"}</button>
+                                >{wallet.ergoPayOnly ? "Ergopay" : "Send transaction"}</button>&nbsp;
+                                {
+                                    expertMode ?
+
+                                        <button className="btn btn-outline-info"
+                                            onClick={this.openInTxBuilder}
+                                            disabled={!(this.state.isValidSendToAddress
+                                                && this.state.isValidErgToSend
+                                                && this.state.isValidTokenAmountToSend.every(Boolean)
+                                                && this.state.isValidTxFee)}
+                                        >Open in transaction builder</button>
+                                        : null
+                                }
                             </div>
                             : null
                         }
+
                     </div>
                 </div>
             </Fragment>
