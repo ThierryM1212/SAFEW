@@ -9,7 +9,7 @@ import ImageButtonLabeled from './TransactionBuilder/ImageButtonLabeled';
 import ReactJson from 'react-json-view';
 import { UtxoItem } from './TransactionBuilder/UtxoItem';
 import { unspentBoxesForV1, boxByBoxId, currentHeight } from '../ergo-related/explorer';
-import { parseUtxo, parseUtxos, enrichUtxos, buildBalanceBox, getUnspentBoxesForAddressList, parseSignedTx, enrichTokenInfoFromUtxos } from '../ergo-related/utxos';
+import { parseUtxo, parseUtxos, enrichUtxos, buildBalanceBox, getUnspentBoxesForAddressList, parseSignedTx, enrichTokenInfoFromUtxos, getUtxoBalanceForAddressList } from '../ergo-related/utxos';
 import { getWalletForAddresses, signTransaction } from '../ergo-related/serializer';
 import JSONBigInt from 'json-bigint';
 import { errorAlert, promptPassword, waitingAlert } from '../utils/Alerts';
@@ -17,7 +17,7 @@ import { sendTx } from '../ergo-related/node';
 import { getTxReducedB64Safe } from '../ergo-related/ergolibUtils';
 import BigQRCode from './BigQRCode';
 import SelectWallet from './SelectWallet';
-import { decryptMnemonic, getUnconfirmedTransactionsForAddressList, getWalletAddressList, getWalletById } from '../utils/walletUtils';
+import { decryptMnemonic, formatERGAmount, formatTokenAmount, getUnconfirmedTransactionsForAddressList, getWalletAddressList, getWalletById } from '../utils/walletUtils';
 import { VERIFIED_TOKENS } from '../utils/constants';
 /* global BigInt */
 
@@ -294,7 +294,21 @@ export default class TxBuilder extends React.Component {
     async signTx() {
         const wallet = getWalletById(this.state.selectedWalletId);
         const walletAddressList = getWalletAddressList(wallet);
-        const password = await promptPassword("Sign transaction for<br/>" + wallet.name, '', "Sign");
+        const jsonUnsignedTx = this.getTransaction();
+        const txBalance = await getUtxoBalanceForAddressList(jsonUnsignedTx.inputs, jsonUnsignedTx.outputs, walletAddressList);
+        var txSummaryHtml = "<div class='card m-1 p-1'><table class='txSummarry'><tbody>";
+        txSummaryHtml += "<tr><td class='textSmall'><b>Total</b></td><td><b>" + formatERGAmount(txBalance.value) + "&nbsp;ERG</b></td></tr>";
+        txSummaryHtml += "</tbody></table>";
+        if (txBalance.tokens.length > 0) {
+            txSummaryHtml += "<table class='txSummarry'><tbody>";
+            txSummaryHtml += "<thead><th colspan='2'>Tokens</th></thead>";
+            for (const token of txBalance.tokens) {
+                txSummaryHtml += "<tr><td class='textSmall'>" + token.name + "</td><td class='textSmall'>" + formatTokenAmount(token.amount, token.decimals) + "</td></tr>";
+            }
+            txSummaryHtml += "</tbody></table></div>";
+        }
+
+        const password = await promptPassword("Sign transaction for<br/>" + wallet.name, txSummaryHtml, "Sign");
         //console.log("sendTransaction password", password);
         const mnemonic = decryptMnemonic(wallet.mnemonic, password);
         //console.log("mnemonic",mnemonic)
@@ -309,7 +323,7 @@ export default class TxBuilder extends React.Component {
         //console.log("signingWallet", signingWallet);
         var signedTx = {};
         try {
-            signedTx = JSON.parse(await signTransaction(this.getTransaction(), this.state.selectedBoxList, this.state.selectedDataBoxList, signingWallet));
+            signedTx = JSON.parse(await signTransaction(jsonUnsignedTx, this.state.selectedBoxList, this.state.selectedDataBoxList, signingWallet));
             console.log("signedTx", signedTx);
             this.setState({ signedTransaction: signedTx })
         } catch (e) {
@@ -331,7 +345,6 @@ export default class TxBuilder extends React.Component {
     }
 
     async setErgoPayTx() {
-        const wallet = getWalletById(this.state.selectedWalletId);
         var txId = '', txReducedB64safe = '';
         try {
             [txId, txReducedB64safe] = await getTxReducedB64Safe(this.getTransaction(), this.state.selectedBoxList);

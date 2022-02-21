@@ -55,7 +55,7 @@ export default class OutputEditable extends React.Component {
                             this.setState(prevState => ({
                                 json: {
                                     ...prevState.json,
-                                    ["assets"]: [...prevState.json.assets, defaultToken]
+                                    assets: [...prevState.json.assets, defaultToken]
                                 }
                             }));
                         } else {

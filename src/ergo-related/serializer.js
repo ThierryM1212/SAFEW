@@ -105,7 +105,7 @@ export async function encodeContract(address) {
 }
 
 export async function ergoTreeToAddress(ergoTree) {
-    console.log("ergoTreeToAddress",ergoTree);
+    //console.log("ergoTreeToAddress",ergoTree);
     const ergoT = (await ergolib).ErgoTree.from_base16_bytes(ergoTree);
     const address = (await ergolib).Address.recreate_from_ergo_tree(ergoT);
     return address.to_base58();

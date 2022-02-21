@@ -2,14 +2,13 @@ import React, { Fragment } from 'react';
 import Address from './Address';
 import ValidInput from './ValidInput';
 import ImageButton from './ImageButton';
-import { NANOERG_TO_ERG, SUGGESTED_TRANSACTION_FEE, VERIFIED_TOKENS } from '../utils/constants';
-import { copySuccess, errorAlert, promptPassword, waitingAlert } from '../utils/Alerts';
+import { NANOERG_TO_ERG, SUGGESTED_TRANSACTION_FEE } from '../utils/constants';
+import { errorAlert, promptPassword, waitingAlert } from '../utils/Alerts';
 import { getWalletById, getWalletAddressList, formatERGAmount, formatTokenAmount, getSummaryFromAddressListContent, getSummaryFromSelectedAddressListContent, getAddressListContent, decryptMnemonic, formatLongString, getWalletUsedAddressList, getUnconfirmedTransactionsForAddressList } from '../utils/walletUtils';
 import { createTxOutputs, createUnsignedTransaction, getTxReducedB64Safe, getUtxosForSelectedInputs, isValidErgAddress } from '../ergo-related/ergolibUtils';
 import { getWalletForAddresses, signTransaction } from '../ergo-related/serializer';
 import { sendTx } from '../ergo-related/node';
 import { getUtxoBalanceForAddressList, parseSignedTx } from '../ergo-related/utxos';
-import VerifiedTokenImage from './VerifiedTokenImage';
 import BigQRCode from './BigQRCode';
 import TokenLabel from './TokenLabel';
 
@@ -275,7 +274,7 @@ export default class SendTransaction extends React.Component {
                 intervalId: intervalId,
             })
         } else {
-            const txBalance = await getUtxoBalanceForAddressList(jsonUnsignedTx.inputs, jsonUnsignedTx.outputs, this.state.walletAddressList);
+            const txBalance = await getUtxoBalanceForAddressList(jsonUnsignedTx.inputs, jsonUnsignedTx.outputs, getWalletAddressList(wallet));
             const txBalanceReceiver = await getUtxoBalanceForAddressList(jsonUnsignedTx.inputs, jsonUnsignedTx.outputs, [this.state.sendToAddress]);
             //console.log("sendTransaction txBalance", txBalance, txBalanceReceiver);
 
@@ -322,7 +321,7 @@ export default class SendTransaction extends React.Component {
     }
 
     async openInTxBuilder() {
-        const [jsonUnsignedTx, selectedUtxos] = await this.getTransactionJson();
+        const jsonUnsignedTx = (await this.getTransactionJson())[0];
         this.state.setPage('txbuilder', this.state.walletId, jsonUnsignedTx);
     }
 

@@ -280,6 +280,17 @@ export function getConnectedWalletByURL(url) {
     }
     return null;
 }
+export function getWalletId(wallet) {
+    var walletId = undefined;
+    const walletList = JSON.parse(localStorage.getItem('walletList')) ?? [];
+    for (const i in walletList) {
+        if (wallet.name === walletList[i].name) {
+            walletId = i;
+        }
+    }
+    return walletId;
+}
+
 
 export function getWalletListAddressList(walletList) {
     let walletListAddressList = [];
