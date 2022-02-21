@@ -14,6 +14,7 @@ Wallet features:
  - Configure Explorer, Node and Explorer UI addresses used by the wallet
  - ErgoPay wallet and signing (only the public address are provided, signing is delegated to ErgoPay EIP-19 with iOS or Android wallet v1.6+)
  - ErgoMixer access: interact with ErgoMixer directly from the wallet (still incomplete)
+ - Transaction builder to manipulate json of ergo transaction in Expert mode
 
 ## Security
 The wallets are stored in the local storage of the SAFEW browser extension.<br/>
@@ -57,7 +58,6 @@ Publish on Chrome Web Store (currently blocked by https://bugs.chromium.org/p/ch
 Publish on Opera Addons (available on Opera beta store waiting for validation)<br/>
 Build for Firefox<br/>
 Ledger signing<br/>
-Transaction builder integration: https://transaction-builder.ergo.ga/<br/>
 Display NFT images ?<br/>
 <br/>
 
@@ -68,3 +68,6 @@ v0.3
 - Update dApp connector functions to allow future Wallet selector in dApps
 - Update dependencies, cleanup lint
 
+v0.4
+- Transaction builder integration
+- bug fixes
