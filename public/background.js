@@ -22,7 +22,12 @@ var transactionsToSign = new Map();
 // launch extension popup
 function launchPopup(message, sender, param = '') {
     const searchParams = new URLSearchParams();
-    searchParams.set('origin', sender.origin);
+    if (Object.keys(sender).includes('origin')) {
+        searchParams.set('origin', sender.origin);
+    } else {
+        searchParams.set('origin', sender.url.replace(/\/$/, ""));
+    }
+    
     //searchParams.set('request', JSON.stringify(message.data));
     var type = message.data.type;
     console.log("launchPopup", message, type, param);
@@ -42,7 +47,6 @@ function launchPopup(message, sender, param = '') {
             height: 700,
             top: focusedWindow.top,
             left: focusedWindow.left + (focusedWindow.width - 375),
-            setSelfAsOpener: true,
             focused: true,
         });
     });
@@ -167,7 +171,7 @@ function getTokenListFromUtxos(utxos) {
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    console.log("background addListener", message, sender, sendResponse);
+    //console.log("background addListener", message, sender, sendResponse);
     if (message.channel === 'safew_contentscript_background_channel') {
         if (message.data && message.data.type === "connect") {
             const walletFound = (getConnectedWalletName(message.data.url) !== null);
@@ -283,7 +287,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 return true;
             }
             if (message.data.func === "sign_tx") {
-                console.log("sign_tx", message.data)
+                //console.log("sign_tx", message.data)
                 const walletFound = (getConnectedWalletName(message.data.url) !== null);
                 if (!walletFound) { // No wallet
                     sendResponse({
@@ -322,7 +326,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             }
             if (message.data.func === "submit_tx") {
                 // TO DO minimal check inputs
-                console.log("submit_tx", message.data.data);
+                //console.log("submit_tx", message.data.data);
                 sendTx(message.data.data[0]).then(res => {
                     console.log("submit_tx response", res);
                     sendResponse({
@@ -346,7 +350,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
 
     } else if (message.channel === 'safew_extension_background_channel') {
-        console.log("background safew_extension_background_channel", message, connectResponseHandlers);
+        //console.log("background safew_extension_background_channel", message, connectResponseHandlers);
         if (message.data && message.data.type && message.data.type === "connect_response") {
             const responseHandler = connectResponseHandlers.get(message.data.url);
             connectResponseHandlers.delete(message.data.url);
