@@ -1,4 +1,5 @@
 import { displayTransaction, errorAlert } from "../utils/Alerts";
+import JSONBigInt from 'json-bigint';
 
 export async function postTx(url, body = {}, apiKey = '') {
     console.log("post", url)
@@ -11,7 +12,7 @@ export async function postTx(url, body = {}, apiKey = '') {
             'Access-Control-Allow-Origin': '*',
             'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
         },
-        body: JSON.stringify(body)
+        body: JSONBigInt.stringify(body)
     }).then(response => Promise.all([response.ok, response.json()]))
         .then(([responseOk, body]) => {
             if (responseOk) {
@@ -41,7 +42,7 @@ export async function post(url, body = {}, apiKey = '') {
             'Content-Type': 'application/json',
             api_key: apiKey,
         },
-        body: JSON.stringify(body),
+        body: JSONBigInt.stringify(body),
     });
 }
 

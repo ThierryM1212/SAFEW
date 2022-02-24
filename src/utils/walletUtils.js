@@ -373,7 +373,7 @@ export function setAddressUsed(addressToSet) {
 }
 
 export async function updateUnusedAddresses() {
-    var alert = waitingAlert("Searching new used addresses");
+    //var alert = waitingAlert("Searching new used addresses");
     var walletList = JSON.parse(localStorage.getItem('walletList'));
     for (var k in walletList) {
         var newWallet = { ...walletList[k] };
@@ -397,7 +397,7 @@ export async function updateUnusedAddresses() {
             }
         }
     }
-    alert.close();
+    //alert.close();
 }
 
 export function setChangeAddress(walletId, address) {

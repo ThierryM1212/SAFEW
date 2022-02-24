@@ -11,6 +11,7 @@ import { sendTx } from '../ergo-related/node';
 import { getUtxoBalanceForAddressList, parseSignedTx } from '../ergo-related/utxos';
 import BigQRCode from './BigQRCode';
 import TokenLabel from './TokenLabel';
+import JSONBigInt from 'json-bigint';
 
 export default class SendTransaction extends React.Component {
     constructor(props) {
@@ -252,7 +253,7 @@ export default class SendTransaction extends React.Component {
             amountToSendFloat, feeFloat, this.state.tokens, tokenAmountToSendInt);
 
         const unsignedTransaction = await createUnsignedTransaction(selectedUtxos, outputCandidates);
-        const jsonUnsignedTx = JSON.parse(unsignedTransaction.to_json());
+        const jsonUnsignedTx = JSONBigInt.parse(unsignedTransaction.to_json());
         //console.log("sendTransaction unsignedTransaction", jsonUnsignedTx);
         return [jsonUnsignedTx, selectedUtxos];
     }
@@ -308,7 +309,7 @@ export default class SendTransaction extends React.Component {
             var signedTx = {};
 
             try {
-                signedTx = JSON.parse(await signTransaction(jsonUnsignedTx, selectedUtxos, [], signingWallet));
+                signedTx = JSONBigInt.parse(await signTransaction(jsonUnsignedTx, selectedUtxos, [], signingWallet));
                 console.log("signedTx", signedTx);
             } catch (e) {
                 errorAlert("Failed to sign transaction", e);

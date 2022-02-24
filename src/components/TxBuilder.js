@@ -330,7 +330,7 @@ export default class TxBuilder extends React.Component {
         //console.log("signingWallet", signingWallet);
         var signedTx = {};
         try {
-            signedTx = JSON.parse(await signTransaction(jsonUnsignedTx, this.state.selectedBoxList, this.state.selectedDataBoxList, signingWallet));
+            signedTx = JSONBigInt.parse(await signTransaction(jsonUnsignedTx, this.state.selectedBoxList, this.state.selectedDataBoxList, signingWallet));
             console.log("signedTx", signedTx);
             this.setState({ signedTransaction: signedTx })
         } catch (e) {
