@@ -22,10 +22,13 @@ var transactionsToSign = new Map();
 // launch extension popup
 function launchPopup(message, sender, param = '') {
     const searchParams = new URLSearchParams();
+    console.log("launchPopup sender", sender, location.origin);
     if (Object.keys(sender).includes('origin')) {
         searchParams.set('origin', sender.origin);
     } else {
-        searchParams.set('origin', sender.url.replace(/\/$/, ""));
+        const origin = (new URL(sender.url)).origin;
+        console.log("launchPopup origin", origin, sender.url)
+        searchParams.set('origin', origin);
     }
     
     //searchParams.set('request', JSON.stringify(message.data));
@@ -36,12 +39,12 @@ function launchPopup(message, sender, param = '') {
         searchParams.set('requestId', param);
     }
     console.log("launchPopup", type);
-    const URL = 'index.html#' + type + '?' + searchParams.toString()
+    const URLpopup = 'index.html#' + type + '?' + searchParams.toString()
 
     // TODO consolidate popup dimensions
     chrome.windows.getLastFocused((focusedWindow) => {
         chrome.windows.create({
-            url: URL,
+            url: URLpopup,
             type: 'popup',
             width: 800,
             height: 700,
@@ -138,8 +141,11 @@ async function unspentBoxesForV1(address) {
 async function getUnspentBoxesForAddressList(addressList) {
     const boxList = await Promise.all(addressList.map(async (address) => {
         const addressBoxes = await unspentBoxesForV1(address);
-        //console.log("getUnspentBoxesForAddressList", address, addressBoxes)
+        console.log("getUnspentBoxesForAddressList", address, addressBoxes)
         return addressBoxes;
+    }));
+    console.log("getUnspentBoxesForAddressList boxList", boxList, boxList.flat(), boxList.flat().sort(function (a, b) {
+        return a.globalIndex - b.globalIndex;
     }));
     return boxList.flat().sort(function (a, b) {
         return a.globalIndex - b.globalIndex;
@@ -171,7 +177,7 @@ function getTokenListFromUtxos(utxos) {
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    //console.log("background addListener", message, sender, sendResponse);
+    console.log("background addListener", message, sender, sendResponse);
     if (message.channel === 'safew_contentscript_background_channel') {
         if (message.data && message.data.type === "connect") {
             const walletFound = (getConnectedWalletName(message.data.url) !== null);
@@ -254,7 +260,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                     .then(addressBoxes => {
                         const [amount, token_id, paginate] = message.data.data;
                         var selectedUtxos = [], unSelectedUtxos = addressBoxes, amountSelected = BigInt(0);
-                        if (amount !== null) {
+                        if (amount) {
                             const amountInt = BigInt(amount.toString());
                             if (token_id === 'ERG') {
                                 while (amountSelected < amountInt && unSelectedUtxos.length > 0) {
