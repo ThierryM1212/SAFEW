@@ -4,6 +4,10 @@ Simple And Fast Ergo Wallet
 
 Ergo wallet integrating a dApp connector compatible EIP-12.
 
+SAFEW is compatible with 
+- Chrome based browser (Opera, Brave, ...) but not released on Chrome store yet.
+- Firefox and available at: https://addons.mozilla.org/en-US/firefox/addon/safew/
+
 ## Features
 Wallet features:
  - Add, restore, edit wallets (BIP-32/39)
@@ -56,12 +60,10 @@ Same ergo_request_read_access and ergo_check_read_access than Yoroi method are d
 ## Next steps ?
 Publish on Chrome Web Store (currently blocked by https://bugs.chromium.org/p/chromium/issues/detail?id=1173354 and the requirement to publish the new extensions with manifest v3)<br/>
 Publish on Opera Addons (available on Opera beta store waiting for validation)<br/>
-Build for Firefox<br/>
-Ledger signing<br/>
-Display NFT images ?<br/>
+Ledger signing (Waiting on ledger-ergo-app fix)<br/>
 <br/>
 
-## Release note
+## Release notes
 v0.3
 - ErgoPay improvement: allow to delete mnemonic to convert a wallet to an ErgoPay wallet, add/remove addresses from Ergopay wallets, add ErgoPay button for mobile users
 - ErgoMixer integration: Display available Mixes, send mix transactions from the wallet, manage covert addresses
@@ -70,4 +72,8 @@ v0.3
 
 v0.4
 - Transaction builder integration
+- bug fixes
+
+v0.4.1
+- Firefox support
 - bug fixes
