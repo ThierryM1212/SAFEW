@@ -10,7 +10,7 @@
     "@testing-library/user-event": "^12.1.10",
     "bip39": "^3.0.4",
     "crypto-js": "^4.1.1",
-    "ergo-lib-wasm-browser": "^0.15.0-alpha-fde64ae",
+    "ergo-lib-wasm-browser": "^0.15.0-alpha-f7a9ee0",
     "json-bigint": "^1.0.0",
     "qrcode": "^1.5.0",
     "qrcode.react": "^1.0.1",
@@ -29,10 +29,10 @@
     "typescript": "^4.5.5"
   },
   "scripts": {
-    "start": "NODE_ENV=development webpack serve --mode development",
-    "build-dev": "NODE_ENV=development webpack build --mode development",
-    "build-prod": "NODE_ENV=prodution webpack build --mode production",
-    "watch": "NODE_ENV=development webpack watch --mode development",
+    "start": "cross-env NODE_ENV=development webpack serve --mode development",
+    "build-dev": "cross-env NODE_ENV=development webpack build --mode development",
+    "build-prod": "cross-env NODE_ENV=prodution webpack build --mode production",
+    "watch": "cross-env NODE_ENV=development webpack watch --mode development",
     "test": "echo no tests yet"
   },
   "eslintConfig": {
@@ -62,6 +62,7 @@
     "@types/react-color": "^3.0.6",
     "babel-loader": "^8.2.3",
     "copy-webpack-plugin": "^10.2.4",
+    "cross-env": "^7.0.3",
     "css-loader": "^6.6.0",
     "ergo-market-lib": "github:JimmyHoffa/ergo-market-lib#1.1.1",
     "file-loader": "^6.2.0",
