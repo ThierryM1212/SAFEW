@@ -232,13 +232,17 @@ export async function createTxOutputs(selectedUtxos, sendToAddress, changeAddres
 
 }
 
-export async function createUnsignedTransaction(selectedUtxos, outputCandidates) {
+export async function createUnsignedTransaction(selectedUtxos, outputCandidates, dataInputs = []) {
     console.log("createUnsignedTransaction selectedUtxos",selectedUtxos);
     const inputIds = selectedUtxos.map(utxo => utxo.boxId);
     const unsignedInputArray = inputIds.map((await ergolib).BoxId.from_str).map((await ergolib).UnsignedInput.from_box_id)
     const unsignedInputs = new (await ergolib).UnsignedInputs();
     unsignedInputArray.forEach((i) => unsignedInputs.add(i));
-    const unsignedTx = new (await ergolib).UnsignedTransaction(unsignedInputs, new (await ergolib).DataInputs(), outputCandidates);
+    var data_inputs = new (await ergolib).DataInputs();
+    for (const dataInputBox of dataInputs) {
+        data_inputs.add(new (await ergolib).DataInput(dataInputBox.boxId));
+    }
+    const unsignedTx = new (await ergolib).UnsignedTransaction(unsignedInputs, data_inputs, outputCandidates);
     console.log("createUnsignedTransaction unsignedTx",unsignedTx.to_json());
     return unsignedTx;
 }
@@ -265,4 +269,8 @@ async function getTxReduced(json, inputs, dataInputs) {
     const inputDataBoxes = (await ergolib).ErgoBoxes.from_boxes_json(dataInputs);
     const ctx = await getErgoStateContext();
     return [unsignedTx.id().to_str(), (await ergolib).ReducedTransaction.from_unsigned_tx(unsignedTx,inputBoxes,inputDataBoxes,ctx)];
+}
+
+export async function getUnsignedTxFromJson(txObject) {
+    return (await ergolib).UnsignedTransaction.from_json(JSONBigInt.stringify(txObject));
 }

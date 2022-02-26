@@ -47,11 +47,13 @@ const injected_script_1 = `
   if (ergoConnector !== undefined) {
     ergoConnector = {
       ...ergoConnector,
-      safew: Object.freeze(new ErgoAPIini())
+      safew: Object.freeze(new ErgoAPIini()),
+      nautilus: Object.freeze(new ErgoAPIini())
     };
   } else {
     var ergoConnector = {
-      safew: Object.freeze(new ErgoAPIini())
+      safew: Object.freeze(new ErgoAPIini()),
+      nautilus: Object.freeze(new ErgoAPIini())
     };
   }
 
@@ -96,7 +98,7 @@ const injected_script_1 = `
 
 const injected_script_2 = `
   
-  class ErgoAPI {
+  class NautilusErgoApi {
       ${ergoInitialAPIFunctions}
 
       get_balance(token_id = 'ERG') {
@@ -149,7 +151,7 @@ const injected_script_2 = `
           });
       }
   }
-  const ergo = Object.freeze(new ErgoAPI());
+  const ergo = Object.freeze(new NautilusErgoApi());
   `
 
 injectScript(injected_script_1);
@@ -157,7 +159,7 @@ var ergoApiInjected = false;
 
 // injected script listerner
 window.addEventListener('safew_injected_script_message', (event) => {
-    console.log("contentScript addEventListener event", event);
+    //console.log("contentScript addEventListener event", event);
     chrome.runtime.sendMessage(
         {
             channel: 'safew_contentscript_background_channel',
@@ -168,15 +170,23 @@ window.addEventListener('safew_injected_script_message', (event) => {
             if (!response) {
                 return;
             }
-            console.log("contentScript response", response);
+            //console.log("contentScript response", response);
             if (response.type && response.type === "connect_response" && response.result) {
                 if (!ergoApiInjected) {
                     injectScript(injected_script_2);
                     ergoApiInjected = true;
                 }
             }
+            var newresp = {};
+            var isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
+            if (isFirefox) {
+                newresp = cloneInto(response, window.document.defaultView);
+            } else {
+                newresp = response;
+            }
+            //console.log("contentScript newresp", newresp);
             window.dispatchEvent(
-                new CustomEvent('safew_contentscript_message', { detail: response }),
+                new CustomEvent('safew_contentscript_message', { detail: newresp }),
             );
         },
     );

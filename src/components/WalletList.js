@@ -26,7 +26,7 @@ export default class WalletList extends React.Component {
     async componentDidMount() {
         var intervalId = setInterval(this.timer, 60000);
         this.setState({ intervalId: intervalId });
-        await updateUnusedAddresses();
+        updateUnusedAddresses();
         await this.updateWalletAddressListContent();
     }
 

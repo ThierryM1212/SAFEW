@@ -280,6 +280,17 @@ export function getConnectedWalletByURL(url) {
     }
     return null;
 }
+export function getWalletId(wallet) {
+    var walletId = undefined;
+    const walletList = JSON.parse(localStorage.getItem('walletList')) ?? [];
+    for (const i in walletList) {
+        if (wallet.name === walletList[i].name) {
+            walletId = i;
+        }
+    }
+    return walletId;
+}
+
 
 export function getWalletListAddressList(walletList) {
     let walletListAddressList = [];
@@ -362,7 +373,7 @@ export function setAddressUsed(addressToSet) {
 }
 
 export async function updateUnusedAddresses() {
-    var alert = waitingAlert("Searching new used addresses");
+    //var alert = waitingAlert("Searching new used addresses");
     var walletList = JSON.parse(localStorage.getItem('walletList'));
     for (var k in walletList) {
         var newWallet = { ...walletList[k] };
@@ -386,7 +397,7 @@ export async function updateUnusedAddresses() {
             }
         }
     }
-    alert.close();
+    //alert.close();
 }
 
 export function setChangeAddress(walletId, address) {

@@ -8,6 +8,7 @@ import { errorAlert } from '../utils/Alerts';
 import { sampleTxErgodex, TX_FEE_ERGO_TREE } from '../utils/constants';
 import { decryptMnemonic, formatERGAmount, formatTokenAmount, getConnectedWalletByURL, getUnconfirmedTransactionsForAddressList, getWalletAddressList, getWalletById, getWalletUsedAddressList } from '../utils/walletUtils';
 import BigQRCode from './BigQRCode';
+import JSONBigInt from 'json-bigint';
 
 /* global chrome */
 
@@ -162,7 +163,7 @@ export default class SignPopup extends React.Component {
             data: {
                 type: "ergo_api_response",
                 result: true,
-                data: JSON.parse(signedTx),
+                data: JSONBigInt.parse(signedTx),
                 requestId: this.state.requestId,
             }
         });
@@ -191,6 +192,7 @@ export default class SignPopup extends React.Component {
         }
         return (
             <Fragment>
+                <br />
                 <div className='card w-75 m-1 p-1 d-flex flex-column'
                     style={{
                         borderColor: `rgba(${this.state.wallet.color.r},${this.state.wallet.color.g},${this.state.wallet.color.b}, 0.95)`,
