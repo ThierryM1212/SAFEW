@@ -10,7 +10,7 @@ const config = {
     './src/index.js'
   ],
   output: {
-    path: './build',
+    path: path.resolve(__dirname, 'build'),
     filename: 'bundle.js'
   },
   module: {
