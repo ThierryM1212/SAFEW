@@ -6,6 +6,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const config = {
   entry: [
     'react-hot-loader/patch',
+    'regenerator-runtime/runtime.js',
     './src/index.js'
   ],
   output: {
@@ -80,7 +81,8 @@ const config = {
   experiments: {
     asyncWebAssembly: true
     // syncWebAssembly: true
-  }
+  },
+  mode: 'development'
 };
 
 module.exports = config;
