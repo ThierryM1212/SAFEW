@@ -5,6 +5,7 @@ import '@sweetalert2/theme-dark/dark.css';
 import { enrichUtxos } from "../ergo-related/utxos";
 import { hexToRgbA } from "./utils";
 import { waitingAlert } from "./Alerts";
+import { ExplorerTokenMarket } from 'ergo-market-lib/dist/ExplorerTokenMarket';
 var CryptoJS = require("crypto-js");
 
 
@@ -12,6 +13,8 @@ export const MIN_CHAR_WALLET_NAME = 3;
 export const MIN_CHAR_WALLET_PASSWORD = 10;
 export const INVALID_PASSWORD_LENGTH_MSG = "Min " + MIN_CHAR_WALLET_PASSWORD.toString() + " characters !";
 export const INVALID_NAME_LENGTH_MSG = "Min " + MIN_CHAR_WALLET_NAME.toString() + " characters !";
+
+export const tokenMarket = new ExplorerTokenMarket({ throwOnError: false });
 
 export function isValidPassword(password) {
     console.log(password, password.length);
@@ -410,7 +413,13 @@ export async function getAddressListContent(addressList) {
     const addressContentList = await Promise.all(addressList.map(async (address) => {
         const addressContent = await getBalanceForAddress(address);
         //console.log("getAddressListContent", address, addressContent, JSON.stringify(addressContent))
-        return { address: address, content: addressContent.confirmed, unconfirmed: { ...addressContent.unconfirmed } };
+        //console.log('GETTING BALANCES....', address);
+        const tokenBalances = await tokenMarket.getTokenBalanceByAddress(address);
+        // console.log("tokenBalances", address, tokenBalances, JSON.stringify(tokenBalances))
+        const confirmedValueInErgs = Object.values(tokenBalances).map(({confirmed}) => parseFloat(confirmed.valueInErgs) || 0).reduce((sum, cur) => cur + sum, 0)
+        const unconfirmedValueInErgs = Object.values(tokenBalances).map(({unconfirmed}) => parseFloat(unconfirmed.valueInErgs) || 0).reduce((sum, cur) => cur + sum, 0)
+        // const totalValueInErgs = unconfirmedValueInErgs + confirmedValueInErgs;
+        return { address: address, content: { ...addressContent.confirmed, tokenValue: confirmedValueInErgs, tokenBalances }, unconfirmed: { ...addressContent.unconfirmed, tokenValue: unconfirmedValueInErgs } };
     }));
     return addressContentList;
 }
@@ -446,6 +455,7 @@ export async function getUnconfirmedTransactionsForAddressList(addressList, enri
 }
 
 export function getSummaryFromAddressListContent(addressContentList) {
+    //console.log('CONTENTLIST', addressContentList);
     const addressList = addressContentList.map(addrContent => addrContent.address);
     const selectedAddressList = new Array(addressList.length).fill(true);
     return getSummaryFromSelectedAddressListContent(addressList, addressContentList, selectedAddressList);
@@ -463,13 +473,14 @@ export function getSummaryFromSelectedAddressListContent(addressList, addressCon
             if (Array.isArray(addrInfo.tokens)) {
                 for (const i in addrInfo.tokens) {
                     const token = {...addrInfo.tokens[i]};
+                    const tokenBalances = addrInfo.tokenBalances[token.tokenId]
                     //if (addressList.includes(addrInfo.address)) {
                     const tokIndex = tokens.findIndex(e => (e.tokenId === token.tokenId));
                     if (tokIndex >= 0) {
                         //console.log("getSummaryFromSelectedAddressListContent adding", i, addressList[i], token.tokenId, token.amount)
                         tokens[tokIndex].amount += token.amount;
                     } else {
-                        tokens.push({ ...token });
+                        tokens.push({ ...token, confirmed: tokenBalances.confirmed, unconfirmed: tokenBalances.unconfirmed });
                     }
                 }
             }

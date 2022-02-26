@@ -63,6 +63,7 @@
     "babel-loader": "^8.2.3",
     "copy-webpack-plugin": "^10.2.4",
     "css-loader": "^6.6.0",
+    "ergo-market-lib": "github:JimmyHoffa/ergo-market-lib#1.1.1",
     "file-loader": "^6.2.0",
     "html-webpack-plugin": "^5.5.0",
     "patch-package": "^6.4.7",
