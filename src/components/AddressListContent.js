@@ -108,7 +108,7 @@ export default function AddressListContent(props) {
                                                 </div>
                                             </td>
                                             <td>{formatTokenAmount(tok.amount, tok.decimals)}</td>
-                                            <td>{parseFloat(tok.confirmed.valueInErgs || '0')?.toLocaleString('en-US', { maximumFractionDigits: 4})}</td>
+                                            <td>{parseFloat(tok.valueInErgs || '0')?.toLocaleString(navigator.language, { maximumFractionDigits: 4})}</td>
                                             {/* <td>{tok.unconfirmed.valueInErgs}</td> */}
                                         </tr>)
                                 }
