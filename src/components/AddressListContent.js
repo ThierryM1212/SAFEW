@@ -6,11 +6,13 @@ import { formatERGAmount, formatTokenAmount, getSummaryFromAddressListContent } 
 import ImageButton from './ImageButton';
 import VerifiedTokenImage from './VerifiedTokenImage';
 
+/* global BigInt */
+
 export default function AddressListContent(props) {
     const [details, toggleDetails] = useState(0);
     const ergoPrice = parseFloat(readErgoPrice());
 
-    var nanoErgs = 0, tokens = [], addressList = [], unconfirmedBalance = { value: 0, tokens: [] };
+    var nanoErgs = 0, tokens = [], addressList = [], unconfirmedBalance = { value: BigInt(0), tokens: [] };
     if (props.addressContentList !== undefined) {
         [nanoErgs, tokens] = getSummaryFromAddressListContent(props.addressContentList);
         addressList = props.addressContentList.map(addr => addr.address);
@@ -30,17 +32,17 @@ export default function AddressListContent(props) {
             <div className='d-flex flex-column '>
                 <div className='d-flex flex-row justify-content-end align-items-end'>
                     {
-                        unconfirmedBalance.value !== 0 ?
+                        unconfirmedBalance.value !== BigInt(0) ?
                             <div className='card m-1 p-1 d-flex flex-column justify-content-between '>
                                 Pending
-                                <h5 className={'textSmall ' + (unconfirmedBalance.value > 0 ? "greenAmount" : "redAmount")}>
-                                    {unconfirmedBalance.value > 0 ? "+" : null}{formatERGAmount(unconfirmedBalance.value)} ERG
+                                <h5 className={'textSmall ' + (unconfirmedBalance.value > BigInt(0) ? "greenAmount" : "redAmount")}>
+                                    {unconfirmedBalance.value > BigInt(0) ? "+" : null}{formatERGAmount(unconfirmedBalance.value)} ERG
                                 </h5>
                                 {
                                     unconfirmedBalance.tokens.map((tok, index) =>
                                         <div key={index} className='d-flex flex-row align-items-end justify-content-between'>
-                                            <div className={'textSmall d-flex flex-row ' + (tok.amount > 0 ? "greenAmount" : "redAmount")}>
-                                                {tok.amount > 0 ? "+" : null}{formatTokenAmount(tok.amount, tok.decimals)}
+                                            <div className={'textSmall d-flex flex-row ' + (tok.amount > BigInt(0) ? "greenAmount" : "redAmount")}>
+                                                {tok.amount > BigInt(0) ? "+" : null}{formatTokenAmount(tok.amount, tok.decimals)}
                                             </div>&nbsp;
                                             <div className='textSmall'>
                                                 {tok.name}

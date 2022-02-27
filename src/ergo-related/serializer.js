@@ -5,6 +5,8 @@ import { getLastHeaders } from "./node";
 
 let ergolib = import('ergo-lib-wasm-browser')
 
+/* global BigInt */
+
 export async function encodeNum(n, isInt = false) {
     if (isInt) return (await ergolib).Constant.from_i32(n).encode_to_base16()
     else return (await ergolib).Constant.from_i64((await ergolib).I64.from_str(n)).encode_to_base16()
@@ -61,6 +63,23 @@ export function ergToNano(erg) {
     if (parts[1].length > 9) return 0
     return parseInt(parts[0] + parts[1] + '0'.repeat(9 - parts[1].length))
 }
+
+export function tokenFloatToAmount(amountFloatStr, decimals) {
+    if (amountFloatStr === undefined) return BigInt(0)
+    if (amountFloatStr.startsWith('.')) return BigInt(amountFloatStr.slice(1) + '0'.repeat(decimals - amountFloatStr.length + 1))
+    let parts = amountFloatStr.split('.')
+    if (parts.length === 1) parts.push('')
+    if (parts[1].length > decimals) return BigInt(0)
+    return BigInt(parts[0] + parts[1] + '0'.repeat(decimals - parts[1].length))
+}
+export function tokenAmountToFloatStr(amount, decimals) {
+    if (decimals > 0) {
+        //
+    } else {
+        return amount.toString();
+    }
+}
+
 
 export async function encodeAddress(address) {
     const byteArray = (await ergolib).Address.from_mainnet_str(address).to_bytes();

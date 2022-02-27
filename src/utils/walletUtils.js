@@ -177,10 +177,22 @@ export async function addWalletAddress(walletId, address) {
 // decimalsInt: number of decimals of the token
 export function formatTokenAmount(amountInt, decimalsInt, trimTrailing0 = true) {
     if (decimalsInt > 0) {
-        const numberAmount = (Number(amountInt) / Number(Math.pow(10, parseInt(decimalsInt)))).toFixed(parseInt(decimalsInt));
+        var str = '';
+        console.log("formatTokenAmount", amountInt, decimalsInt);
+        const amountStr = amountInt.toString();
+        if (amountStr.length > decimalsInt) {
+            //console.log("formatTokenAmount2",amountStr.slice(0, Math.abs(decimalsInt - amountStr.length)), amountStr.slice(amountStr.length - decimalsInt))
+            str = [amountStr.substring(0, amountStr.length - decimalsInt), amountStr.substring(amountStr.length - decimalsInt) ]
+        } else {
+            str = ['0', '0'.repeat(decimalsInt-amountStr.length) + amountStr]
+        }
+
+        console.log("formatTokenAmount3", str);
+
+        //const numberAmount = (BigInt(amountInt) / BigInt(Math.pow(10, parseInt(decimalsInt)))).toFixed(parseInt(decimalsInt));
         //const strAmount = amountInt.toString();
         //const numberAmount = strAmount.substring(0, parseInt(decimalsInt)-1) + "." + strAmount.substring(parseInt(decimalsInt)-1);
-        var str = numberAmount.toString().split(".");
+        //var str = numberAmount.toString().split(".");
         str[0] = str[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
         if (trimTrailing0) { str[1] = str[1].replace(/0+$/g, "") };
         if (str[1].length > 0) {
