@@ -5,6 +5,8 @@ import '@sweetalert2/theme-dark/dark.css';
 import { enrichUtxos } from "../ergo-related/utxos";
 import { hexToRgbA } from "./utils";
 import { waitingAlert } from "./Alerts";
+import { ExplorerTokenMarket } from 'ergo-market-lib/dist/ExplorerTokenMarket';
+import { renderFractions, math } from 'ergo-market-lib/dist/math';
 var CryptoJS = require("crypto-js");
 
 
@@ -12,6 +14,8 @@ export const MIN_CHAR_WALLET_NAME = 3;
 export const MIN_CHAR_WALLET_PASSWORD = 10;
 export const INVALID_PASSWORD_LENGTH_MSG = "Min " + MIN_CHAR_WALLET_PASSWORD.toString() + " characters !";
 export const INVALID_NAME_LENGTH_MSG = "Min " + MIN_CHAR_WALLET_NAME.toString() + " characters !";
+
+export const tokenMarket = new ExplorerTokenMarket({ throwOnError: false });
 
 export function isValidPassword(password) {
     console.log(password, password.length);
@@ -407,10 +411,23 @@ export function setChangeAddress(walletId, address) {
 }
 
 export async function getAddressListContent(addressList) {
+  const tokenRatesCalculateBalances = await tokenMarket.getTokenRates();
+  const tokenRatesDict = tokenRatesCalculateBalances.reduce((acc, cur) => {
+    acc[cur.token.tokenId] = cur;
+    return acc;
+  }, {});
+  console.log('tokenRatesDict', tokenRatesDict);
     const addressContentList = await Promise.all(addressList.map(async (address) => {
         const addressContent = await getBalanceForAddress(address);
-        //console.log("getAddressListContent", address, addressContent, JSON.stringify(addressContent))
-        return { address: address, content: addressContent.confirmed, unconfirmed: { ...addressContent.unconfirmed } };
+        // console.log("getAddressListContent", address, addressContent, JSON.stringify(addressContent))
+        const addressListContent = { address: address, content: addressContent.confirmed, unconfirmed: { ...addressContent.unconfirmed } };
+        addressListContent.content.tokens.forEach(token => {
+          const tokenValue = tokenRatesDict[token.tokenId];
+          if (tokenValue === undefined) return;
+          token.valueInErgs = math.evaluate(`${tokenValue.ergPerToken} * ${renderFractions(token.amount, token.decimals)}`).toLocaleString(navigator.language, { maximumFractionDigits: 4});
+        })
+        // console.log('addressListContent', addressListContent);
+        return addressListContent;
     }));
     return addressContentList;
 }
@@ -446,6 +463,7 @@ export async function getUnconfirmedTransactionsForAddressList(addressList, enri
 }
 
 export function getSummaryFromAddressListContent(addressContentList) {
+    //console.log('CONTENTLIST', addressContentList);
     const addressList = addressContentList.map(addrContent => addrContent.address);
     const selectedAddressList = new Array(addressList.length).fill(true);
     return getSummaryFromSelectedAddressListContent(addressList, addressContentList, selectedAddressList);

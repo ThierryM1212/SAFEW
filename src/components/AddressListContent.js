@@ -75,7 +75,13 @@ export default function AddressListContent(props) {
 
                     {
                         details ?
-                            <table className='tokentable'><tbody>
+                            <table className='tokentable'>
+                              <thead><tr>
+                                <td>Token</td>
+                                <td>Amount</td>
+                                <td>Value in Σ</td>
+                              </tr></thead>
+                              <tbody>
                                 {
                                     tokens.map((tok, index) =>
                                         <tr key={index}>
@@ -102,6 +108,8 @@ export default function AddressListContent(props) {
                                                 </div>
                                             </td>
                                             <td>{formatTokenAmount(tok.amount, tok.decimals)}</td>
+                                            <td>{parseFloat(tok.valueInErgs || '0')?.toLocaleString(navigator.language, { maximumFractionDigits: 4})}</td>
+                                            {/* <td>{tok.unconfirmed.valueInErgs}</td> */}
                                         </tr>)
                                 }
                             </tbody></table>
