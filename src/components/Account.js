@@ -19,6 +19,7 @@ export default class Account extends React.Component {
             showAddresses: false,
             color: props.color,
             addressContentList: props.addressContentList,
+            tokenRatesDict: props.tokenRatesDict,
         };
         this.addNewAddress = this.addNewAddress.bind(this);
         this.setAccountName = this.setAccountName.bind(this);
@@ -91,14 +92,19 @@ export default class Account extends React.Component {
             this.setState({
                 addressContentList: this.props.addressContentList,
             });
-        }  
+        } 
+        if (prevProps.tokenRatesDict !== this.props.tokenRatesDict) {
+            this.setState({
+                tokenRatesDict: this.props.tokenRatesDict,
+            });
+        }
     }
 
     render() {
         const wallet = getWalletById(this.state.walletId);
         const walletAddressList = wallet.accounts.map(account => account.addresses).flat();
         //console.log("Account", this.state.account);
-        //console.log("Account this.state.addressContentList", this.state.addressContentList);
+        console.log("Account this.state.tokenRatesDict", this.state.tokenRatesDict);
         return (
             <Fragment>
                 <div className='card m-1 p-1 ' style={{ borderColor: this.state.color }}>
@@ -111,7 +117,7 @@ export default class Account extends React.Component {
                         /></h6>
                         <div>Account {this.state.account.id}</div>
                     </div>
-                    <AddressListContent addressContentList={this.state.addressContentList} />
+                    <AddressListContent addressContentList={this.state.addressContentList} tokenRatesDict={this.state.tokenRatesDict} />
                     <div className='d-flex flex-row align-items-center'>
                         <ImageButton
                             id={"toggleAddresses"}
@@ -138,6 +144,7 @@ export default class Account extends React.Component {
                                 color={this.state.color} 
                                 addressContent={this.state.addressContentList.find(addrContent => addrContent.address === address.address )}
                                 used={walletAddressList.find(addressW => addressW.address === address.address ).used}
+                                tokenRatesDict={this.state.tokenRatesDict}
                                 />
                             )
                             : null

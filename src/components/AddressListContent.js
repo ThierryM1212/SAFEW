@@ -11,6 +11,7 @@ import VerifiedTokenImage from './VerifiedTokenImage';
 export default function AddressListContent(props) {
     const [details, toggleDetails] = useState(0);
     const ergoPrice = parseFloat(readErgoPrice());
+    const tokenRatesDict = props.tokenRatesDict ?? {};
 
     var nanoErgs = 0, tokens = [], addressList = [], unconfirmedBalance = { value: BigInt(0), tokens: [] };
     if (props.addressContentList !== undefined) {
@@ -110,8 +111,7 @@ export default function AddressListContent(props) {
                                                 </div>
                                             </td>
                                             <td>{formatTokenAmount(tok.amount, tok.decimals)}</td>
-                                            <td>{parseFloat(tok.valueInErgs || '0')?.toLocaleString(navigator.language, { maximumFractionDigits: 4})}</td>
-                                            {/* <td>{tok.unconfirmed.valueInErgs}</td> */}
+                                            <td>{props.tokenRatesDict && Object.keys(props.tokenRatesDict).includes(tok.tokenId) ? formatERGAmount(props.tokenRatesDict[tok.tokenId].ergPerToken * tok.amount * NANOERG_TO_ERG / Math.pow(10,tok.decimals)) : '0'}</td>
                                         </tr>)
                                 }
                             </tbody></table>

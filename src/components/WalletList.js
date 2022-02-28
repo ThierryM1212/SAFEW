@@ -1,7 +1,7 @@
 import React, { Fragment } from 'react';
 import Wallet from './Wallet';
 import ImageButton from './ImageButton';
-import { getAddressListContent, getUnconfirmedTransactionsForAddressList, getWalletListAddressList, updateUnusedAddresses } from '../utils/walletUtils';
+import { getAddressListContent, getTokenValue, getUnconfirmedTransactionsForAddressList, getWalletListAddressList, updateUnusedAddresses } from '../utils/walletUtils';
 import { errorAlert, waitingAlert } from '../utils/Alerts';
 import { updateErgoPrice } from '../ergo-related/ergoprice';
 
@@ -18,6 +18,7 @@ export default class WalletList extends React.Component {
             walletList: walletList,
             addressContentList: [],
             setPage: props.setPage,
+            tokenRatesDict: {},
         };
         this.updateWalletList = this.updateWalletList.bind(this);
         this.timer = this.timer.bind(this);
@@ -28,6 +29,10 @@ export default class WalletList extends React.Component {
         this.setState({ intervalId: intervalId });
         updateUnusedAddresses();
         await this.updateWalletAddressListContent();
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        console.log("WalletList componentDidUpdate", prevProps, prevState, this.props, this.state);
     }
 
     componentWillUnmount() {
@@ -62,10 +67,9 @@ export default class WalletList extends React.Component {
                 .filter((t, index, self) => {
                     return self.findIndex(tx => tx.id === t.id) === index;
                 });
-        } catch(e) {
+        } catch (e) {
             console.log("Failed fetch Unconfirmed transactions", e)
         }
-        
 
         try {
             for (const walletAddressList of addressList) {
@@ -86,6 +90,11 @@ export default class WalletList extends React.Component {
 
         if (showAlert) { alert.close(); }
 
+        getTokenValue().then(tokenRatesDict => {
+            this.setState({
+                tokenRatesDict: tokenRatesDict,
+            });
+        });
     }
 
     render() {
@@ -128,6 +137,7 @@ export default class WalletList extends React.Component {
                                 wallet={this.state.walletList[id]}
                                 addressContentList={this.state.addressContentList[id]}
                                 updateWalletList={this.updateWalletList}
+                                tokenRatesDict={this.state.tokenRatesDict}
                             />
                         ))}
                     </div>

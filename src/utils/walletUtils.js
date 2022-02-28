@@ -186,9 +186,9 @@ export function formatTokenAmount(amountInt, decimalsInt, trimTrailing0 = true) 
         const amountStr = amountInt.toString();
         if (amountStr.length > decimalsInt) {
             //console.log("formatTokenAmount2",amountStr.slice(0, Math.abs(decimalsInt - amountStr.length)), amountStr.slice(amountStr.length - decimalsInt))
-            str = [amountStr.substring(0, amountStr.length - decimalsInt), amountStr.substring(amountStr.length - decimalsInt) ]
+            str = [amountStr.substring(0, amountStr.length - decimalsInt), amountStr.substring(amountStr.length - decimalsInt)]
         } else {
-            str = ['0', '0'.repeat(decimalsInt-amountStr.length) + amountStr]
+            str = ['0', '0'.repeat(decimalsInt - amountStr.length) + amountStr]
         }
 
         //console.log("formatTokenAmount3", str);
@@ -422,21 +422,22 @@ export function setChangeAddress(walletId, address) {
     updateWallet(wallet, walletId);
 }
 
+export async function getTokenValue() {
+    const tokenRatesCalculateBalances = await tokenMarket.getTokenRates();
+    const tokenRatesDict = tokenRatesCalculateBalances.reduce((acc, cur) => {
+        acc[cur.token.tokenId] = cur;
+        return acc;
+    }, {});
+    console.log('getTokenValue tokenRatesDict', tokenRatesDict);
+    return tokenRatesDict;
+}
+
 export async function getAddressListContent(addressList) {
-  const tokenRatesCalculateBalances = await tokenMarket.getTokenRates();
-  const tokenRatesDict = tokenRatesCalculateBalances.reduce((acc, cur) => {
-    acc[cur.token.tokenId] = cur;
-    return acc;
-  }, {});
-  console.log('tokenRatesDict', tokenRatesDict);
     const addressContentList = await Promise.all(addressList.map(async (address) => {
         const addressContent = await getBalanceForAddress(address);
         // console.log("getAddressListContent", address, addressContent, JSON.stringify(addressContent))
         const addressListContent = { address: address, content: addressContent.confirmed, unconfirmed: { ...addressContent.unconfirmed } };
         addressListContent.content.tokens.forEach(token => {
-          const tokenValue = tokenRatesDict[token.tokenId];
-          if (tokenValue === undefined) return;
-          token.valueInErgs = math.evaluate(`${tokenValue.ergPerToken} * ${renderFractions(token.amount, token.decimals)}`).toLocaleString(navigator.language, { maximumFractionDigits: 4});
         })
         // console.log('addressListContent', addressListContent);
         return addressListContent;
@@ -492,7 +493,7 @@ export function getSummaryFromSelectedAddressListContent(addressList, addressCon
             //nanoErgsUnconfirmed += addrUnconfirmedInfo.nanoErgs;
             if (Array.isArray(addrInfo.tokens)) {
                 for (const i in addrInfo.tokens) {
-                    const token = {...addrInfo.tokens[i]};
+                    const token = { ...addrInfo.tokens[i] };
                     //if (addressList.includes(addrInfo.address)) {
                     const tokIndex = tokens.findIndex(e => (e.tokenId === token.tokenId));
                     if (tokIndex >= 0) {
