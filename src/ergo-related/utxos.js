@@ -284,7 +284,7 @@ function isDict(v) {
 
 async function getUtxoContentForAddressList(utxos, addressList) {
     var value = BigInt(0), tokens = [];
-    console.log("getUtxoContentForAddressList_0", utxos, addressList)
+    //console.log("getUtxoContentForAddressList_0", utxos, addressList)
     for (var utxo of utxos) {
         if (!("address" in utxo)) {
             if (!("assets" in utxo)) {
@@ -293,17 +293,17 @@ async function getUtxoContentForAddressList(utxos, addressList) {
                 } else {
                     utxo = await boxByBoxId(utxo.boxId);
                 }
-                console.log("getUtxoContentForAddressList_1 enriched", utxo)
+                //console.log("getUtxoContentForAddressList_1 enriched", utxo)
             }
             try {
                 utxo["address"] = await ergoTreeToAddress(utxo.ergoTree);
-                console.log("getUtxoContentForAddressList_2 address", utxo);
+                //console.log("getUtxoContentForAddressList_2 address", utxo);
             } catch (e) {
                 console.log(e);
             }
         }
         if (addressList.includes(utxo.address)) {
-            console.log("getUtxoContentForAddressList_3")
+            //console.log("getUtxoContentForAddressList_3")
             value = value + BigInt(utxo.value.toString());
             if (!("assets" in utxo)) {
                 utxo.assets = (await boxByBoxId(utxo.id)).assets;
@@ -312,11 +312,11 @@ async function getUtxoContentForAddressList(utxos, addressList) {
                 utxo.assets = [];
             }
             for (const token of utxo.assets) {
-                console.log("getUtxoContentForAddressList_4")
+                //console.log("getUtxoContentForAddressList_4")
                 if (tokens.map(tok => tok.tokenId).includes(token.tokenId)) {
                     const index = tokens.findIndex(t => t.tokenId === token.tokenId);
                     const tokAmount = BigInt(token.amount.toString());
-                    console.log("getUtxoContentForAddressList_4", token.tokenId, tokens[index].amount, tokAmount)
+                    //console.log("getUtxoContentForAddressList_4", token.tokenId, tokens[index].amount, tokAmount)
                     tokens[index].amount = BigInt(tokens[index].amount) + tokAmount;
                 } else {
                     tokens.push({ ...token });
@@ -372,7 +372,7 @@ export function getUtxoBalanceForAddressList2(inputs, outputs, addressList) {
 }
 
 function buildBalance(inputBal, outputBal) {
-    console.log("buildBalance1", inputBal, outputBal)
+    //console.log("buildBalance1", inputBal, outputBal)
     const balValue = BigInt(outputBal.value.toString()) - BigInt(inputBal.value.toString());
     var balTokens = [];
     const tokenList = [...new Set([inputBal.tokens.map(tok => tok.tokenId), outputBal.tokens.map(tok => tok.tokenId)].flat())];

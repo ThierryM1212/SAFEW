@@ -82,6 +82,7 @@ export default class SendTransaction extends React.Component {
     }
 
     async componentDidMount() {
+        const alert = waitingAlert("Loading wallet content...");
         const wallet = getWalletById(this.state.walletId);
         var walletAddressList = getWalletAddressList(wallet);
         var addressContentList = await getAddressListContent(walletAddressList);
@@ -135,6 +136,7 @@ export default class SendTransaction extends React.Component {
                 isValidTokenAmountToSend: newTokenAmountToSend.map((amount, index) => this.validateTokenAmount(index, amount)),
             });
         }
+        alert.close();
     }
 
     setErgsToSend = (ergAmount) => {
@@ -202,13 +204,13 @@ export default class SendTransaction extends React.Component {
         if (tokAmount === '' || tokAmount === undefined) { return true; };
         const token = this.state.tokens[index];
         const tokenDecimals = parseInt(token.decimals);
-        console.log("validateTokenAmount", token, tokenDecimals, tokAmount)
+        //console.log("validateTokenAmount", token, tokenDecimals, tokAmount)
         const tokAmountStr = tokAmount.toString();
         var tokenAmount = BigInt(0);
         if (tokAmountStr.indexOf('.') > -1) {
             var str = tokAmountStr.split(".");
             str[1] = str[1].replace(/0+$/g, ""); //remove trailing 0
-            console.log("validateTokenAmount2", str[1].length)
+            //console.log("validateTokenAmount2", str[1].length)
             if (str[1].length > tokenDecimals) {
                 return false;
             } else {

@@ -182,7 +182,7 @@ export async function addWalletAddress(walletId, address) {
 export function formatTokenAmount(amountInt, decimalsInt, trimTrailing0 = true) {
     if (decimalsInt > 0) {
         var str = '';
-        console.log("formatTokenAmount", amountInt, decimalsInt);
+        //console.log("formatTokenAmount", amountInt, decimalsInt);
         const amountStr = amountInt.toString();
         if (amountStr.length > decimalsInt) {
             //console.log("formatTokenAmount2",amountStr.slice(0, Math.abs(decimalsInt - amountStr.length)), amountStr.slice(amountStr.length - decimalsInt))
@@ -191,7 +191,7 @@ export function formatTokenAmount(amountInt, decimalsInt, trimTrailing0 = true) 
             str = ['0', '0'.repeat(decimalsInt-amountStr.length) + amountStr]
         }
 
-        console.log("formatTokenAmount3", str);
+        //console.log("formatTokenAmount3", str);
 
         //const numberAmount = (BigInt(amountInt) / BigInt(Math.pow(10, parseInt(decimalsInt)))).toFixed(parseInt(decimalsInt));
         //const strAmount = amountInt.toString();
