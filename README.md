@@ -8,6 +8,9 @@ SAFEW is compatible with
 - Chrome based browser (Opera, Brave, ...) but not released on Chrome store yet.
 - Firefox and available at: https://addons.mozilla.org/en-US/firefox/addon/safew/
 
+## Releases
+Download at: https://github.com/ThierryM1212/SAFEW/releases
+
 ## Features
 Wallet features:
  - Add, restore, edit wallets (BIP-32/39)
@@ -16,8 +19,8 @@ Wallet features:
  - View wallet transactions confirmed and unconfirmed
  - Display unconfirmed balances per wallet, account and address
  - Configure Explorer, Node and Explorer UI addresses used by the wallet
- - ErgoPay wallet and signing (only the public address are provided, signing is delegated to ErgoPay EIP-19 with iOS or Android wallet v1.6+)
- - ErgoMixer access: interact with ErgoMixer directly from the wallet (still incomplete)
+ - ErgoPay/ReadOnly wallet and signing (only the public address are provided, signing is delegated to ErgoPay EIP-19 with iOS or Android wallet v1.6+)
+ - ErgoMixer access: interact with ErgoMixer directly from the wallet
  - Transaction builder to manipulate json of ergo transaction in Expert mode
  - Export wallet transactions as csv
 
@@ -82,7 +85,7 @@ v0.4.1
 v0.4.2
 - Export transactions as csv
 - Display the value in Erg for exchangeable tokens (Thanks SoCool)
-- Fix transaction with big amounts of tokens (tested with 18 significative numbers)
+- Fix transaction with big amounts of tokens (tested with 18 significant numbers)
 - Fix Utxo selection when sending multiple assets
 - Display token details in transaction builder unspent boxes
 - Technical: Remove react-app-rewired, allow to "watch" the build directory (Thanks SoCool)
