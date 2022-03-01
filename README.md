@@ -19,6 +19,7 @@ Wallet features:
  - ErgoPay wallet and signing (only the public address are provided, signing is delegated to ErgoPay EIP-19 with iOS or Android wallet v1.6+)
  - ErgoMixer access: interact with ErgoMixer directly from the wallet (still incomplete)
  - Transaction builder to manipulate json of ergo transaction in Expert mode
+ - Export wallet transactions as csv
 
 ## Security
 The wallets are stored in the local storage of the SAFEW browser extension.<br/>
@@ -77,3 +78,11 @@ v0.4
 v0.4.1
 - Firefox support
 - bug fixes
+
+v0.4.2
+- Export transactions as csv
+- Display the value in Erg for exchangeable tokens (Thanks SoCool)
+- Fix transaction with big amounts of tokens (tested with 18 significative numbers)
+- Fix Utxo selection when sending multiple assets
+- Display token details in transaction builder unspent boxes
+- Technical: Remove react-app-rewired, allow to "watch" the build directory (Thanks SoCool)
