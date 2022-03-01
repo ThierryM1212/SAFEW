@@ -1,8 +1,10 @@
 import React, { Fragment } from 'react';
 import { updateErgoPrice } from '../ergo-related/ergoprice';
+import { getUtxoBalanceForAddressList } from '../ergo-related/utxos';
 import { waitingAlert } from '../utils/Alerts';
 import { getAddressListContent, getTransactionsForAddressList, getUnconfirmedTransactionsForAddressList, getWalletAddressList, getWalletById } from '../utils/walletUtils';
 import AddressListContent from './AddressListContent';
+import DownloadTxListCSV from './DownloadTxListCSV';
 import ImageButton from './ImageButton';
 import Transaction from './Transaction';
 
@@ -31,7 +33,7 @@ export default class TransactionList extends React.Component {
 
     async updateTransactionList(showAlert = true) {
         var alert = "";
-        if (showAlert) alert = waitingAlert("Loading transations...");
+        if (showAlert) { alert = waitingAlert("Loading transations..."); };
         const wallet = getWalletById(this.state.walletId);
         this.setState({ color: wallet.color });
         const walletAddressList = getWalletAddressList(wallet);
@@ -54,7 +56,7 @@ export default class TransactionList extends React.Component {
             })
             .slice(0, 2 * this.state.limit, Infinity);
         this.setState({ transactionList: transactionListFiltered, numberOfTransactions: numberOfTransactions });
-        if (showAlert) alert.close();
+        if (showAlert) { alert.close() };
     }
 
     async componentDidMount() {
@@ -110,6 +112,9 @@ export default class TransactionList extends React.Component {
                                     tips={"Wallet list"}
                                     onClick={() => this.state.setPage('home')}
                                 />
+                                <DownloadTxListCSV
+                                    walletId={this.state.walletId}
+                                    numberOfTransactions={this.state.numberOfTransactions} />
                                 <ImageButton
                                     id={"refreshTransactionPage"}
                                     color={"blue"}
@@ -125,10 +130,14 @@ export default class TransactionList extends React.Component {
                     {this.state.unconfirmedTransactionList.map(tx => <Transaction key={tx.id} transaction={tx} wallet={wallet} />)}
                     {this.state.transactionList.map(tx => <Transaction key={tx.id} transaction={tx} wallet={wallet} />)}
                     <br />
+
                     <div className='m-1 p-1 d-flex flex-row justify-content-center'>
                         <button className="btn btn-outline-info"
                             onClick={() => this.setLimit(this.state.limit + 10)}
                         >Load more transactions</button>
+                        <button className="btn btn-outline-info"
+                            onClick={() => this.setLimit(this.state.numberOfTransactions + 10)}
+                        >Load all</button>
                     </div>
                 </div>
             </Fragment>

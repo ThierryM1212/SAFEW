@@ -53,7 +53,7 @@ export function UtxoItem(props) {
             />
             <div className="d-flex justify-content-between ">
                 <span>{formatERGAmount(props.json.value)} ERG </span>
-                <span>
+                <div className='d-flex flex-row'>
                     {
                         props.json.assets.length > 0 ?
                             <ImageButton
@@ -106,7 +106,7 @@ export function UtxoItem(props) {
                                 Tokens: {props.json.assets.length}
                             </div>
                     }
-                </span>
+                </div>
             </div>
         </div>
     )

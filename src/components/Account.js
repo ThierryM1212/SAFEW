@@ -104,7 +104,7 @@ export default class Account extends React.Component {
         const wallet = getWalletById(this.state.walletId);
         const walletAddressList = wallet.accounts.map(account => account.addresses).flat();
         //console.log("Account", this.state.account);
-        console.log("Account this.state.tokenRatesDict", this.state.tokenRatesDict);
+        //console.log("Account this.state.tokenRatesDict", this.state.tokenRatesDict);
         return (
             <Fragment>
                 <div className='card m-1 p-1 ' style={{ borderColor: this.state.color }}>
