@@ -1,6 +1,7 @@
 import React from 'react';
 import { CSVLink } from "react-csv";
 import { getUtxoBalanceForAddressList } from '../ergo-related/utxos';
+import { waitingAlert } from '../utils/Alerts';
 import { formatERGAmount, formatTokenAmount, getTransactionsForAddressList, getWalletAddressList, getWalletById } from "../utils/walletUtils";
 import ImageButton from './ImageButton';
 
@@ -52,6 +53,7 @@ export default class DownloadTxListCSV extends React.Component {
                 loading: true
             });
             try {
+                const alert = waitingAlert("Loading transactions...");
                 const wallet = getWalletById(this.state.walletId);
                 const walletAddressList = getWalletAddressList(wallet);
                 const allTxList = (await getTransactionsForAddressList(walletAddressList, this.state.numberOfTransactions + 10))
@@ -64,6 +66,7 @@ export default class DownloadTxListCSV extends React.Component {
                     const balance = await getUtxoBalanceForAddressList(transaction.inputs, transaction.outputs, walletAddressList);
                     return balance;
                 }));
+                alert.close();
                 console.log("exportCSVTransactionList", allTxList, transactionBalances);
                 var csvList = [];
                 for (const i in allTxList) {
