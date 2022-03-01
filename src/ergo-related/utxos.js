@@ -342,7 +342,7 @@ function getUtxoContentForAddressList2(utxos, addressList) {
                 if (index >= 0) {
                     //console.log("getUtxoContentForAddressList_24", token, tokens[index].amount)
                     const tokAmount = BigInt(token.amount.toString());
-                    tokens[index].amount = tokens[index].amount + tokAmount;
+                    tokens[index].amount = BigInt(tokens[index].amount) + tokAmount;
                     //console.log("getUtxoContentForAddressList_25", token, tokens[index].amount, tokAmount)
                 } else {
                     //console.log("getUtxoContentForAddressList_26", token)
