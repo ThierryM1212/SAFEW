@@ -1,4 +1,4 @@
-# SAFEW  
+# ![](./public/images/safew_icon_32.png) SAFEW
 
 Simple And Fast Ergo Wallet
 
@@ -7,6 +7,8 @@ Ergo wallet integrating a dApp connector compatible EIP-12.
 SAFEW is compatible with 
 - Chrome based browser (Opera, Brave, ...) but not released on Chrome store yet.
 - Firefox and available at: https://addons.mozilla.org/en-US/firefox/addon/safew/
+
+SAFEW was awarded as project participating in ErgoHack 3: https://ergoplatform.org/en/blog/2022-03-01-ergohack-iii-results/
 
 ## Releases
 Download at: https://github.com/ThierryM1212/SAFEW/releases
@@ -28,15 +30,15 @@ Wallet features:
 The wallets are stored in the local storage of the SAFEW browser extension.<br/>
 The mnemonic is encrypted (AES-256) with the spending password, that is not stored in the application.<br/>
 The password will be required to spend funds or to add or discover new addresses.<br/>
-You can use ErgoPay wallet to keep your secrets on a mobile device (beta on iOS wallet, soon on Android)<br/>
-ErgoPay wallets are available to sign remotely the transaction using iOS or Android wallet v1.6+, to avoid to store the encryted mnemonic in your browser extension local storage.<br/>
+You can use ErgoPay wallet to keep your secrets on a mobile device (iOS or Android wallet)<br/>
+ErgoPay wallets are available to sign remotely the transaction using iOS or Android wallet v1.6+, to avoid to store the encrypted mnemonic in your browser extension local storage.<br/>
 
 ## Privacy
 The address discovery can be launched at any time to generate unused addresses in the wallets.<br/>
 Non connected sites have no access to the information of your wallet.<br/>
 Connected sites can read the wallet content.<br/>
 The explorer and node used to interact with Ergo blockchain are configurable.<br/>
-ErgoPay wallets allow you to keep the content of your wallet hidden..<br/>
+ErgoPay/ReadOnly wallets allow you to keep the content of your wallet hidden..<br/>
 ErgoMixer integration ease the usage of privacy tools.<br/>
 
 ## Reliability
@@ -46,14 +48,16 @@ The transaction balance displayed when sending funds using SAFEW is computed fro
 > git clone https://github.com/ThierryM1212/SAFEW.git<br/>
 > cd SAFEW <br/>
 > npm install <br/>
-> npm run build <br/>
+> npm run build-prod <br/>
 <br/>
 Load the unpacked extension as described at: https://developer.chrome.com/docs/extensions/mv3/getstarted/ <br/>
 <br/>
 It requires to disable Yoroi or Nautilus extension to use the dApp connector.<br/>
 
 ## debug
-set the key "debug" = "true" in the local storage to display dApp connector popups buttons
+> npm run watch<br/>
+And reload the extension from the build directory<br/>
+Set the key "debug" = "true" in the local storage to display dApp connector popups buttons<br/>
 
 ## dApp Connector
 It tries to follow https://github.com/Emurgo/Emurgo-Research/blob/master/ergo/EIP-0012.md
@@ -89,3 +93,10 @@ v0.4.2
 - Fix Utxo selection when sending multiple assets
 - Display token details in transaction builder unspent boxes
 - Technical: Remove react-app-rewired, allow to "watch" the build directory (Thanks SoCool)
+
+## Sample screens
+![Wallet list image](./screens/main_page.png)
+![Send multi-asset](./screens/send_multiasset.png)
+![Ergo mixer](./screens/ergo_mixer_mixes.png)
+![Transaction builder](./screens/tx_builder.png)
+![Sign with ErgoPay](./screens/sign_ergopay.png)
