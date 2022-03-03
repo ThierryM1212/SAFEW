@@ -72,6 +72,13 @@ Publish on Opera Addons (available on Opera beta store waiting for validation)<b
 Ledger signing (Waiting on ledger-ergo-app fix)<br/>
 <br/>
 
+## Sample screens
+![Wallet list image](./screens/main_page.png)
+![Send multi-asset](./screens/send_multiasset.png)
+![Ergo mixer](./screens/ergo_mixer_mixes.png)
+![Transaction builder](./screens/tx_builder.png)
+![Sign with ErgoPay](./screens/sign_ergopay.png)
+
 ## Release notes
 v0.3
 - ErgoPay improvement: allow to delete mnemonic to convert a wallet to an ErgoPay wallet, add/remove addresses from Ergopay wallets, add ErgoPay button for mobile users
@@ -94,10 +101,3 @@ v0.4.2
 - Fix Utxo selection when sending multiple assets
 - Display token details in transaction builder unspent boxes
 - Technical: Remove react-app-rewired, allow to "watch" the build directory (Thanks SoCool)
-
-## Sample screens
-![Wallet list image](./screens/main_page.png)
-![Send multi-asset](./screens/send_multiasset.png)
-![Ergo mixer](./screens/ergo_mixer_mixes.png)
-![Transaction builder](./screens/tx_builder.png)
-![Sign with ErgoPay](./screens/sign_ergopay.png)
