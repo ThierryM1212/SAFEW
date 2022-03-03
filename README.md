@@ -5,7 +5,8 @@ Simple And Fast Ergo Wallet
 Ergo wallet integrating a dApp connector compatible EIP-12.
 
 SAFEW is compatible with 
-- Chrome based browser (Opera, Brave, ...) but not released on Chrome store yet.
+- Chrome based browser (Opera, Brave, Edge...) but not released on Chrome store yet.
+How to install: https://www.youtube.com/watch?v=4ZEIcr0udkI
 - Firefox and available at: https://addons.mozilla.org/en-US/firefox/addon/safew/
 
 SAFEW was awarded as project participating in ErgoHack 3: https://ergoplatform.org/en/blog/2022-03-01-ergohack-iii-results/
