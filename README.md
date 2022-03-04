@@ -25,6 +25,8 @@ Wallet features:
  - ErgoPay/ReadOnly wallet and signing (only the public address are provided, signing is delegated to ErgoPay EIP-19 with iOS or Android wallet v1.6+)
  - ErgoMixer access: interact with ErgoMixer directly from the wallet
  - Transaction builder to manipulate json of ergo transaction in Expert mode
+   - How to mint tokens with transaction builder: 
+   - How to burn tokens with transaction builder: 
  - Export wallet transactions as csv
 
 ## Security
