@@ -1,6 +1,6 @@
 import { DEFAULT_NUMBER_OF_UNUSED_ADDRESS_PER_ACCOUNT, NANOERG_TO_ERG } from '../utils/constants';
 import { addressHasTransactions, currentHeight, unspentBoxesFor } from './explorer';
-import { byteArrayToBase64, getErgoStateContext } from './serializer';
+import { byteArrayToBase64, getErgoStateContext, tokenFloatToAmount } from './serializer';
 import JSONBigInt from 'json-bigint';
 import { getTokenListFromUtxos, getUtxosListValue, parseUtxos } from './utxos';
 let ergolib = import('ergo-lib-wasm-browser');
@@ -139,13 +139,15 @@ export async function getUtxosForSelectedInputs(inputAddressList, ergAmount, tok
     // Select boxes to meet tokens selected
     var selectedUtxos = [], unSelectedUtxos = utxos, i = 0;
     while (!hasEnoughSelectedTokens(selectedUtxos, tokens, tokensAmountToSend) && i < 1000) {
-        //console.log("getUtxosForSelectedInputs1", selectedUtxos, unSelectedUtxos);
+        console.log("getUtxosForSelectedInputs1", selectedUtxos, unSelectedUtxos);
         var boxFound = false, boxIndex = -1;
-        for (const j in tokens) {   
-            if (tokensAmountToSend[j] > 0 && !boxFound) {
-                //console.log("getUtxosForSelectedInputs2", tokens[j].tokenId, tokensAmountToSend[j], boxFound, unSelectedUtxos);
+        for (const j in tokens) { 
+            console.log("getUtxosForSelectedInputs12", tokensAmountToSend[j]);
+            if (tokenFloatToAmount(tokensAmountToSend[j]) > BigInt(0) && !boxFound) {
+                console.log("getUtxosForSelectedInputs2", tokens[j].tokenId, tokensAmountToSend[j], boxFound, unSelectedUtxos);
                 boxIndex = unSelectedUtxos.findIndex(utxo => utxo.assets.map(tok=>tok.tokenId).includes(tokens[j].tokenId))
-                //console.log("getUtxosForSelectedInputs3 boxIndex", boxIndex);
+                boxFound = boxIndex > -1;
+                console.log("getUtxosForSelectedInputs3 boxIndex", boxIndex);
             }
         }
         if (boxIndex > -1) {

@@ -4,6 +4,7 @@ import { NANOERG_TO_ERG, PASSWORD_SALT, WALLET_VERSION } from "./constants";
 import '@sweetalert2/theme-dark/dark.css';
 import { enrichUtxos } from "../ergo-related/utxos";
 import { hexToRgbA } from "./utils";
+import { ExplorerTokenMarket } from 'ergo-market-lib/dist/ExplorerTokenMarket';
 var CryptoJS = require("crypto-js");
 
 
@@ -11,6 +12,8 @@ export const MIN_CHAR_WALLET_NAME = 3;
 export const MIN_CHAR_WALLET_PASSWORD = 10;
 export const INVALID_PASSWORD_LENGTH_MSG = "Min " + MIN_CHAR_WALLET_PASSWORD.toString() + " characters !";
 export const INVALID_NAME_LENGTH_MSG = "Min " + MIN_CHAR_WALLET_NAME.toString() + " characters !";
+
+export const tokenMarket = new ExplorerTokenMarket({ throwOnError: false });
 
 export function isValidPassword(password) {
     console.log(password, password.length);
@@ -188,10 +191,22 @@ export async function addWalletAddress(walletId, address) {
 // decimalsInt: number of decimals of the token
 export function formatTokenAmount(amountInt, decimalsInt, trimTrailing0 = true) {
     if (decimalsInt > 0) {
-        const numberAmount = (Number(amountInt) / Number(Math.pow(10, parseInt(decimalsInt)))).toFixed(parseInt(decimalsInt));
+        var str = '';
+        //console.log("formatTokenAmount", amountInt, decimalsInt);
+        const amountStr = amountInt.toString();
+        if (amountStr.length > decimalsInt) {
+            //console.log("formatTokenAmount2",amountStr.slice(0, Math.abs(decimalsInt - amountStr.length)), amountStr.slice(amountStr.length - decimalsInt))
+            str = [amountStr.substring(0, amountStr.length - decimalsInt), amountStr.substring(amountStr.length - decimalsInt)]
+        } else {
+            str = ['0', '0'.repeat(decimalsInt - amountStr.length) + amountStr]
+        }
+
+        //console.log("formatTokenAmount3", str);
+
+        //const numberAmount = (BigInt(amountInt) / BigInt(Math.pow(10, parseInt(decimalsInt)))).toFixed(parseInt(decimalsInt));
         //const strAmount = amountInt.toString();
         //const numberAmount = strAmount.substring(0, parseInt(decimalsInt)-1) + "." + strAmount.substring(parseInt(decimalsInt)-1);
-        var str = numberAmount.toString().split(".");
+        //var str = numberAmount.toString().split(".");
         str[0] = str[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
         if (trimTrailing0) { str[1] = str[1].replace(/0+$/g, "") };
         if (str[1].length > 0) {
@@ -399,6 +414,7 @@ export function setAddressUsed(addressToSet) {
 }
 
 export async function updateUnusedAddresses() {
+    //var alert = waitingAlert("Searching new used addresses");
     var walletList = JSON.parse(localStorage.getItem('walletList'));
     for (var k in walletList) {
         var newWallet = { ...walletList[k] };
@@ -422,6 +438,7 @@ export async function updateUnusedAddresses() {
             }
         }
     }
+    //alert.close();
 }
 
 export function setChangeAddress(walletId, address) {
@@ -430,11 +447,25 @@ export function setChangeAddress(walletId, address) {
     updateWallet(wallet, walletId);
 }
 
+export async function getTokenValue() {
+    const tokenRatesCalculateBalances = await tokenMarket.getTokenRates();
+    const tokenRatesDict = tokenRatesCalculateBalances.reduce((acc, cur) => {
+        acc[cur.token.tokenId] = cur;
+        return acc;
+    }, {});
+    console.log('getTokenValue tokenRatesDict', tokenRatesDict);
+    return tokenRatesDict;
+}
+
 export async function getAddressListContent(addressList) {
     const addressContentList = await Promise.all(addressList.map(async (address) => {
         const addressContent = await getBalanceForAddress(address);
-        //console.log("getAddressListContent", address, addressContent, JSON.stringify(addressContent))
-        return { address: address, content: addressContent.confirmed, unconfirmed: { ...addressContent.unconfirmed } };
+        // console.log("getAddressListContent", address, addressContent, JSON.stringify(addressContent))
+        const addressListContent = { address: address, content: addressContent.confirmed, unconfirmed: { ...addressContent.unconfirmed } };
+        addressListContent.content.tokens.forEach(token => {
+        })
+        // console.log('addressListContent', addressListContent);
+        return addressListContent;
     }));
     return addressContentList;
 }
@@ -470,6 +501,7 @@ export async function getUnconfirmedTransactionsForAddressList(addressList, enri
 }
 
 export function getSummaryFromAddressListContent(addressContentList) {
+    //console.log('CONTENTLIST', addressContentList);
     const addressList = addressContentList.map(addrContent => addrContent.address);
     const selectedAddressList = new Array(addressList.length).fill(true);
     return getSummaryFromSelectedAddressListContent(addressList, addressContentList, selectedAddressList);

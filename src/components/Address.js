@@ -67,7 +67,7 @@ export default function Address(props) {
                                 }
                             </div>
                             {
-                                props.used ? <AddressListContent addressContentList={[props.addressContent]} />
+                                props.used ? <AddressListContent addressContentList={[props.addressContent]} tokenRatesDict={props.tokenRatesDict}/>
                                     : <div>Unused</div>
                             }
 

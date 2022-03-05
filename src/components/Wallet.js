@@ -20,8 +20,9 @@ export default class Wallet extends React.Component {
             showAccounts: false,
             updateWalletList: props.updateWalletList,
             expertMode: (localStorage.getItem('expertMode') === 'true') ?? false,
+            tokenRatesDict: props.tokenRatesDict,
         };
-        console.log("Wallet constructor", props.wallet, props.addressContentList, JSON.stringify(props.addressContentList));
+        //console.log("Wallet constructor", props.wallet, props.addressContentList, JSON.stringify(props.addressContentList));
         this.addNewAccount = this.addNewAccount.bind(this);
         this.toggleAccounts = this.toggleAccounts.bind(this);
     }
@@ -94,6 +95,11 @@ export default class Wallet extends React.Component {
                 addressContentList: this.props.addressContentList,
             });
         }
+        if (prevProps.tokenRatesDict !== this.props.tokenRatesDict) {
+            this.setState({
+                tokenRatesDict: this.props.tokenRatesDict,
+            });
+        }
     }
 
     render() {
@@ -159,7 +165,7 @@ export default class Wallet extends React.Component {
                         {
                             !this.state.showAccounts ?
                                 <div>
-                                    <AddressListContent addressContentList={this.state.addressContentList} />
+                                    <AddressListContent addressContentList={this.state.addressContentList} tokenRatesDict={this.state.tokenRatesDict}/>
                                 </div>
                                 : <div></div>
                         }
@@ -188,6 +194,7 @@ export default class Wallet extends React.Component {
                                                 addressContentList={this.state.addressContentList.filter(addrContent =>
                                                     getAccountAddressList(account).includes(addrContent.address)
                                                 )}
+                                                tokenRatesDict={this.state.tokenRatesDict}
                                             />
                                         )
                                     }
@@ -203,6 +210,7 @@ export default class Wallet extends React.Component {
                                                     color={this.state.wallet.color}
                                                     addressContent={this.state.addressContentList.find(addrContent => addrContent.address === address.address)}
                                                     used={walletAddressList.find(addressW => addressW.address === address.address).used}
+                                                    tokenRatesDict={this.state.tokenRatesDict}
                                                 />
                                             )
                                     }

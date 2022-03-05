@@ -1,7 +1,7 @@
 import React from 'react';
 import OutputEditable from './OutputEditable';
 import ImageButton from '../ImageButton';
-import { encodeStr, encodeAddress, encodeInt, encodeLong, encodeLongArray, encodeContract } from '../../ergo-related/serializer';
+import { encodeStr, encodeAddress, encodeInt, encodeLong, encodeLongArray, encodeContract, ergoTreeToAddress } from '../../ergo-related/serializer';
 
 export default class OutputBoxCreator extends React.Component {
     constructor(props) {
@@ -25,8 +25,11 @@ export default class OutputBoxCreator extends React.Component {
             longArrayEncoded: '',
             addressContract: '',
             addressContractEncoded: '',
+            ergoTree: '',
+            addressFromErgoTree: '',
             showConverter: false,
         };
+
 
         this.setLongEncoded = this.setLongEncoded.bind(this);
         this.setLongArrayEncoded = this.setLongArrayEncoded.bind(this);
@@ -36,6 +39,7 @@ export default class OutputBoxCreator extends React.Component {
         this.setNanoErg = this.setNanoErg.bind(this);
         this.setShowConverter = this.setShowConverter.bind(this);
         this.setAddressContractEncoded = this.setAddressContractEncoded.bind(this);
+        this.setAddressFromErgoTree = this.setAddressFromErgoTree.bind(this);
         //this.reset = this.reset.bind(this);
     }
 
@@ -126,6 +130,23 @@ export default class OutputBoxCreator extends React.Component {
             console.log(e);
             this.setState({
                 addressContractEncoded: "Invalid address",
+            })
+        })
+    }
+
+    setAddressFromErgoTree = (item) => {
+        this.setState({
+            ergoTree: item.target.value,
+        })
+        ergoTreeToAddress(item.target.value).then(encoded => {
+            console.log(encoded, item);
+            this.setState({
+                addressFromErgoTree: encoded,
+            })
+        }).catch(e => {
+            console.log(e);
+            this.setState({
+                addressFromErgoTree: "Invalid ErgoTree",
             })
         })
     }
@@ -249,6 +270,16 @@ export default class OutputBoxCreator extends React.Component {
                                         </td>
                                         <td>
                                             <input className="w-100 grey-input" defaultValue={this.state.addressContractEncoded} readOnly />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>ErgoTree to address</td>
+                                        <td>
+                                            <input className="grey-input" value={this.state.ergoTree}
+                                                onChange={this.setAddressFromErgoTree} />
+                                        </td>
+                                        <td>
+                                            <input className="w-100 grey-input" defaultValue={this.state.addressFromErgoTree} readOnly />
                                         </td>
                                     </tr>
                                 </tbody>

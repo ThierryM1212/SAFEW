@@ -84,6 +84,7 @@ export default class TxBuilder extends React.Component {
         this.setBalanceBoxJson = this.setBalanceBoxJson.bind(this);
         this.signTx = this.signTx.bind(this);
         this.signAndSendTx = this.signAndSendTx.bind(this);
+        this.sendSignedTx = this.sendSignedTx.bind(this);
         this.setErgoPayTx = this.setErgoPayTx.bind(this);
         this.resetTxReduced = this.resetTxReduced.bind(this);
         this.timer = this.timer.bind(this);
@@ -276,7 +277,13 @@ export default class TxBuilder extends React.Component {
     resetCreateBoxJson = () => { this.setState({ outputCreateJson: initCreateBox }); }
     setFeeBoxJson = () => { this.setState({ outputCreateJson: feeBox }); }
     async setBalanceBoxJson() {
-        const changeAddress = getWalletById(this.state.selectedWalletId).changeAddress;
+        var changeAddress = '';
+        try {
+            changeAddress = getWalletById(this.state.selectedWalletId).changeAddress;
+        } catch (e) {
+            errorAlert("No change address found, configure a wallet");
+            return;
+        }
         const balanceBox = await buildBalanceBox(this.state.selectedBoxList, this.state.outputList, changeAddress);
         if (BigInt(balanceBox.value) < 10000) {
             errorAlert("Not enough ERG in inputs");
@@ -363,7 +370,12 @@ export default class TxBuilder extends React.Component {
             //await delay(3000);
             this.state.setPage('transactions', this.state.selectedWalletId);
         }
+    }
 
+    async sendSignedTx() {
+        await sendTx(this.state.signedTransaction);
+        //await delay(3000);
+        this.state.setPage('transactions', this.state.selectedWalletId);
     }
 
     async setErgoPayTx() {
@@ -450,17 +462,21 @@ export default class TxBuilder extends React.Component {
                         <div className="card p-1 m-2 w-100">
                             <div className="d-flex flex-row align-items-center justify-content-between">
                                 <h5>Unspent boxes</h5>
-                                <div className="d-flex flex-row align-items-center">
-                                    <SelectWallet selectedWalletId={this.state.selectedWalletId}
-                                        setWallet={this.setWallet} />
-                                    <ImageButton
-                                        id={"fetchWalletBoxes"}
-                                        color={"blue"}
-                                        icon={"file_download"}
-                                        tips={"Fetch wallet unspent boxes"}
-                                        onClick={this.fetchWalletBoxes}
-                                    />
-                                </div>
+                                {
+                                    selectedWallet ?
+                                        <div className="d-flex flex-row align-items-center">
+                                            <SelectWallet selectedWalletId={this.state.selectedWalletId}
+                                                setWallet={this.setWallet} />
+                                            <ImageButton
+                                                id={"fetchWalletBoxes"}
+                                                color={"blue"}
+                                                icon={"file_download"}
+                                                tips={"Fetch wallet unspent boxes"}
+                                                onClick={this.fetchWalletBoxes}
+                                            />
+                                        </div>
+                                        : null
+                                }
                             </div>
                             <div className="d-flex flex-wrap">
                                 {this.state.addressBoxList.map(item => (
@@ -605,25 +621,27 @@ export default class TxBuilder extends React.Component {
                                 <div className="d-flex flex-row align-items-center ">
                                     <h6>Sign transaction</h6>&nbsp;
                                     {
-                                        selectedWallet.type === "ergopay" ? null :
-                                            <Fragment>
-                                                <div className='card m-1 p-1 d-flex align-items_center'
-                                                    style={{
-                                                        borderColor: `rgba(${selectedWallet.color.r},${selectedWallet.color.g},${selectedWallet.color.b}, 0.95)`,
-                                                        backgroundColor: `rgba(${selectedWallet.color.r},${selectedWallet.color.g},${selectedWallet.color.b}, 0.10)`
-                                                    }}>
-                                                    <ImageButton id="sign-and-send" color="blue" icon="send" tips="Sign and send transaction"
-                                                        onClick={() => { this.signAndSendTx(txJson); }} />
-                                                </div>
-                                                <div className='card m-1 p-1 d-flex align-items_center'
-                                                    style={{
-                                                        borderColor: `rgba(${selectedWallet.color.r},${selectedWallet.color.g},${selectedWallet.color.b}, 0.95)`,
-                                                        backgroundColor: `rgba(${selectedWallet.color.r},${selectedWallet.color.g},${selectedWallet.color.b}, 0.10)`
-                                                    }}>
-                                                    <ImageButton id="sign" color="blue" icon="border_color" tips="Sign transaction"
-                                                        onClick={() => { this.signTx(txJson); }} />
-                                                </div>
-                                            </Fragment>
+                                        selectedWallet ?
+                                            selectedWallet.type === "ergopay" ? null :
+                                                <Fragment>
+                                                    <div className='card m-1 p-1 d-flex align-items_center'
+                                                        style={{
+                                                            borderColor: `rgba(${selectedWallet.color.r},${selectedWallet.color.g},${selectedWallet.color.b}, 0.95)`,
+                                                            backgroundColor: `rgba(${selectedWallet.color.r},${selectedWallet.color.g},${selectedWallet.color.b}, 0.10)`
+                                                        }}>
+                                                        <ImageButton id="sign-and-send" color="blue" icon="send" tips="Sign and send transaction"
+                                                            onClick={() => { this.signAndSendTx(txJson); }} />
+                                                    </div>
+                                                    <div className='card m-1 p-1 d-flex align-items_center'
+                                                        style={{
+                                                            borderColor: `rgba(${selectedWallet.color.r},${selectedWallet.color.g},${selectedWallet.color.b}, 0.95)`,
+                                                            backgroundColor: `rgba(${selectedWallet.color.r},${selectedWallet.color.g},${selectedWallet.color.b}, 0.10)`
+                                                        }}>
+                                                        <ImageButton id="sign" color="blue" icon="border_color" tips="Sign transaction"
+                                                            onClick={() => { this.signTx(txJson); }} />
+                                                    </div>
+                                                </Fragment>
+                                            : null
                                     }
                                     <ImageButton id="help-swagger" icon="help_outline"
                                         tips={swaggertips} />

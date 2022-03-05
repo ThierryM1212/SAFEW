@@ -6,13 +6,16 @@ import { NANOERG_TO_ERG, SUGGESTED_TRANSACTION_FEE } from '../utils/constants';
 import { errorAlert, promptPassword, waitingAlert } from '../utils/Alerts';
 import { getWalletById, getWalletAddressList, formatERGAmount, formatTokenAmount, getSummaryFromAddressListContent, getSummaryFromSelectedAddressListContent, getAddressListContent, decryptMnemonic, formatLongString, getWalletUsedAddressList, getUnconfirmedTransactionsForAddressList } from '../utils/walletUtils';
 import { createTxOutputs, createUnsignedTransaction, getTxReducedB64Safe, getUtxosForSelectedInputs, isValidErgAddress } from '../ergo-related/ergolibUtils';
-import { getWalletForAddresses, signTransaction } from '../ergo-related/serializer';
+import { getWalletForAddresses, signTransaction, tokenFloatToAmount } from '../ergo-related/serializer';
 import { sendTx } from '../ergo-related/node';
 import { getUtxoBalanceForAddressList, parseSignedTx } from '../ergo-related/utxos';
 import BigQRCode from './BigQRCode';
 import { signTxLedger } from '../ergo-related/ledger';
 import { DeviceError } from 'ledgerjs-hw-app-ergo';
 import TokenLabel from './TokenLabel';
+import JSONBigInt from 'json-bigint';
+
+/* global BigInt */
 
 
 export default class SendTransaction extends React.Component {
@@ -82,8 +85,9 @@ export default class SendTransaction extends React.Component {
     }
 
     async componentDidMount() {
+        const alert = waitingAlert("Loading wallet content...");
         const wallet = getWalletById(this.state.walletId);
-        var walletAddressList = getWalletUsedAddressList(wallet);
+        var walletAddressList = getWalletAddressList(wallet);
         var addressContentList = await getAddressListContent(walletAddressList);
         // remove 0 erg addresses
         var i = walletAddressList.length;
@@ -97,7 +101,7 @@ export default class SendTransaction extends React.Component {
         this.setState({
             tokens: tokens,
             nanoErgs: nanoErgs,
-            tokenAmountToSend: new Array(tokens.length).fill(0.0),
+            tokenAmountToSend: new Array(tokens.length).fill('0.0'),
             isValidTokenAmountToSend: new Array(tokens.length).fill(true),
             selectedAddresses: new Array(walletAddressList.length).fill(true),
             addressContentList: addressContentList,
@@ -135,6 +139,7 @@ export default class SendTransaction extends React.Component {
                 isValidTokenAmountToSend: newTokenAmountToSend.map((amount, index) => this.validateTokenAmount(index, amount)),
             });
         }
+        alert.close();
     }
 
     setErgsToSend = (ergAmount) => {
@@ -202,22 +207,22 @@ export default class SendTransaction extends React.Component {
         if (tokAmount === '' || tokAmount === undefined) { return true; };
         const token = this.state.tokens[index];
         const tokenDecimals = parseInt(token.decimals);
-        console.log("validateTokenAmount", token, tokenDecimals, tokAmount)
+        //console.log("validateTokenAmount", token, tokenDecimals, tokAmount)
         const tokAmountStr = tokAmount.toString();
-        var tokenAmount = 0;
+        var tokenAmount = BigInt(0);
         if (tokAmountStr.indexOf('.') > -1) {
             var str = tokAmountStr.split(".");
             str[1] = str[1].replace(/0+$/g, ""); //remove trailing 0
-            console.log("validateTokenAmount2", str[1].length)
+            //console.log("validateTokenAmount2", str[1].length)
             if (str[1].length > tokenDecimals) {
                 return false;
             } else {
-                tokenAmount = parseInt(str[0]) * Math.pow(10, tokenDecimals) + parseInt(str[1] + '0'.repeat(tokenDecimals - str[1].length));
+                tokenAmount = BigInt(str[0]) * BigInt(Math.pow(10, tokenDecimals)) + BigInt(str[1] + '0'.repeat(tokenDecimals - str[1].length));
             }
         } else {
-            tokenAmount = parseInt(tokAmount.toString()) * Math.pow(10, tokenDecimals);
+            tokenAmount = BigInt(tokAmount.toString()) * BigInt(Math.pow(10, tokenDecimals));
         }
-        return (tokenAmount >= 0 && tokenAmount <= parseInt(token.amount));
+        return (tokenAmount >= 0 && tokenAmount <= BigInt(token.amount));
     }
 
     componentWillUnmount() {
@@ -248,14 +253,20 @@ export default class SendTransaction extends React.Component {
         const selectedUtxos = await getUtxosForSelectedInputs(selectedAddresses,
             totalAmountToSendFloat, this.state.tokens, this.state.tokenAmountToSend);
         //console.log("this.state.tokenAmountToSend", this.state.tokenAmountToSend)
-        const tokenAmountToSendInt = this.state.tokenAmountToSend.map((amountFloat, id) =>
-            Math.round(parseFloat(amountFloat.toString()) * Math.pow(10, parseInt(this.state.tokens[id].decimals))));
+        const tokenAmountToSendInt = this.state.tokenAmountToSend.map((amountFloat, id) => 
+            //Math.round(parseFloat(amountFloat.toString()) * Math.pow(10, parseInt(this.state.tokens[id].decimals)))
+            
+            tokenFloatToAmount(amountFloat.toString(), this.state.tokens[id].decimals)
+        );
+
+        console.log("getTransactionJson", tokenAmountToSendInt)
+
         //console.log("sendTransaction", amountToSendFloat, feeFloat, wallet);
         const outputCandidates = await createTxOutputs(selectedUtxos, this.state.sendToAddress, wallet.changeAddress,
             amountToSendFloat, feeFloat, this.state.tokens, tokenAmountToSendInt);
 
         const unsignedTransaction = await createUnsignedTransaction(selectedUtxos, outputCandidates);
-        const jsonUnsignedTx = JSON.parse(unsignedTransaction.to_json());
+        const jsonUnsignedTx = JSONBigInt.parse(unsignedTransaction.to_json());
         //console.log("sendTransaction unsignedTransaction", jsonUnsignedTx);
         return [jsonUnsignedTx, selectedUtxos];
     }
@@ -279,19 +290,20 @@ export default class SendTransaction extends React.Component {
         } else {
             const txBalance = await getUtxoBalanceForAddressList(jsonUnsignedTx.inputs, jsonUnsignedTx.outputs, getWalletAddressList(wallet));
             const txBalanceReceiver = await getUtxoBalanceForAddressList(jsonUnsignedTx.inputs, jsonUnsignedTx.outputs, [this.state.sendToAddress]);
-            //console.log("sendTransaction txBalance", txBalance, txBalanceReceiver);
+            console.log("sendTransaction txBalance", txBalance, txBalanceReceiver);
 
             var txSummaryHtml = "<div class='card m-1 p-1'><table class='txSummarry'><tbody>";
             txSummaryHtml += "<thead><th colspan='2'>Sending to: &nbsp;" + formatLongString(this.state.sendToAddress, 10) + "</th></thead>";
             txSummaryHtml += "<tr><td class='textSmall'>Amount</td><td>" + formatERGAmount(txBalanceReceiver.value) + "&nbsp;ERG</td></tr>";
             txSummaryHtml += "<tr><td class='textSmall'>Fee</td><td>" + formatERGAmount(feeFloat * NANOERG_TO_ERG) + "&nbsp;ERG</td></tr>";
-            txSummaryHtml += "<tr><td class='textSmall'><b>Total</b></td><td><b>" + formatERGAmount(-1 * txBalance.value) + "&nbsp;ERG</b></td></tr>";
+            txSummaryHtml += "<tr><td class='textSmall'><b>Total</b></td><td><b>" + formatERGAmount(BigInt(-1) * txBalance.value) + "&nbsp;ERG</b></td></tr>";
             txSummaryHtml += "</tbody></table>";
             if (txBalance.tokens.length > 0) {
                 txSummaryHtml += "<table class='txSummarry'><tbody>";
                 txSummaryHtml += "<thead><th colspan='2'>Tokens</th></thead>";
                 for (const token of txBalance.tokens) {
-                    txSummaryHtml += "<tr><td class='textSmall'>" + token.name + "</td><td class='textSmall'>" + formatTokenAmount((-1) * token.amount, token.decimals) + "</td></tr>";
+                    console.log("sendTransaction token.amount", token.name, token.amount)
+                    txSummaryHtml += "<tr><td class='textSmall'>" + token.name + "</td><td class='textSmall'>" + formatTokenAmount(BigInt(-1) * token.amount, token.decimals) + "</td></tr>";
                 }
                 txSummaryHtml += "</tbody></table></div>";
             }

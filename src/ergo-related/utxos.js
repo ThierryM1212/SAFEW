@@ -22,6 +22,8 @@ export function parseUtxo(json, addExtention = true, mode = 'input') {
         res["assets"] = json.assets.map(asset => ({
             tokenId: asset.tokenId,
             amount: asset.amount.toString(),
+            name: asset.name ?? '',
+            decimals: asset.decimals ?? 0,
         }));
     } else {
         res["assets"] = [];
@@ -64,13 +66,14 @@ export async function enrichUtxos(utxos, addExtension = false) {
         if ("id" in utxos[i]) {
             key = "id";
         }
-        //console.log("enrichUtxos1", utxos[i][key]);
+        console.log("enrichUtxos1", utxos[i][key]);
         var box = await boxByBoxId(utxos[i][key]);
         var newAssets = []
         for (var token of box.assets) {
             var newToken = { ...token }
-            //console.log("enrichUtxos2", token.tokenId);
+            console.log("enrichUtxos2", token.tokenId);
             const tokenDesc = await getTokenBoxV1(token.tokenId);
+            console.log("enrichUtxos2_1", tokenDesc);
             newToken["name"] = tokenDesc.name;
             newToken["decimals"] = tokenDesc.decimals;
             newAssets.push(newToken)
@@ -193,9 +196,9 @@ export function getTokenListFromUtxos(utxos) {
     for (const i in utxos) {
         for (const j in utxos[i].assets) {
             if (utxos[i].assets[j].tokenId in tokenList) {
-                tokenList[utxos[i].assets[j].tokenId] = parseInt(tokenList[utxos[i].assets[j].tokenId]) + parseInt(utxos[i].assets[j].amount);
+                tokenList[utxos[i].assets[j].tokenId] = BigInt(tokenList[utxos[i].assets[j].tokenId]) + BigInt(utxos[i].assets[j].amount);
             } else {
-                tokenList[utxos[i].assets[j].tokenId] = parseInt(utxos[i].assets[j].amount);
+                tokenList[utxos[i].assets[j].tokenId] = BigInt(utxos[i].assets[j].amount);
             }
         }
     }
@@ -225,7 +228,7 @@ export function getMissingErg(inputs, outputs) {
     if (amountIn >= amountOut) {
         return amountIn - amountOut;
     } else {
-        return 0;
+        return BigInt(0);
     }
 }
 
@@ -281,7 +284,7 @@ function isDict(v) {
 }
 
 async function getUtxoContentForAddressList(utxos, addressList) {
-    var value = 0, tokens = [];
+    var value = BigInt(0), tokens = [];
     //console.log("getUtxoContentForAddressList_0", utxos, addressList)
     for (var utxo of utxos) {
         if (!("address" in utxo)) {
@@ -302,7 +305,7 @@ async function getUtxoContentForAddressList(utxos, addressList) {
         }
         if (addressList.includes(utxo.address)) {
             //console.log("getUtxoContentForAddressList_3")
-            value = value + parseInt(utxo.value.toString());
+            value = value + BigInt(utxo.value.toString());
             if (!("assets" in utxo)) {
                 utxo.assets = (await boxByBoxId(utxo.id)).assets;
             }
@@ -313,9 +316,9 @@ async function getUtxoContentForAddressList(utxos, addressList) {
                 //console.log("getUtxoContentForAddressList_4")
                 if (tokens.map(tok => tok.tokenId).includes(token.tokenId)) {
                     const index = tokens.findIndex(t => t.tokenId === token.tokenId);
-                    const tokAmount = parseInt(token.amount.toString());
+                    const tokAmount = BigInt(token.amount.toString());
                     //console.log("getUtxoContentForAddressList_4", token.tokenId, tokens[index].amount, tokAmount)
-                    tokens[index].amount = tokens[index].amount + tokAmount;
+                    tokens[index].amount = BigInt(tokens[index].amount) + tokAmount;
                 } else {
                     tokens.push({ ...token });
                 }
@@ -327,19 +330,19 @@ async function getUtxoContentForAddressList(utxos, addressList) {
 
 function getUtxoContentForAddressList2(utxos, addressList) {
     //console.log("getUtxoContentForAddressList_20", utxos, addressList)
-    var value = 0, tokens = [];
+    var value = BigInt(0), tokens = [];
     for (var utxo of utxos) {
         //console.log("getUtxoContentForAddressList_21", utxo)
         if (addressList.includes(utxo.address)) {
             //console.log("getUtxoContentForAddressList_22", value)
-            value += parseInt(utxo.value.toString());
+            value = value + BigInt(utxo.value.toString());
             for (const token of utxo.assets) {
                 const index = tokens.findIndex(t => t.tokenId === token.tokenId);
                 //console.log("getUtxoContentForAddressList_23", index)
                 if (index >= 0) {
                     //console.log("getUtxoContentForAddressList_24", token, tokens[index].amount)
-                    const tokAmount = parseInt(token.amount.toString());
-                    tokens[index].amount = tokens[index].amount + tokAmount;
+                    const tokAmount = BigInt(token.amount.toString());
+                    tokens[index].amount = BigInt(tokens[index].amount) + tokAmount;
                     //console.log("getUtxoContentForAddressList_25", token, tokens[index].amount, tokAmount)
                 } else {
                     //console.log("getUtxoContentForAddressList_26", token)
@@ -371,27 +374,28 @@ export function getUtxoBalanceForAddressList2(inputs, outputs, addressList) {
 
 function buildBalance(inputBal, outputBal) {
     //console.log("buildBalance1", inputBal, outputBal)
-    const balValue = parseInt(outputBal.value.toString()) - parseInt(inputBal.value.toString());
+    const balValue = BigInt(outputBal.value.toString()) - BigInt(inputBal.value.toString());
     var balTokens = [];
     const tokenList = [...new Set([inputBal.tokens.map(tok => tok.tokenId), outputBal.tokens.map(tok => tok.tokenId)].flat())];
     for (const tokId of tokenList) {
 
-        var tokAmount = 0, decimals = 0, tokenName = '';
+        var tokAmount = BigInt(0), decimals = 0, tokenName = '';
         for (const outToken of outputBal.tokens) {
             if (outToken.tokenId === tokId) {
-                tokAmount += parseInt(outToken.amount.toString());
+                tokAmount = tokAmount + BigInt(outToken.amount.toString());
                 decimals = outToken.decimals;
                 tokenName = outToken.name;
             }
         }
         for (const inToken of inputBal.tokens) {
             if (inToken.tokenId === tokId) {
-                tokAmount -= parseInt(inToken.amount.toString());
+                tokAmount = tokAmount - BigInt(inToken.amount.toString());
                 decimals = inToken.decimals;
                 tokenName = inToken.name;
             }
         }
-        if (tokAmount !== 0) {
+        //console.log("buildBalance2",tokenName,tokAmount,decimals)
+        if (tokAmount !== BigInt(0)) {
             balTokens.push({
                 tokenId: tokId,
                 amount: tokAmount,

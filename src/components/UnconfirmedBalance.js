@@ -18,7 +18,7 @@ export default class UnconfirmedBalance extends React.Component {
         const unconfirmedInputs = this.state.unconfirmedTx.map(tx => tx.inputs).flat();
         const unconfirmedOutputs = this.state.unconfirmedTx.map(tx => tx.outputs).flat();
         const unconfirmedBalance = await getUtxoBalanceForAddressList(unconfirmedInputs, unconfirmedOutputs, this.state.addressList);
-        console.log("AddressListContent23", unconfirmedInputs, unconfirmedOutputs, this.state.addressList, JSON.stringify(unconfirmedBalance))
+        console.log("AddressListContent23", unconfirmedInputs, unconfirmedOutputs, this.state.addressList, JSONBigInt.stringify(unconfirmedBalance))
         this.setState({
             unconfirmedBalance: unconfirmedBalance,
         })
@@ -30,7 +30,7 @@ export default class UnconfirmedBalance extends React.Component {
             const unconfirmedInputs = this.state.unconfirmedTx.map(tx => tx.inputs).flat();
             const unconfirmedOutputs = this.state.unconfirmedTx.map(tx => tx.outputs).flat();
             const unconfirmedBalance = await getUtxoBalanceForAddressList(unconfirmedInputs, unconfirmedOutputs, this.state.addressList);
-            console.log("AddressListContent23", unconfirmedInputs, unconfirmedOutputs, this.state.addressList, JSON.stringify(unconfirmedBalance))
+            console.log("AddressListContent23", unconfirmedInputs, unconfirmedOutputs, this.state.addressList, JSONBigInt.stringify(unconfirmedBalance))
             this.setState({
                 unconfirmedBalance: unconfirmedBalance,
             })

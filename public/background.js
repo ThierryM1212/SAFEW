@@ -22,7 +22,15 @@ var transactionsToSign = new Map();
 // launch extension popup
 function launchPopup(message, sender, param = '') {
     const searchParams = new URLSearchParams();
-    searchParams.set('origin', sender.origin);
+    console.log("launchPopup sender", sender, location.origin);
+    if (Object.keys(sender).includes('origin')) {
+        searchParams.set('origin', sender.origin);
+    } else {
+        const origin = (new URL(sender.url)).origin;
+        console.log("launchPopup origin", origin, sender.url)
+        searchParams.set('origin', origin);
+    }
+    
     //searchParams.set('request', JSON.stringify(message.data));
     var type = message.data.type;
     console.log("launchPopup", message, type, param);
@@ -31,18 +39,17 @@ function launchPopup(message, sender, param = '') {
         searchParams.set('requestId', param);
     }
     console.log("launchPopup", type);
-    const URL = 'index.html#' + type + '?' + searchParams.toString()
+    const URLpopup = 'index.html#' + type + '?' + searchParams.toString()
 
     // TODO consolidate popup dimensions
     chrome.windows.getLastFocused((focusedWindow) => {
         chrome.windows.create({
-            url: URL,
+            url: URLpopup,
             type: 'popup',
             width: 800,
             height: 700,
             top: focusedWindow.top,
             left: focusedWindow.left + (focusedWindow.width - 375),
-            setSelfAsOpener: true,
             focused: true,
         });
     });
@@ -134,8 +141,11 @@ async function unspentBoxesForV1(address) {
 async function getUnspentBoxesForAddressList(addressList) {
     const boxList = await Promise.all(addressList.map(async (address) => {
         const addressBoxes = await unspentBoxesForV1(address);
-        //console.log("getUnspentBoxesForAddressList", address, addressBoxes)
+        console.log("getUnspentBoxesForAddressList", address, addressBoxes)
         return addressBoxes;
+    }));
+    console.log("getUnspentBoxesForAddressList boxList", boxList, boxList.flat(), boxList.flat().sort(function (a, b) {
+        return a.globalIndex - b.globalIndex;
     }));
     return boxList.flat().sort(function (a, b) {
         return a.globalIndex - b.globalIndex;
@@ -250,7 +260,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                     .then(addressBoxes => {
                         const [amount, token_id, paginate] = message.data.data;
                         var selectedUtxos = [], unSelectedUtxos = addressBoxes, amountSelected = BigInt(0);
-                        if (amount !== null) {
+                        if (amount) {
                             const amountInt = BigInt(amount.toString());
                             if (token_id === 'ERG') {
                                 while (amountSelected < amountInt && unSelectedUtxos.length > 0) {
@@ -283,7 +293,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 return true;
             }
             if (message.data.func === "sign_tx") {
-                console.log("sign_tx", message.data)
+                //console.log("sign_tx", message.data)
                 const walletFound = (getConnectedWalletName(message.data.url) !== null);
                 if (!walletFound) { // No wallet
                     sendResponse({
@@ -322,7 +332,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             }
             if (message.data.func === "submit_tx") {
                 // TO DO minimal check inputs
-                console.log("submit_tx", message.data.data);
+                //console.log("submit_tx", message.data.data);
                 sendTx(message.data.data[0]).then(res => {
                     console.log("submit_tx response", res);
                     sendResponse({
@@ -346,7 +356,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
 
     } else if (message.channel === 'safew_extension_background_channel') {
-        console.log("background safew_extension_background_channel", message, connectResponseHandlers);
+        //console.log("background safew_extension_background_channel", message, connectResponseHandlers);
         if (message.data && message.data.type && message.data.type === "connect_response") {
             const responseHandler = connectResponseHandlers.get(message.data.url);
             connectResponseHandlers.delete(message.data.url);
