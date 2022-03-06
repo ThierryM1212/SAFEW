@@ -9,6 +9,7 @@
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",
+    "bip32": "^3.0.1",
     "bip39": "^3.0.4",
     "crypto-js": "^4.1.1",
     "ergo-lib-wasm-browser": "^0.15.0-alpha-f7a9ee0",
@@ -29,6 +30,7 @@
     "react-switch": "^6.0.0",
     "react-tooltip": "^4.2.21",
     "sweetalert2": "^11.3.4",
+    "tiny-secp256k1": "^2.2.1",
     "typescript": "^4.5.5"
   },
   "scripts": {
