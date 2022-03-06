@@ -65,21 +65,15 @@ export function ergToNano(erg) {
 }
 
 export function tokenFloatToAmount(amountFloatStr, decimals) {
-    if (amountFloatStr === undefined) return BigInt(0)
-    if (amountFloatStr.startsWith('.')) return BigInt(amountFloatStr.slice(1) + '0'.repeat(decimals - amountFloatStr.length + 1))
-    let parts = amountFloatStr.split('.')
+    if (amountFloatStr === undefined ) return BigInt(0);
+    if (decimals === undefined ) decimals = 0;
+    const amountStr = amountFloatStr.toString();
+    if (amountStr.startsWith('.')) return BigInt(amountStr.slice(1) + '0'.repeat(decimals - amountStr.length + 1))
+    let parts = amountStr.split('.')
     if (parts.length === 1) parts.push('')
     if (parts[1].length > decimals) return BigInt(0)
     return BigInt(parts[0] + parts[1] + '0'.repeat(decimals - parts[1].length))
 }
-export function tokenAmountToFloatStr(amount, decimals) {
-    if (decimals > 0) {
-        //
-    } else {
-        return amount.toString();
-    }
-}
-
 
 export async function encodeAddress(address) {
     const byteArray = (await ergolib).Address.from_mainnet_str(address).to_bytes();
