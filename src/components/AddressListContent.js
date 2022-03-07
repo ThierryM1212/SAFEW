@@ -4,6 +4,8 @@ import { getUtxoBalanceForAddressList2 } from '../ergo-related/utxos';
 import { NANOERG_TO_ERG, VERIFIED_TOKENS } from '../utils/constants';
 import { formatERGAmount, formatTokenAmount, getSummaryFromAddressListContent } from '../utils/walletUtils';
 import ImageButton from './ImageButton';
+import NFTImage from './NFTImage';
+import TokenLabel from './TokenLabel';
 import VerifiedTokenImage from './VerifiedTokenImage';
 
 /* global BigInt */
@@ -79,42 +81,25 @@ export default function AddressListContent(props) {
                     {
                         details ?
                             <table className='tokentable'>
-                              <thead><tr>
-                                <td>Token</td>
-                                <td>Amount</td>
-                                <td>Value in Σ</td>
-                              </tr></thead>
-                              <tbody>
-                                {
-                                    tokens.map((tok, index) =>
-                                        <tr key={index}>
-                                            <td>
-                                                <div className='d-flex flex-row justify-content-between align-items-center'>
-                                                    <div className='d-flex flex-row align-items-center'>
-                                                        {tok.name}
-                                                        {
-                                                            Object.keys(VERIFIED_TOKENS).includes(tok.tokenId) ?
-                                                                <div>&nbsp;<VerifiedTokenImage tokenId={tok.tokenId} /></div>
-                                                                : null
-                                                        }
+                                <thead><tr>
+                                    <td>Token</td>
+                                    <td>Amount</td>
+                                    <td>Value in Σ</td>
+                                </tr></thead>
+                                <tbody>
+                                    {
+                                        tokens.map((tok, index) =>
+                                            <tr key={index}>
+                                                <td>
+                                                    <div className='d-flex flex-row justify-content-between align-items-center'>
+                                                        <TokenLabel name={tok.name} tokenId={tok.tokenId} decimals={tok.decimals} />
                                                     </div>
-                                                    <ImageButton
-                                                        id={"openAddressExplorer" + tok.tokenId}
-                                                        color={"blue"}
-                                                        icon={"open_in_new"}
-                                                        tips={"Open in Explorer"}
-                                                        onClick={() => {
-                                                            const url = localStorage.getItem('explorerWebUIAddress') + 'en/token/' + tok.tokenId;
-                                                            window.open(url, '_blank').focus();
-                                                        }}
-                                                    />
-                                                </div>
-                                            </td>
-                                            <td>{formatTokenAmount(tok.amount, tok.decimals)}</td>
-                                            <td>{props.tokenRatesDict && Object.keys(props.tokenRatesDict).includes(tok.tokenId) ? formatERGAmount(props.tokenRatesDict[tok.tokenId].ergPerToken * tok.amount * NANOERG_TO_ERG / Math.pow(10,tok.decimals)) : '0'}</td>
-                                        </tr>)
-                                }
-                            </tbody></table>
+                                                </td>
+                                                <td>{formatTokenAmount(tok.amount, tok.decimals)}</td>
+                                                <td>{tokenRatesDict && Object.keys(tokenRatesDict).includes(tok.tokenId) ? formatERGAmount(tokenRatesDict[tok.tokenId].ergPerToken * tok.amount * NANOERG_TO_ERG / Math.pow(10, tok.decimals)) : '0'}</td>
+                                            </tr>)
+                                    }
+                                </tbody></table>
                             : <div className='d-flex flex-row'>
                                 Tokens: {tokens.length}
                             </div>

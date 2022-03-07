@@ -1,14 +1,12 @@
 
 import { useState } from 'react';
 import ReactJson from 'react-json-view';
-import { VERIFIED_TOKENS } from '../../utils/constants';
 import { formatERGAmount, formatLongString, formatTokenAmount } from '../../utils/walletUtils';
 import ImageButton from '../ImageButton';
-import VerifiedTokenImage from '../VerifiedTokenImage';
+import TokenLabel from '../TokenLabel';
 
 export function UtxoItem(props) {
     const [details, toggleDetails] = useState(0);
-
     return (
         <div className="d-flex flex-column m-1 p-1">
             {props.id !== undefined ? <h6>INPUTS({props.id})</h6> : null}
@@ -77,26 +75,10 @@ export function UtxoItem(props) {
                                         props.json.assets.map((tok, index) =>
                                             <tr key={index}>
                                                 <td>
-                                                    <div className='d-flex flex-row justify-content-between align-items-center'>
-                                                        <div className='d-flex flex-row align-items-center'>
-                                                            {tok.name}
-                                                            {
-                                                                Object.keys(VERIFIED_TOKENS).includes(tok.tokenId) ?
-                                                                    <div>&nbsp;<VerifiedTokenImage tokenId={tok.tokenId} /></div>
-                                                                    : null
-                                                            }
-                                                        </div>
-                                                        <ImageButton
-                                                            id={"openAddressExplorer" + tok.tokenId}
-                                                            color={"blue"}
-                                                            icon={"open_in_new"}
-                                                            tips={"Open in Explorer"}
-                                                            onClick={() => {
-                                                                const url = localStorage.getItem('explorerWebUIAddress') + 'en/token/' + tok.tokenId;
-                                                                window.open(url, '_blank').focus();
-                                                            }}
-                                                        />
-                                                    </div>
+                                                    <TokenLabel tokenId={tok.tokenId}
+                                                        name={tok.name}
+                                                        decimals={tok.decimals}
+                                                    />
                                                 </td>
                                                 <td>{formatTokenAmount(tok.amount, tok.decimals)}</td>
                                             </tr>)

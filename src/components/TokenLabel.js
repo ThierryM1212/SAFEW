@@ -2,10 +2,12 @@ import { copySuccess } from "../utils/Alerts";
 import { VERIFIED_TOKENS } from "../utils/constants";
 import { formatLongString } from "../utils/walletUtils";
 import ImageButton from "./ImageButton"
+import NFTImage from "./NFTImage";
 import VerifiedTokenImage from "./VerifiedTokenImage";
 
 
 export default function TokenLabel(props) {
+    //console.log("TokenLabel",props.name, props)
     return (
         <div className='d-flex flex-row justify-content-between align-items-center'>
             <div className='d-flex flex-row align-items-center'>
@@ -13,6 +15,14 @@ export default function TokenLabel(props) {
                 {
                     Object.keys(VERIFIED_TOKENS).includes(props.tokenId) ?
                         <div>&nbsp;<VerifiedTokenImage tokenId={props.tokenId} /></div>
+                        : null
+                }
+                {
+                    props.decimals === 0 ?
+                        <div className='d-flex flex-row'>
+                            &nbsp;
+                            <NFTImage tokenId={props.tokenId} />
+                        </div>
                         : null
                 }
             </div>

@@ -47,7 +47,11 @@ export default function TransactionSummary(props) {
                     {
                         Object.entries(tokenDiffArray).map(([tokenId, value]) => (
                             <tr key={tokenId}>
-                                <td><TokenLabel tokenId={tokenId} name={tokenInfo && tokenInfo[tokenId] ? tokenInfo[tokenId][0] : false} /></td>
+                                <td><TokenLabel
+                                    tokenId={tokenId}
+                                    name={tokenInfo && tokenInfo[tokenId] ? tokenInfo[tokenId][0] : false}
+                                    decimals={tokenInfo && tokenInfo[tokenId] ? tokenInfo[tokenId][2] : false}
+                                /></td>
                                 <td>{tokenInfo[tokenId] ? formatTokenAmount(value[0], tokenInfo[tokenId][2]) : value[0]}</td>
                                 <td>{tokenInfo[tokenId] ? formatTokenAmount(value[1], tokenInfo[tokenId][2]) : value[1]}</td>
                                 <td>

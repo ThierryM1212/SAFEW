@@ -445,7 +445,7 @@ export default class SendTransaction extends React.Component {
                                     this.state.tokens.map((tok, index) =>
                                         <tr key={index}>
                                             <td>
-                                                <TokenLabel name={tok.name} tokenId={tok.tokenId} />
+                                                <TokenLabel name={tok.name} tokenId={tok.tokenId} decimals={tok.decimals}/>
                                             </td>
                                             <td>{formatTokenAmount(tok.amount, tok.decimals, false)}</td>
                                             <td>
