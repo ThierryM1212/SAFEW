@@ -42,21 +42,14 @@ export const WALLET_VERSION = 1;
 
 export const DISCLAIMER_TEXT = `
 <div align="left">
-This software is distributed for free with its source code.<br/>
+This software is distributed for free with its source code, "AS IS" and without any warranties on its behaviors.<br/>
 https://github.com/ThierryM1212/SAFEW<br/>
 <br/>
-The security of each wallet is ensured by the encryption of the mnemonic using its spending password (AES-256).<br/>
-The clear text mnemonic and the spending password are not stored by the application. <br/>
-The privacy of the wallet content is ensured by the browser local storage that cannot be accessed by other sites or extensions.<br/>
-Only the connected sites can read the available addresses and their content through the dApp connector.<br/>
-<br/>
-The current is not audited and tested only be me before release.<br/>
-Use at your own riks.
-Enjoy Ergo dApps carefully !<br/>
+Please review carefully the transactions before signing.<br/>
+Enjoy Ergo dApps !<br/>
 <br/>
 <div/>
 `
-
 
 export const sampleTxErgodex = {
   "inputs": [
