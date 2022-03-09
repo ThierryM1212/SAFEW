@@ -1,7 +1,6 @@
 import React, { Fragment } from 'react';
-import Select from 'react-select';
 import { isValidErgAddress } from '../ergo-related/ergolibUtils';
-import { addCovertAddress, getCovertWithdrawAddresses, setCovertWithdrawAddresses } from '../ergo-related/mixer';
+import { getCovertWithdrawAddresses, setCovertWithdrawAddresses } from '../ergo-related/mixer';
 import ImageButton from './ImageButton';
 import ValidInput from './ValidInput';
 
