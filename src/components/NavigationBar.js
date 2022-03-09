@@ -43,6 +43,13 @@ export default function NavigationBar(props) {
                     tips={"Ergo mixer"}
                     onClick={() => { props.setPage('mixer') }}
                 />
+                <ImageButton
+                    id={"mintTokens"}
+                    color={"blue"}
+                    icon={"add_circle_outline"}
+                    tips={"Mint tokens"}
+                    onClick={() => { props.setPage('mint') }}
+                />
                 {
                     expertMode ?
                         <ImageButton

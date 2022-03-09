@@ -2,87 +2,101 @@ const webpack = require('webpack');
 const CopyPlugin = require('copy-webpack-plugin');
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const { ModifySourcePlugin } = require('modify-source-webpack-plugin');
 
 const config = {
-  entry: [
-    'react-hot-loader/patch',
-    'regenerator-runtime/runtime.js',
-    './src/index.js'
-  ],
-  output: {
-    path: path.resolve(__dirname, 'build'),
-    filename: 'bundle.js'
-  },
-  module: {
-    rules: [
-      {
-        test: /\.(js|jsx)$/,
-        use: 'babel-loader',
-        exclude: /node_modules/
-      },
-      {
-        test: /\.css$/,
-        use: [
-          'style-loader',
-          'css-loader'
-        ]
-      },
-      {
-        test: /\.svg$/,
-        use: 'file-loader'
-      },
-      {
-        test: /\.png$/,
-        use: [
-          {
-            loader: 'url-loader',
-            options: {
-              mimetype: 'image/png'
+    entry: [
+        'react-hot-loader/patch',
+        'regenerator-runtime/runtime.js',
+        './src/index.js'
+    ],
+    output: {
+        path: path.resolve(__dirname, 'build'),
+        filename: 'bundle.js'
+    },
+    module: {
+        rules: [
+            {
+                test: /\.(js|jsx)$/,
+                use: 'babel-loader',
+                exclude: /node_modules/
+            },
+            {
+                test: /\.css$/,
+                use: [
+                    'style-loader',
+                    'css-loader'
+                ]
+            },
+            {
+                test: /\.svg$/,
+                use: 'file-loader'
+            },
+            {
+                test: /\.png$/,
+                use: [
+                    {
+                        loader: 'url-loader',
+                        options: {
+                            mimetype: 'image/png'
+                        }
+                    }
+                ]
             }
-          }
         ]
-      }
-    ]
-  },
-  devServer: {
-    'static': {
-      directory: './build'
-    }
-  },
-  plugins: [
-    new CopyPlugin({
-      patterns: [{ from: 'public' }],
-    }),
-    new HtmlWebpackPlugin({
-      template: 'public/index_template.html',
-      inject: true,
-      filename: 'index.html',
-    }),
-    new webpack.ContextReplacementPlugin(
-        /ergo-lib-wasm-browser/,
-        (data) => {
-            delete data.dependencies[0].critical;
-            return data;
-        },
-    ),
-    // Work around for Buffer is undefined:
-    // https://github.com/webpack/changelog-v5/issues/10
-    // Necessary for some buffer calls done throughout
-    new webpack.ProvidePlugin({
-      Buffer: ['buffer', 'Buffer'],
-    }),
-    new webpack.ProvidePlugin({
-      process: 'process/browser',
-    })
-  ],
-  resolve:{
-    fallback: { "stream": require.resolve("stream-browserify") }
-  },
-  experiments: {
-    asyncWebAssembly: true
-    // syncWebAssembly: true
-  },
-  mode: 'development'
+    },
+    devServer: {
+        'static': {
+            directory: './build'
+        }
+    },
+    plugins: [
+        new ModifySourcePlugin({
+            // fix react-ipfs-uploader import that breaks SAFEW UI
+            rules: [
+                {
+                    test: /index\.modern\.js$/,
+                    modifications: [{
+                        type: 2,
+                        searchValue: "import 'bootstrap/dist/css/bootstrap.min.css';",
+                        replaceValue: ""
+                    }]
+                }
+            ]
+        }),
+        new CopyPlugin({
+            patterns: [{ from: 'public' }],
+        }),
+        new HtmlWebpackPlugin({
+            template: 'public/index_template.html',
+            inject: true,
+            filename: 'index.html',
+        }),
+        new webpack.ContextReplacementPlugin(
+            /ergo-lib-wasm-browser/,
+            (data) => {
+                delete data.dependencies[0].critical;
+                return data;
+            },
+        ),
+        // Work around for Buffer is undefined:
+        // https://github.com/webpack/changelog-v5/issues/10
+        // Necessary for some buffer calls done throughout
+        new webpack.ProvidePlugin({
+            Buffer: ['buffer', 'Buffer'],
+        }),
+        new webpack.ProvidePlugin({
+            process: 'process/browser',
+        })
+    ],
+    resolve: {
+        fallback: { "stream": require.resolve("stream-browserify") }
+    },
+    experiments: {
+        asyncWebAssembly: true
+        // syncWebAssembly: true
+    },
+    mode: 'development'
 };
 
 module.exports = config;

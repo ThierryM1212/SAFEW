@@ -15,6 +15,7 @@ import Mixer from './components/Mixer';
 import { confirmAlert } from './utils/Alerts';
 import { isUpgradeWalletRequired, upgradeWallets } from './utils/walletUtils';
 import TxBuilder from './components/TxBuilder';
+import MintTokens from './components/MintTokens';
 
 export default class App extends React.Component {
     constructor(props) {
@@ -22,7 +23,7 @@ export default class App extends React.Component {
         var iniPage = 'empty';
         const disclaimerAccepted = (localStorage.getItem('disclaimerAccepted') === "true") ?? false;
         if (disclaimerAccepted) iniPage = 'home';
-        console.log("App ini",disclaimerAccepted,iniPage);
+        console.log("App ini", disclaimerAccepted, iniPage);
         this.state = {
             page: iniPage,
             walletId: 0,
@@ -69,7 +70,7 @@ export default class App extends React.Component {
             confirmAlert("Disclaimer", DISCLAIMER_TEXT, "Use SAFEW", "Refuse").then(res => {
                 if (res.isConfirmed) {
                     localStorage.setItem('disclaimerAccepted', "true");
-                    this.setState({disclaimerAccepted: true});
+                    this.setState({ disclaimerAccepted: true });
                     this.setPage('home');
                 } else {
                     window.close();
@@ -99,7 +100,7 @@ export default class App extends React.Component {
                 page = <EditWallet setPage={this.setPage} walletId={this.state.walletId} />
                 break;
             case 'send':
-                page = <SendTransaction setPage={this.setPage} walletId={this.state.walletId} iniTran={this.state.setPageParam}/>
+                page = <SendTransaction setPage={this.setPage} walletId={this.state.walletId} iniTran={this.state.setPageParam} />
                 break;
             case 'transactions':
                 page = <TransactionList setPage={this.setPage} walletId={this.state.walletId} />
@@ -120,7 +121,10 @@ export default class App extends React.Component {
                 page = <SignPopup />
                 break;
             case 'txbuilder':
-                page = <TxBuilder setPage={this.setPage} walletId={this.state.walletId} iniTran={this.state.setPageParam}/>
+                page = <TxBuilder setPage={this.setPage} walletId={this.state.walletId} iniTran={this.state.setPageParam} />
+                break;
+            case 'mint':
+                page = <MintTokens setPage={this.setPage} />
                 break;
             case 'empty':
                 page = null;
