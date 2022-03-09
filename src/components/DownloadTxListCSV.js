@@ -36,6 +36,14 @@ export default class DownloadTxListCSV extends React.Component {
 
     }
 
+    componentDidUpdate(prevProps, prevState) {
+        if (prevProps.numberOfTransactions !== this.props.numberOfTransactions) {
+            this.setState({
+                numberOfTransactions: this.props.numberOfTransactions,
+            });
+        }
+    }
+
     getListSeparator() {
         var list = ['a', 'b'], str;
         if (list.toLocaleString) {

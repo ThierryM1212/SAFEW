@@ -84,11 +84,16 @@ export default class TransactionList extends React.Component {
                 this.updateTransactionList();
             }
         }
+        if (prevProps.numberOfTransactions !== this.props.numberOfTransactions) {
+            this.setState({
+                numberOfTransactions: this.props.numberOfTransactions,
+            });
+        }
     }
 
     render() {
         const wallet = getWalletById(this.state.walletId);
-
+        
         return (
             <Fragment>
                 <div className='container card m-1 p-1 d-flex flex-column w-75 '
