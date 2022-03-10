@@ -1,7 +1,7 @@
 import React from 'react';
 import { CSVLink } from "react-csv";
 import { getUtxoBalanceForAddressList } from '../ergo-related/utxos';
-import { waitingAlert } from '../utils/Alerts';
+import { errorAlert, promptNumTx, waitingAlert } from '../utils/Alerts';
 import { formatERGAmount, formatTokenAmount, getTransactionsForAddressList, getWalletAddressList, getWalletById } from "../utils/walletUtils";
 import ImageButton from './ImageButton';
 
@@ -26,14 +26,16 @@ export default class DownloadTxListCSV extends React.Component {
     }
 
     downloadReport = async () => {
-        const data = await this.getData();
-        this.setState({ data: data }, () => {
-            setTimeout(() => {
-                this.csvLinkEl.current.link.click();
-                this.setState({ data: [], loading: false });
+        const numberOfTx = await promptNumTx();
+        if (numberOfTx) {
+            const data = await this.getData(numberOfTx);
+            this.setState({ data: data }, () => {
+                setTimeout(() => {
+                    this.csvLinkEl.current.link.click();
+                    this.setState({ data: [], loading: false });
+                });
             });
-        });
-
+        }
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -55,7 +57,7 @@ export default class DownloadTxListCSV extends React.Component {
         return ',';
     }
 
-    getData = async () => {
+    getData = async (numberOfTx) => {
         if (!this.state.loading) {
             this.setState({
                 loading: true
@@ -64,13 +66,17 @@ export default class DownloadTxListCSV extends React.Component {
                 const alert = waitingAlert("Loading transactions...");
                 const wallet = getWalletById(this.state.walletId);
                 const walletAddressList = getWalletAddressList(wallet);
-                const allTxList = (await getTransactionsForAddressList(walletAddressList, this.state.numberOfTransactions + 10))
+                const allTxList = (await getTransactionsForAddressList(walletAddressList, numberOfTx))
                     .map(res => res.transactions)
                     .flat()
                     .sort(function (a, b) {
                         return a.numConfirmations - b.numConfirmations;
                     });
+
                 const transactionBalances = await Promise.all(allTxList.map(async (transaction) => {
+                    if (!(transaction && transaction.inputs && transaction.outputs)) {
+                        throw "Fail to get transactions for " + wallet.name;
+                    }
                     const balance = await getUtxoBalanceForAddressList(transaction.inputs, transaction.outputs, walletAddressList);
                     return balance;
                 }));
@@ -105,7 +111,7 @@ export default class DownloadTxListCSV extends React.Component {
                 }
                 return csvList;
             } catch (e) {
-                console.log(e);
+                errorAlert("Failed to export transactions", e.toString());
                 return [];
             }
         }
