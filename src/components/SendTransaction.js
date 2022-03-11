@@ -3,22 +3,19 @@ import Address from './Address';
 import ValidInput from './ValidInput';
 import ImageButton from './ImageButton';
 import { NANOERG_TO_ERG, SUGGESTED_TRANSACTION_FEE } from '../utils/constants';
-import { errorAlert, promptPassword, waitingAlert } from '../utils/Alerts';
+import { waitingAlert } from '../utils/Alerts';
 import { getWalletById, getWalletAddressList, formatERGAmount, formatTokenAmount, getSummaryFromAddressListContent, getSummaryFromSelectedAddressListContent, getAddressListContent, decryptMnemonic, formatLongString, getWalletUsedAddressList, getUnconfirmedTransactionsForAddressList } from '../utils/walletUtils';
-import { createTxOutputs, createUnsignedTransaction, getTxReducedB64Safe, getUtxosForSelectedInputs, isValidErgAddress } from '../ergo-related/ergolibUtils';
-import { getWalletForAddresses, signTransaction, tokenFloatToAmount } from '../ergo-related/serializer';
-import { sendTx } from '../ergo-related/node';
-import { getUtxoBalanceForAddressList, parseSignedTx } from '../ergo-related/utxos';
-import BigQRCode from './BigQRCode';
+import { createTxOutputs, createUnsignedTransaction, getUtxosForSelectedInputs, isValidErgAddress } from '../ergo-related/ergolibUtils';
+import { tokenFloatToAmount } from '../ergo-related/serializer';
 import TokenLabel from './TokenLabel';
 import JSONBigInt from 'json-bigint';
+import SignTransaction from './SignTransaction';
 
 /* global BigInt */
 
 export default class SendTransaction extends React.Component {
     constructor(props) {
         super(props);
-
         this.state = {
             walletId: props.walletId,
             setPage: props.setPage,
@@ -38,18 +35,13 @@ export default class SendTransaction extends React.Component {
             txFee: SUGGESTED_TRANSACTION_FEE / NANOERG_TO_ERG,
             isValidTxFee: true,
             isSendAll: false,
-            ergoPayTxId: "",
-            ergoPayUnsignedTx: "",
         };
         this.setSendToAddress = this.setSendToAddress.bind(this);
-        this.sendTransaction = this.sendTransaction.bind(this);
         this.setErgsToSend = this.setErgsToSend.bind(this);
         this.setTokenToSend = this.setTokenToSend.bind(this);
         this.validateTokenAmount = this.validateTokenAmount.bind(this);
         this.setSendAll = this.setSendAll.bind(this);
         this.getTransactionJson = this.getTransactionJson.bind(this);
-        this.openInTxBuilder = this.openInTxBuilder.bind(this);
-        this.timer = this.timer.bind(this);
     }
 
     async setSendToAddress(address) {
@@ -222,25 +214,6 @@ export default class SendTransaction extends React.Component {
         return (tokenAmount >= 0 && tokenAmount <= BigInt(token.amount));
     }
 
-    componentWillUnmount() {
-        clearInterval(this.state.intervalId);
-    }
-
-    async timer() {
-        const wallet = getWalletById(this.state.walletId);
-        const walletAddressList = getWalletAddressList(wallet);
-        const unconfirmedTransactions = await getUnconfirmedTransactionsForAddressList(walletAddressList, false);
-        const unconfirmedTransactionsIdFiltered = unconfirmedTransactions.map(tx => tx.transactions).flat();
-        const ourTx = unconfirmedTransactionsIdFiltered.filter(tx => tx !== undefined && tx.id === this.state.ergoPayTxId);
-        if (ourTx.length > 0) {
-            var fixedTx = parseSignedTx(ourTx[0]);
-            fixedTx.id = this.state.txId;
-            //console.log("fixedTx", fixedTx);
-            clearInterval(this.state.intervalId);
-            this.state.setPage('transactions', this.state.walletId);
-        }
-    }
-
     async getTransactionJson() {
         const amountToSendFloat = parseFloat(this.state.ergsToSend);
         const feeFloat = parseFloat(this.state.txFee);
@@ -250,96 +223,21 @@ export default class SendTransaction extends React.Component {
         const selectedUtxos = await getUtxosForSelectedInputs(selectedAddresses,
             totalAmountToSendFloat, this.state.tokens, this.state.tokenAmountToSend);
         //console.log("this.state.tokenAmountToSend", this.state.tokenAmountToSend)
-        const tokenAmountToSendInt = this.state.tokenAmountToSend.map((amountFloat, id) => 
-            //Math.round(parseFloat(amountFloat.toString()) * Math.pow(10, parseInt(this.state.tokens[id].decimals)))
-            
+        const tokenAmountToSendInt = this.state.tokenAmountToSend.map((amountFloat, id) =>
             tokenFloatToAmount(amountFloat.toString(), this.state.tokens[id].decimals)
         );
-
-        console.log("getTransactionJson", tokenAmountToSendInt)
-
+        //console.log("getTransactionJson", tokenAmountToSendInt)
         //console.log("sendTransaction", amountToSendFloat, feeFloat, wallet);
         const outputCandidates = await createTxOutputs(selectedUtxos, this.state.sendToAddress, wallet.changeAddress,
             amountToSendFloat, feeFloat, this.state.tokens, tokenAmountToSendInt);
-
         const unsignedTransaction = await createUnsignedTransaction(selectedUtxos, outputCandidates);
         const jsonUnsignedTx = JSONBigInt.parse(unsignedTransaction.to_json());
         //console.log("sendTransaction unsignedTransaction", jsonUnsignedTx);
         return [jsonUnsignedTx, selectedUtxos];
     }
 
-    async sendTransaction() {
-        var alert = waitingAlert("Preparing the transaction...");
-        const wallet = getWalletById(this.state.walletId);
-        const feeFloat = parseFloat(this.state.txFee);
-        const selectedAddresses = this.state.walletAddressList.filter((addr, id) => this.state.selectedAddresses[id]);
-        const [jsonUnsignedTx, selectedUtxos] = await this.getTransactionJson();
-        alert.close();
-
-        if (wallet.ergoPayOnly) {
-            const [txId, txReducedB64safe] = await getTxReducedB64Safe(jsonUnsignedTx, selectedUtxos);
-            var intervalId = setInterval(this.timer, 3000);
-            this.setState({
-                ergoPayTxId: txId,
-                ergoPayUnsignedTx: txReducedB64safe,
-                intervalId: intervalId,
-            })
-        } else {
-            const txBalance = await getUtxoBalanceForAddressList(jsonUnsignedTx.inputs, jsonUnsignedTx.outputs, getWalletAddressList(wallet));
-            const txBalanceReceiver = await getUtxoBalanceForAddressList(jsonUnsignedTx.inputs, jsonUnsignedTx.outputs, [this.state.sendToAddress]);
-            console.log("sendTransaction txBalance", txBalance, txBalanceReceiver);
-
-            var txSummaryHtml = "<div class='card m-1 p-1'><table class='txSummarry'><tbody>";
-            txSummaryHtml += "<thead><th colspan='2'>Sending to: &nbsp;" + formatLongString(this.state.sendToAddress, 10) + "</th></thead>";
-            txSummaryHtml += "<tr><td class='textSmall'>Amount</td><td>" + formatERGAmount(txBalanceReceiver.value) + "&nbsp;ERG</td></tr>";
-            txSummaryHtml += "<tr><td class='textSmall'>Fee</td><td>" + formatERGAmount(feeFloat * NANOERG_TO_ERG) + "&nbsp;ERG</td></tr>";
-            txSummaryHtml += "<tr><td class='textSmall'><b>Total</b></td><td><b>" + formatERGAmount(BigInt(-1) * txBalance.value) + "&nbsp;ERG</b></td></tr>";
-            txSummaryHtml += "</tbody></table>";
-            if (txBalance.tokens.length > 0) {
-                txSummaryHtml += "<table class='txSummarry'><tbody>";
-                txSummaryHtml += "<thead><th colspan='2'>Tokens</th></thead>";
-                for (const token of txBalance.tokens) {
-                    console.log("sendTransaction token.amount", token.name, token.amount)
-                    txSummaryHtml += "<tr><td class='textSmall'>" + token.name + "</td><td class='textSmall'>" + formatTokenAmount(BigInt(-1) * token.amount, token.decimals) + "</td></tr>";
-                }
-                txSummaryHtml += "</tbody></table></div>";
-            }
-
-            const password = await promptPassword("Sign transaction for<br/>" + wallet.name, txSummaryHtml, "Sign");
-            //console.log("sendTransaction password", password);
-            const mnemonic = decryptMnemonic(wallet.mnemonic, password);
-            if (mnemonic === null) {
-                return;
-            }
-            if (mnemonic === '' || mnemonic === undefined) {
-                errorAlert("Failed to decrypt Mnemonic", "Wrong password ?");
-                return;
-            }
-            const signingWallet = await getWalletForAddresses(mnemonic, selectedAddresses);
-            //console.log("signingWallet", signingWallet);
-            var signedTx = {};
-
-            try {
-                signedTx = JSONBigInt.parse(await signTransaction(jsonUnsignedTx, selectedUtxos, [], signingWallet));
-                console.log("signedTx", signedTx);
-            } catch (e) {
-                errorAlert("Failed to sign transaction", e);
-                return;
-            }
-            await sendTx(signedTx);
-            //await delay(3000);
-            this.state.setPage('transactions', this.state.walletId);
-        }
-    }
-
-    async openInTxBuilder() {
-        const jsonUnsignedTx = (await this.getTransactionJson())[0];
-        this.state.setPage('txbuilder', this.state.walletId, jsonUnsignedTx);
-    }
-
     render() {
         const wallet = getWalletById(this.state.walletId);
-        const expertMode = (localStorage.getItem('expertMode') === 'true') ?? false;
         return (
             <Fragment>
                 <div className='container card m-1 p-1 d-flex flex-column w-75'
@@ -397,13 +295,11 @@ export default class SendTransaction extends React.Component {
                                                         <Address addressContent={this.state.addressContentList[id]} used={true} />
                                                     </div>
                                                 )
-
                                             }
                                             <br />
                                         </div>
                                     </div>
                                     : <h6>Show wallet addresses</h6>}
-
                             </div>
                         </div>
                         <table>
@@ -445,7 +341,7 @@ export default class SendTransaction extends React.Component {
                                     this.state.tokens.map((tok, index) =>
                                         <tr key={index}>
                                             <td>
-                                                <TokenLabel name={tok.name} tokenId={tok.tokenId} decimals={tok.decimals}/>
+                                                <TokenLabel name={tok.name} tokenId={tok.tokenId} decimals={tok.decimals} />
                                             </td>
                                             <td>{formatTokenAmount(tok.amount, tok.decimals, false)}</td>
                                             <td>
@@ -509,48 +405,17 @@ export default class SendTransaction extends React.Component {
                         </div>
                         <br />
 
-                        {
-                            this.state.ergoPayTxId === "" ? null :
-                                <div className='d-flex flex-column'>
-                                    <div className='d-flex flex-row '>
-                                        Ergopay transaction
-                                        <ImageButton
-                                            id={"ergoTxInfo"}
-                                            color={"white"}
-                                            icon={"info"}
-                                            tips={"Ergopay transaction (EIP-19)"}
-                                        />
-                                    </div>
-                                    <div className='d-flex flex-row justify-content-center'>
-                                        <BigQRCode QRCodeTx={this.state.ergoPayUnsignedTx} />
-                                    </div>
-                                </div>
-                        }
-
-                        {this.state.ergoPayTxId === "" ?
-                            <div className='d-flex flex-row align-items-baseline justify-content-center'>
-                                <button className="btn btn-outline-info"
-                                    onClick={this.sendTransaction}
-                                    disabled={!(this.state.isValidSendToAddress
-                                        && this.state.isValidErgToSend
-                                        && this.state.isValidTokenAmountToSend.every(Boolean)
-                                        && this.state.isValidTxFee)}
-                                >{wallet.ergoPayOnly ? "Ergopay" : "Send transaction"}</button>&nbsp;
-                                {
-                                    expertMode ?
-
-                                        <button className="btn btn-outline-info"
-                                            onClick={this.openInTxBuilder}
-                                            disabled={!(this.state.isValidSendToAddress
-                                                && this.state.isValidErgToSend
-                                                && this.state.isValidTokenAmountToSend.every(Boolean)
-                                                && this.state.isValidTxFee)}
-                                        >Open in transaction builder</button>
-                                        : null
-                                }
-                            </div>
-                            : null
-                        }
+                        <SignTransaction walletId={this.state.walletId}
+                            isValidTx={(this.state.isValidSendToAddress
+                                && this.state.isValidErgToSend
+                                && this.state.isValidTokenAmountToSend.every(Boolean)
+                                && this.state.isValidTxFee)}
+                            sendToAddress={this.state.sendToAddress}
+                            signAddressList={this.state.walletAddressList.filter((addr, id) => this.state.selectedAddresses[id])}
+                            txFee={this.state.txFee}
+                            setPage={this.state.setPage}
+                            getTransactionJson={this.getTransactionJson}
+                        />
 
                     </div>
                 </div>

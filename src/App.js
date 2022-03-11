@@ -66,7 +66,8 @@ export default class App extends React.Component {
     };
 
     componentDidMount() {
-        if (!this.state.disclaimerAccepted) {
+        const debug = (localStorage.getItem('debug') === 'true') ?? false;
+        if (!this.state.disclaimerAccepted && !debug) {
             confirmAlert("Disclaimer", DISCLAIMER_TEXT, "Use SAFEW", "Refuse").then(res => {
                 if (res.isConfirmed) {
                     localStorage.setItem('disclaimerAccepted', "true");
