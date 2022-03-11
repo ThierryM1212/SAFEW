@@ -77,11 +77,11 @@ export default class TransactionList extends React.Component {
     componentDidUpdate(prevProps, prevState) {
         //console.log("TransactionList componentDidUpdate", prevProps, prevState, this.state)
         if (prevState.limit !== this.state.limit) {
-            this.updateTransactionList();
+            this.updateTransactionList(false);
         }
         if (prevState.transactionList.length > 0) {
             if (prevState.transactionList[0].numConfirmations !== this.state.transactionList[0].numConfirmations) {
-                this.updateTransactionList();
+                this.updateTransactionList(false);
             }
         }
         if (prevProps.numberOfTransactions !== this.props.numberOfTransactions) {

@@ -224,6 +224,7 @@ export default class MintTokens extends React.Component {
                                             className="form-control col-sm"
                                             onChange={e => this.setTokenMediaAddress(e.target.value)}
                                             value={this.state.tokenMediaAddress}
+                                            disabled={this.state.tokenMediaHash !== ''}
                                         />
                                     </div>
                                     <div className='d-flex flex-row align-items-center m-1 p-1'>
@@ -237,11 +238,7 @@ export default class MintTokens extends React.Component {
                                                         <FileUpload setUrl={this.setTokenMediaAddressUploaded} />
                                                     : null
                                             }
-                                            <a
-                                                href={this.state.tokenMediaAddressUploaded}
-                                                target='_blank'
-                                                rel='noopener noreferrer'
-                                            >
+                                            <a href={this.state.tokenMediaAddressUploaded} target='_blank' rel='noopener noreferrer'>
                                                 {this.state.tokenMediaAddressUploaded}
                                             </a>
                                         </div>
