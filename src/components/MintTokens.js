@@ -3,15 +3,18 @@ import { getWalletAddressList, getWalletById } from '../utils/walletUtils';
 import ImageButton from './ImageButton';
 import SelectWallet from './SelectWallet';
 import Select from 'react-select';
-import { ImageUpload, FileUpload } from 'react-ipfs-uploader';
+import { ImageUpload } from './ImageUpload';
+import { FileUpload } from './FileUpload';
 import SignTransaction from './SignTransaction';
 import JSONBigInt from 'json-bigint';
 import { createTxOutputs, createUnsignedTransaction, getUtxosForSelectedInputs } from '../ergo-related/ergolibUtils';
 import { isValidHttpUrl } from '../utils/utils';
+import { NTF_TYPES } from '../utils/constants';
+import { encodeStr } from '../ergo-related/serializer';
 
 const MAX_SIGNIFICANT_NUMBER_TOKEN = 19;
 const AMOUNT_SENT = "0.002";
-const TX_FEE = "0.0011";
+const TX_FEE = "0.002";
 
 const optionsType = [
     { value: 'Standard', label: 'Standard' },
@@ -134,8 +137,8 @@ export default class MintTokens extends React.Component {
     }
     isValidTransaction = () => {
         var isValid = true;
-        if (this.state.tokenName.length < 1) { 
-            isValid = false; 
+        if (this.state.tokenName.length < 1) {
+            isValid = false;
         }
         if (this.state.tokenType !== 'Standard') {
             if (!isValidHttpUrl(this.state.tokenMediaAddress)) {
@@ -156,15 +159,37 @@ export default class MintTokens extends React.Component {
 
         //console.log("sendTransaction", amountToSendFloat, feeFloat, wallet);
         var outputCandidates = await createTxOutputs(selectedUtxos, wallet.changeAddress, wallet.changeAddress,
-            amountToSendFloat, feeFloat, [], [], { 
-                amount: this.state.tokenAmount, 
-                name: this.state.tokenName, 
-                description: this.state.tokenDescription, 
-                decimals: parseInt(this.state.tokenDecimals) 
-            });
+            amountToSendFloat, feeFloat, [], [], {
+            amount: this.state.tokenAmount,
+            name: this.state.tokenName,
+            description: this.state.tokenDescription,
+            decimals: parseInt(this.state.tokenDecimals)
+        });
 
         const unsignedTransaction = await createUnsignedTransaction(selectedUtxos, outputCandidates);
-        const jsonUnsignedTx = JSONBigInt.parse(unsignedTransaction.to_json());
+        var jsonUnsignedTx = JSONBigInt.parse(unsignedTransaction.to_json());
+        const tokenType = this.state.tokenType;
+        if (tokenType !== 'Standard') { // add NFT type, hash, and url
+            const input0BoxId = jsonUnsignedTx.inputs[0].boxId ?? "";
+            for (const i in jsonUnsignedTx.outputs) {
+                console.log("output", output);
+                var output = jsonUnsignedTx.outputs[i];
+                if (Object.keys(output).includes("assets")
+                    && Array.isArray(output.assets)
+                    && Object.keys(output).includes("additionalRegisters")) {
+                    const outputTokenList = output.assets.map(tok => tok.tokenId);
+                    if (outputTokenList.includes(input0BoxId)) {
+                        var register = output.additionalRegisters;
+                        register["R7"] = NTF_TYPES[tokenType];
+                        register["R8"] = await encodeStr(this.state.tokenMediaHash);
+                        register["R9"] = await encodeStr(this.state.tokenMediaAddress);
+                        output.additionalRegisters = register;
+                        jsonUnsignedTx.outputs[i] = output;
+                    }
+                }
+            }
+        }
+
         //console.log("sendTransaction unsignedTransaction", jsonUnsignedTx);
         return [jsonUnsignedTx, selectedUtxos];
     }
@@ -280,9 +305,9 @@ export default class MintTokens extends React.Component {
                                             {
                                                 this.state.tokenMediaAddressUploaded === '' ?
                                                     this.state.tokenType === "Picture" ?
-                                                        <ImageUpload setUrl={this.setTokenMediaAddressUploaded} />
+                                                        <ImageUpload setUrl={this.setTokenMediaAddressUploaded} setHash={this.setTokenMediaHash} />
                                                         :
-                                                        <FileUpload setUrl={this.setTokenMediaAddressUploaded} />
+                                                        <FileUpload setUrl={this.setTokenMediaAddressUploaded} setHash={this.setTokenMediaHash} />
                                                     : null
                                             }
                                             <a href={this.state.tokenMediaAddressUploaded} target='_blank' rel='noopener noreferrer'>

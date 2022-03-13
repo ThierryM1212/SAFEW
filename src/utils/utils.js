@@ -35,4 +35,7 @@ export function isValidHttpUrl(string) {
   
     return url.protocol === "http:" || url.protocol === "https:";
   }
-  
+
+export function getKeyByValue(object, value) {
+    return Object.keys(object).find(key => object[key] === value);
+  }

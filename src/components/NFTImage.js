@@ -1,39 +1,58 @@
 import React, { Fragment } from 'react';
 import { getTokenBox } from '../ergo-related/explorer';
 import { decodeString } from '../ergo-related/serializer';
+import { displayNFT } from '../utils/Alerts';
+import { NTF_TYPES } from '../utils/constants';
+import { getKeyByValue } from '../utils/utils';
+import ImageButton from './ImageButton';
 
 export default class NFTImage extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
             tokenId: props.tokenId,
-            imageURL: '',
+            mediaURL: '',
+            mediaType: '',
+            mediaDesc: '',
+            mediaAmount: 0,
+            mediaName: '',
+            mediaTokenId: '',
+
         };
-        //this.setRingAmount = this.setRingAmount.bind(this);
     }
 
     async componentDidMount() {
         var tokenBox = {};
         try {
             tokenBox = await getTokenBox(this.state.tokenId);
-        } catch(e){
+            console.log("tokenBox", tokenBox);
+        } catch (e) {
             // console.log(e);
         }
-        
+        const ipfsPrefix = 'ipfs://';
+
         if (Object.keys(tokenBox).includes("additionalRegisters")) {
             if (Object.keys(tokenBox.additionalRegisters).includes("R7")) {
-                if (tokenBox.additionalRegisters.R7 === "0e020101") { // NFT Image
+                if (Object.values(NTF_TYPES).includes(tokenBox.additionalRegisters.R7)) {
+                    const type = getKeyByValue(NTF_TYPES, tokenBox.additionalRegisters.R7);
+                    console.log("NFTImage componentDidMount", type)
                     if (Object.keys(tokenBox.additionalRegisters).includes("R9")) {
-                        console.log("NFTImage componentDidMount", tokenBox);
-                        console.log("NFTImage R9", await decodeString(tokenBox.additionalRegisters.R9))
-                        var NFTImageURL = (await decodeString(tokenBox.additionalRegisters.R9)) ?? '';
-                        const ipfsPrefix = 'ipfs://';
-                        if (NFTImageURL.startsWith(ipfsPrefix)) {
-                            NFTImageURL = NFTImageURL.replace(ipfsPrefix, 'https://cloudflare-ipfs.com/ipfs/');
+                        var NFTURL = (await decodeString(tokenBox.additionalRegisters.R9)) ?? '';
+                        if (NFTURL.startsWith(ipfsPrefix)) {
+                            NFTURL = NFTURL.replace(ipfsPrefix, 'https://cloudflare-ipfs.com/ipfs/');
                         }
-                        if (NFTImageURL.startsWith('https://')) {
-                            this.setState({ imageURL: NFTImageURL });
+                        if (NFTURL.startsWith('https://')) {
+                            this.setState({ mediaURL: NFTURL, mediaType: type });
                         }
+                    }
+                    if (Object.keys(tokenBox.additionalRegisters).includes("R5")) {
+                        var NFTdesc = (await decodeString(tokenBox.additionalRegisters.R5)) ?? '';
+                        this.setState({
+                            mediaDesc: NFTdesc,
+                            mediaAmount: tokenBox.assets[0].amount,
+                            mediaName: tokenBox.assets[0].name,
+                            mediaTokenId: tokenBox.assets[0].tokenId
+                        });
                     }
                 }
             }
@@ -44,11 +63,20 @@ export default class NFTImage extends React.Component {
         return (
             <Fragment>
                 {
-                    this.state.imageURL !== '' ?
+                    this.state.mediaURL !== '' ?
+
                         <div onClick={() => {
-                            window.open(this.state.imageURL, '_blank').focus();
-                        }} style={{cursor: 'pointer'}}>
-                            <img src={this.state.imageURL} alt='NFT image' height={50} width={50} />
+                            //window.open(this.state.mediaURL, '_blank').focus();
+                            displayNFT(this.state.mediaType, this.state.mediaName, this.state.mediaDesc, this.state.mediaURL, this.state.mediaAmount, this.state.mediaTokenId);
+                        }} style={{ cursor: 'pointer' }}>
+                            {this.state.mediaType === 'Picture' ? <img src={this.state.mediaURL} alt='NFT image' height={50} width={50} /> : null}
+                            {this.state.mediaType === 'Video' ? <video src={this.state.mediaURL} alt='NFT video' height={70} width={130} /> : null}
+                            {this.state.mediaType === 'Audio' ? 
+                            <ImageButton id={"audioNFT" + this.state.mediaTokenId}
+                                color={"blue"}
+                                icon={"volume_up"}
+                                tips={"Details"}
+                            /> : null}
                         </div>
                         : null
                 }

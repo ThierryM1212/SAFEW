@@ -37,6 +37,12 @@ export const VERIFIED_TOKENS = {
     [TOKENID_NETA]: ['NETA', "token-neta.svg", 6],
   }
 
+export const NTF_TYPES = {
+    'Picture': "0e020101",
+    'Audio': "0e020102",
+    'Video': "0e020103",
+}
+
 // wallet version to handle upgrades (integer)
 export const WALLET_VERSION = 1;
 
