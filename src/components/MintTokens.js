@@ -1,11 +1,17 @@
 import React, { Fragment } from 'react';
-import { getWalletById } from '../utils/walletUtils';
+import { getWalletAddressList, getWalletById } from '../utils/walletUtils';
 import ImageButton from './ImageButton';
 import SelectWallet from './SelectWallet';
 import Select from 'react-select';
 import { ImageUpload, FileUpload } from 'react-ipfs-uploader';
+import SignTransaction from './SignTransaction';
+import JSONBigInt from 'json-bigint';
+import { createTxOutputs, createUnsignedTransaction, getUtxosForSelectedInputs } from '../ergo-related/ergolibUtils';
+import { isValidHttpUrl } from '../utils/utils';
 
 const MAX_SIGNIFICANT_NUMBER_TOKEN = 19;
+const AMOUNT_SENT = "0.002";
+const TX_FEE = "0.0011";
 
 const optionsType = [
     { value: 'Standard', label: 'Standard' },
@@ -34,6 +40,7 @@ export default class MintTokens extends React.Component {
             tokenMediaAddressUploaded: '',
             selectedWalletId: 0,
             optionsDecimals: optionsDecimals,
+            isValidTokenUrl: false,
         };
         this.setWallet = this.setWallet.bind(this);
         this.setTokenName = this.setTokenName.bind(this);
@@ -45,10 +52,14 @@ export default class MintTokens extends React.Component {
         this.setTokenMediaAddress = this.setTokenMediaAddress.bind(this);
         this.isValidTokenAmount = this.isValidTokenAmount.bind(this);
         this.validateAmountStrInt = this.validateAmountStrInt.bind(this);
+        this.setIsValidTokenUrl = this.setIsValidTokenUrl.bind(this);
+        this.isValidTransaction = this.isValidTransaction.bind(this);
+        this.getTransactionJson = this.getTransactionJson.bind(this);
     }
     setWallet = (walletId) => { this.setState({ selectedWalletId: walletId }); };
     setTokenName = (name) => { this.setState({ tokenName: name }); };
     setTokenDescription = (desc) => { this.setState({ tokenDescription: desc }); };
+    setIsValidTokenUrl = (isValid) => { this.setState({ isValidTokenUrl: isValid }); };
     setTokenAmount = (amount) => {
         if (this.isValidTokenAmount(amount)) {
             this.setState({
@@ -121,15 +132,51 @@ export default class MintTokens extends React.Component {
         }
         return false;
     }
+    isValidTransaction = () => {
+        var isValid = true;
+        if (this.state.tokenName.length < 1) { 
+            isValid = false; 
+        }
+        if (this.state.tokenType !== 'Standard') {
+            if (!isValidHttpUrl(this.state.tokenMediaAddress)) {
+                isValid = false;
+            }
+        }
+        return isValid;
+    }
+
+    async getTransactionJson() {
+        const amountToSendFloat = parseFloat(AMOUNT_SENT);
+        const feeFloat = parseFloat(TX_FEE);
+        const totalAmountToSendFloat = amountToSendFloat + feeFloat;
+        const wallet = getWalletById(this.state.selectedWalletId);
+        const selectedAddresses = getWalletAddressList(wallet);
+        const selectedUtxos = await getUtxosForSelectedInputs(selectedAddresses,
+            totalAmountToSendFloat, [], []);
+
+        //console.log("sendTransaction", amountToSendFloat, feeFloat, wallet);
+        var outputCandidates = await createTxOutputs(selectedUtxos, wallet.changeAddress, wallet.changeAddress,
+            amountToSendFloat, feeFloat, [], [], { 
+                amount: this.state.tokenAmount, 
+                name: this.state.tokenName, 
+                description: this.state.tokenDescription, 
+                decimals: parseInt(this.state.tokenDecimals) 
+            });
+
+        const unsignedTransaction = await createUnsignedTransaction(selectedUtxos, outputCandidates);
+        const jsonUnsignedTx = JSONBigInt.parse(unsignedTransaction.to_json());
+        //console.log("sendTransaction unsignedTransaction", jsonUnsignedTx);
+        return [jsonUnsignedTx, selectedUtxos];
+    }
 
     render() {
         const selectedWallet = getWalletById(this.state.selectedWalletId);
+        const walletAddressList = getWalletAddressList(selectedWallet);
 
         var appTips = "The application is intended mint tokens followin EIP-004 format.<br />";
         appTips += "Images, sounds and videos tokens needs to have 0 decimals.<br />";
 
         return (
-
             <Fragment >
                 <div className="w-100 container">
                     <div className="d-flex flex-row justify-content-center align-items-center m-1 p-1">
@@ -224,7 +271,7 @@ export default class MintTokens extends React.Component {
                                             className="form-control col-sm"
                                             onChange={e => this.setTokenMediaAddress(e.target.value)}
                                             value={this.state.tokenMediaAddress}
-                                            disabled={this.state.tokenMediaHash !== ''}
+                                            disabled={this.state.tokenMediaHash !== '' || this.state.tokenMediaAddressUploaded !== ''}
                                         />
                                     </div>
                                     <div className='d-flex flex-row align-items-center m-1 p-1'>
@@ -246,6 +293,18 @@ export default class MintTokens extends React.Component {
                                 </Fragment>
                         }
 
+                    </div>
+                </div>
+                <div className="w-100 container">
+                    <div className="card p-1 m-2 w-100">
+                        <SignTransaction walletId={this.state.selectedWalletId}
+                            isValidTx={this.isValidTransaction()}
+                            sendToAddress={selectedWallet.changeAddress}
+                            signAddressList={walletAddressList}
+                            txFee={"0.0011"}
+                            setPage={this.state.setPage}
+                            getTransactionJson={this.getTransactionJson}
+                        />
                     </div>
                 </div>
             </Fragment>

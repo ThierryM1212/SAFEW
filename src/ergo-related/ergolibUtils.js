@@ -135,11 +135,11 @@ export async function getUtxosForSelectedInputs(inputAddressList, ergAmount, tok
     while (!hasEnoughSelectedTokens(selectedUtxos, tokens, tokensAmountToSend) && i < 1000) {
         console.log("getUtxosForSelectedInputs1", selectedUtxos, unSelectedUtxos);
         var boxFound = false, boxIndex = -1;
-        for (const j in tokens) { 
+        for (const j in tokens) {
             console.log("getUtxosForSelectedInputs12", tokensAmountToSend[j]);
             if (tokenFloatToAmount(tokensAmountToSend[j]) > BigInt(0) && !boxFound) {
                 console.log("getUtxosForSelectedInputs2", tokens[j].tokenId, tokensAmountToSend[j], boxFound, unSelectedUtxos);
-                boxIndex = unSelectedUtxos.findIndex(utxo => utxo.assets.map(tok=>tok.tokenId).includes(tokens[j].tokenId))
+                boxIndex = unSelectedUtxos.findIndex(utxo => utxo.assets.map(tok => tok.tokenId).includes(tokens[j].tokenId))
                 boxFound = boxIndex > -1;
                 console.log("getUtxosForSelectedInputs3 boxIndex", boxIndex);
             }
@@ -150,7 +150,7 @@ export async function getUtxosForSelectedInputs(inputAddressList, ergAmount, tok
         i++
     }
     // Select boxes until we meet Erg requirement
-    while (BigInt(Math.round(ergAmount*NANOERG_TO_ERG)) > getUtxosListValue(selectedUtxos) && unSelectedUtxos.length > 0) {
+    while (BigInt(Math.round(ergAmount * NANOERG_TO_ERG)) > getUtxosListValue(selectedUtxos) && unSelectedUtxos.length > 0) {
         selectedUtxos.push(unSelectedUtxos.shift());
     }
     return selectedUtxos;
@@ -163,7 +163,7 @@ export async function getUtxosForSelectedInputs(inputAddressList, ergAmount, tok
 // requiredTokenAmounts: Array of token amount (float) synchronized with requiredTokens
 function hasEnoughSelectedTokens(utxos, requiredTokens, requiredTokenAmounts) {
     const utxosTokens = getTokenListFromUtxos(utxos);
-    const fixedRequiredTokenAmounts = requiredTokenAmounts.map((amount, id) => Math.round(parseFloat(amount.toString()) * Math.pow(10,requiredTokens[id].decimals)))
+    const fixedRequiredTokenAmounts = requiredTokenAmounts.map((amount, id) => Math.round(parseFloat(amount.toString()) * Math.pow(10, requiredTokens[id].decimals)))
     for (const i in requiredTokens) {
         if (fixedRequiredTokenAmounts[i] > 0) {
             if (!Object.keys(utxosTokens).includes(requiredTokens[i].tokenId)) {
@@ -185,10 +185,10 @@ async function getBoxValueAmount(valueInt) {
     return (await ergolib).BoxValue.from_i64((await ergolib).I64.from_str(valueInt.toString()));
 }
 
-export async function createTxOutputs(selectedUtxos, sendToAddress, changeAddress, amountToSendFloat, feeFloat, tokens, tokenAmountToSend) {
+export async function createTxOutputs(selectedUtxos, sendToAddress, changeAddress, amountToSendFloat, feeFloat, tokens, tokenAmountToSend, tokenToMint = {}) {
     const creationHeight = await currentHeight() - 20; // allow some lag between explorer and node
     const amountNano = BigInt(Math.round((amountToSendFloat * NANOERG_TO_ERG)));
-    const feeNano =  BigInt(Math.round((feeFloat * NANOERG_TO_ERG)));
+    const feeNano = BigInt(Math.round((feeFloat * NANOERG_TO_ERG)));
     console.log("createTxOutputs", amountNano, feeNano);
     const outputCandidates = (await ergolib).ErgoBoxCandidates.empty();
     // prepare the payment box
@@ -196,13 +196,21 @@ export async function createTxOutputs(selectedUtxos, sendToAddress, changeAddres
         await getBoxValueAmount(amountNano),
         (await ergolib).Contract.pay_to_address((await ergolib).Address.from_base58(sendToAddress)),
         creationHeight);
-    for(const i in tokens){
-        if(tokenAmountToSend[i] > 0){
+    for (const i in tokens) {
+        if (tokenAmountToSend[i] > 0) {
             console.log("createTxOutputs tokenAmountToSend", tokenAmountToSend[i])
             paymentBox.add_token((await ergolib).TokenId.from_str(tokens[i].tokenId),
                 (await ergolib).TokenAmount.from_i64((await ergolib).I64.from_str(tokenAmountToSend[i].toString())
-            ));
+                ));
         }
+    }
+    if (Object.keys(tokenToMint).includes("amount")) { // mint token
+        // { amount: "12365.56", name: "my_token", description: "my token is great", decimals: 2 }
+        const tokenAmountAdjusted = BigInt(tokenToMint.amount * Math.pow(10, tokenToMint.decimals)).toString();
+        const token = new (await ergolib).Token(
+            (await ergolib).TokenId.from_box_id((await ergolib).BoxId.from_str(selectedUtxos[0].boxId)),
+            (await ergolib).TokenAmount.from_i64((await ergolib).I64.from_str(tokenAmountAdjusted)));
+        paymentBox.mint_token(token, tokenToMint.name, tokenToMint.description, tokenToMint.decimals);
     }
     outputCandidates.add(paymentBox.build());
 
@@ -212,19 +220,19 @@ export async function createTxOutputs(selectedUtxos, sendToAddress, changeAddres
 
     // prepare the change box
     const changeAmountNano = getUtxosListValue(selectedUtxos) - amountNano - feeNano;
-    if (changeAmountNano > 0){
-        console.log("createTxOutputs changeAmountNano", getUtxosListValue(selectedUtxos) , amountNano, feeNano, changeAmountNano);
+    if (changeAmountNano > 0) {
+        console.log("createTxOutputs changeAmountNano", getUtxosListValue(selectedUtxos), amountNano, feeNano, changeAmountNano);
         var changeBox = new (await ergolib).ErgoBoxCandidateBuilder(
             await getBoxValueAmount(changeAmountNano),
             (await ergolib).Contract.pay_to_address((await ergolib).Address.from_base58(changeAddress)),
             creationHeight);
         const inputsTokens = getTokenListFromUtxos(selectedUtxos);
-        for(const tokId of Object.keys(inputsTokens)){
-            const missingOutputToken = inputsTokens[tokId] - tokenAmountToSend[tokens.findIndex(tok => tok.tokenId === tokId)];
+        for (const tokId of Object.keys(inputsTokens)) {
+            const missingOutputToken = inputsTokens[tokId] - (tokenAmountToSend[tokens.findIndex(tok => tok.tokenId === tokId)] ?? BigInt(0));
             if (missingOutputToken > 0) {
                 changeBox.add_token((await ergolib).TokenId.from_str(tokId),
                     (await ergolib).TokenAmount.from_i64((await ergolib).I64.from_str(missingOutputToken.toString())
-                ));
+                    ));
             }
         }
         outputCandidates.add(changeBox.build());
@@ -235,7 +243,7 @@ export async function createTxOutputs(selectedUtxos, sendToAddress, changeAddres
 }
 
 export async function createUnsignedTransaction(selectedUtxos, outputCandidates, dataInputs = []) {
-    console.log("createUnsignedTransaction selectedUtxos",selectedUtxos);
+    console.log("createUnsignedTransaction selectedUtxos", selectedUtxos);
     const inputIds = selectedUtxos.map(utxo => utxo.boxId);
     const unsignedInputArray = inputIds.map((await ergolib).BoxId.from_str).map((await ergolib).UnsignedInput.from_box_id)
     const unsignedInputs = new (await ergolib).UnsignedInputs();
@@ -245,7 +253,7 @@ export async function createUnsignedTransaction(selectedUtxos, outputCandidates,
         data_inputs.add(new (await ergolib).DataInput(dataInputBox.boxId));
     }
     const unsignedTx = new (await ergolib).UnsignedTransaction(unsignedInputs, data_inputs, outputCandidates);
-    console.log("createUnsignedTransaction unsignedTx",unsignedTx.to_json());
+    console.log("createUnsignedTransaction unsignedTx", unsignedTx.to_json());
     return unsignedTx;
 }
 
@@ -257,7 +265,7 @@ export async function getTxReducedB64Safe(json, inputs, dataInputs = []) {
     // Reduced transaction is encoded with Base64
     const txReducedBase64 = byteArrayToBase64(reducedTx.sigma_serialize_bytes());
     console.log("getTxReducedB64Safe2", json, inputs, dataInputs);
-    const ergoPayTx = "ergopay:"+txReducedBase64.replace(/\//g, '_').replace(/\+/g, '-');
+    const ergoPayTx = "ergopay:" + txReducedBase64.replace(/\//g, '_').replace(/\+/g, '-');
     console.log("getTxReducedB64Safe3", json, inputs, dataInputs);
     // split by chunk of 1000 char to generates the QR codes
     return [txId, ergoPayTx.match(/.{1,1000}/g)];
@@ -270,7 +278,7 @@ async function getTxReduced(json, inputs, dataInputs) {
     const inputBoxes = (await ergolib).ErgoBoxes.from_boxes_json(inputs);
     const inputDataBoxes = (await ergolib).ErgoBoxes.from_boxes_json(dataInputs);
     const ctx = await getErgoStateContext();
-    return [unsignedTx.id().to_str(), (await ergolib).ReducedTransaction.from_unsigned_tx(unsignedTx,inputBoxes,inputDataBoxes,ctx)];
+    return [unsignedTx.id().to_str(), (await ergolib).ReducedTransaction.from_unsigned_tx(unsignedTx, inputBoxes, inputDataBoxes, ctx)];
 }
 
 export async function getUnsignedTxFromJson(txObject) {

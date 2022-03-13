@@ -23,3 +23,16 @@ export function hexToRgbA(hex){
     }
     throw new Error('Bad Hex');
 }
+
+export function isValidHttpUrl(string) {
+    let url;
+    
+    try {
+      url = new URL(string);
+    } catch (_) {
+      return false;  
+    }
+  
+    return url.protocol === "http:" || url.protocol === "https:";
+  }
+  

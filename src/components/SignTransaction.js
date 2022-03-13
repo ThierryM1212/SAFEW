@@ -107,7 +107,7 @@ export default class SignTransaction extends React.Component {
                 txSummaryHtml += "<thead><th colspan='2'>Token balance for wallet</th></thead>";
                 for (const token of txBalance.tokens) {
                     //console.log("sendTransaction token.amount", token.name, token.amount)
-                    txSummaryHtml += "<tr><td class='textSmall'>" + token.name + "</td><td class='textSmall'>" + formatTokenAmount(BigInt(-1) * token.amount, token.decimals) + "</td></tr>";
+                    txSummaryHtml += "<tr><td class='textSmall'>" + token.name + "</td><td class='textSmall'>" + formatTokenAmount(token.amount, token.decimals) + "</td></tr>";
                 }
                 txSummaryHtml += "</tbody></table></div>";
             }
@@ -192,8 +192,6 @@ export default class SignTransaction extends React.Component {
                             }
                         </div>
                 }
-
-
             </Fragment>
         )
     }

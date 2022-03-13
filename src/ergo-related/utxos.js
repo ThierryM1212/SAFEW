@@ -1,6 +1,6 @@
 import { VERIFIED_TOKENS } from "../utils/constants";
 import { boxByBoxId, currentHeight, getTokenBoxV1, unspentBoxesForV1 } from "./explorer";
-import { encodeContract, ergoTreeToAddress } from "./serializer";
+import { decodeString, encodeContract, ergoTreeToAddress } from "./serializer";
 
 /* global BigInt */
 
@@ -93,7 +93,7 @@ export async function enrichUtxos(utxos, addExtension = false) {
             if (!("address" in utxos[i])) {
                 newBox["address"] = addr;
             }
-        } catch(e) {
+        } catch (e) {
             console.log(e)
         }
         if (addExtension && !Object.keys(newBox).includes("extension")) {
@@ -145,7 +145,7 @@ export function parseUnsignedTx(json) {
 }
 
 function parseSignedInputSwagger(input) {
-    console.log("parseSignedInputSwagger",input);
+    console.log("parseSignedInputSwagger", input);
     return {
         boxId: input.id,
         spendingProof: input.spendingProof,
@@ -154,7 +154,6 @@ function parseSignedInputSwagger(input) {
 function parseSignedInputsSwagger(inputs) {
     return inputs.map(input => parseSignedInputSwagger(input));
 }
-
 
 export function parseSignedTx(tx) {
     var res = {};
@@ -207,7 +206,7 @@ export function getTokenListFromUtxos(utxos) {
 
 export function enrichTokenInfoFromUtxos(utxos, tokInfo) {
     //[TOKENID_SIGUSD]: ['SigUSD', "token-sigusd.svg", 2],
-    var tokenInfo = {...tokInfo};
+    var tokenInfo = { ...tokInfo };
     for (const i in utxos) {
         for (const j in utxos[i].assets) {
             if (!Object.keys(tokenInfo).includes()) {
@@ -283,7 +282,7 @@ function isDict(v) {
     return typeof v === 'object' && v !== null && !(v instanceof Array) && !(v instanceof Date);
 }
 
-async function getUtxoContentForAddressList(utxos, addressList) {
+async function getUtxoContentForAddressList(utxos, addressList, input0BoxId = "") {
     var value = BigInt(0), tokens = [];
     //console.log("getUtxoContentForAddressList_0", utxos, addressList)
     for (var utxo of utxos) {
@@ -312,8 +311,20 @@ async function getUtxoContentForAddressList(utxos, addressList) {
             if (!(Array.isArray(utxo.assets))) {
                 utxo.assets = [];
             }
-            for (const token of utxo.assets) {
-                //console.log("getUtxoContentForAddressList_4")
+            for (var token of utxo.assets) {
+                console.log("getUtxoContentForAddressList_4", token.name)
+                if (token.tokenId === input0BoxId && (token.name === null || token.name === undefined)) { //minted token
+                    console.log("getUtxoContentForAddressList_4 minted token", )
+                    if(Object.keys(utxo).includes("additionalRegisters")) {
+                        if(Object.keys(utxo.additionalRegisters).includes("R4")){
+                            token.name = await decodeString(utxo.additionalRegisters.R4);
+                        }
+                        if(Object.keys(utxo.additionalRegisters).includes("R6")){
+                            token.decimals = await decodeString(utxo.additionalRegisters.R6);
+                        }
+                    }
+                }
+
                 if (tokens.map(tok => tok.tokenId).includes(token.tokenId)) {
                     const index = tokens.findIndex(t => t.tokenId === token.tokenId);
                     const tokAmount = BigInt(token.amount.toString());
@@ -328,47 +339,15 @@ async function getUtxoContentForAddressList(utxos, addressList) {
     return { value: value, tokens: tokens };
 }
 
-function getUtxoContentForAddressList2(utxos, addressList) {
-    //console.log("getUtxoContentForAddressList_20", utxos, addressList)
-    var value = BigInt(0), tokens = [];
-    for (var utxo of utxos) {
-        //console.log("getUtxoContentForAddressList_21", utxo)
-        if (addressList.includes(utxo.address)) {
-            //console.log("getUtxoContentForAddressList_22", value)
-            value = value + BigInt(utxo.value.toString());
-            for (const token of utxo.assets) {
-                const index = tokens.findIndex(t => t.tokenId === token.tokenId);
-                //console.log("getUtxoContentForAddressList_23", index)
-                if (index >= 0) {
-                    //console.log("getUtxoContentForAddressList_24", token, tokens[index].amount)
-                    const tokAmount = BigInt(token.amount.toString());
-                    tokens[index].amount = BigInt(tokens[index].amount) + tokAmount;
-                    //console.log("getUtxoContentForAddressList_25", token, tokens[index].amount, tokAmount)
-                } else {
-                    //console.log("getUtxoContentForAddressList_26", token)
-                    tokens.push({ ...token });
-                }
-            }
-        }
-    }
-    //console.log("getUtxoContentForAddressList_27", { value: value, tokens: tokens })
-    return { value: value, tokens: tokens };
-}
-
-
 export async function getUtxoBalanceForAddressList(inputs, outputs, addressList) {
     //console.log("getUtxoBalanceForAddressList params", inputs, outputs, addressList);
     const inputBal = await getUtxoContentForAddressList(inputs, addressList);
-    const outputBal = await getUtxoContentForAddressList(outputs, addressList);
+    var input0BoxId = "";
+    if (inputs && inputs[0] && inputs[0].boxId) {
+        input0BoxId = inputs[0].boxId ?? "";
+    }
+    const outputBal = await getUtxoContentForAddressList(outputs, addressList, input0BoxId);
     //console.log("getUtxoBalanceForAddressList", inputBal, outputBal, addressList);
-    return buildBalance(inputBal, outputBal);
-}
-
-export function getUtxoBalanceForAddressList2(inputs, outputs, addressList) {
-    //console.log("getUtxoBalanceForAddressList2 params", inputs, outputs, addressList);
-    const inputBal = getUtxoContentForAddressList2(inputs, addressList);
-    const outputBal = getUtxoContentForAddressList2(outputs, addressList);
-    //console.log("getUtxoBalanceForAddressList2", inputBal, outputBal, addressList);
     return buildBalance(inputBal, outputBal);
 }
 

@@ -60,7 +60,9 @@ export default function TransactionSummary(props) {
                                             <ImageButtonLabeled id="token-diff" color="green" icon="verified" label="OK" />
                                             : (value[0] > value[1]) ?
                                                 <ImageButtonLabeled id="token-diff" color="orange" icon="warning_amber" label="Tokens burned in output" />
-                                                : <ImageButtonLabeled id="token-diff" color="orange" icon="error_outline" label="Not enough token in input" />
+                                                : (tokenId === props.json.inputs[0].boxId) ?
+                                   <ImageButtonLabeled id="token-diff" color="green" icon="add" label="Token minted in output" />
+                                : <ImageButtonLabeled id="token-diff" color="orange" icon="error_outline" label="Not enough token in input" />
                                     }
                                 </td>
                             </tr>
