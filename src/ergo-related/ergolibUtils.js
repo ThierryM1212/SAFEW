@@ -113,7 +113,7 @@ export async function testAddrGen(addr) {
 export async function isValidErgAddress(address) {
     try {
         const addrBytes = (await ergolib).Address.from_base58(address).to_bytes();
-        console.log("isValidErgAddress addrBytes", addrBytes);
+        //console.log("isValidErgAddress addrBytes", addrBytes);
         return true;
     } catch (e) {
         console.log("isValidErgAddress catch", e);
@@ -133,15 +133,15 @@ export async function getUtxosForSelectedInputs(inputAddressList, ergAmount, tok
     // Select boxes to meet tokens selected
     var selectedUtxos = [], unSelectedUtxos = utxos, i = 0;
     while (!hasEnoughSelectedTokens(selectedUtxos, tokens, tokensAmountToSend) && i < 1000) {
-        console.log("getUtxosForSelectedInputs1", selectedUtxos, unSelectedUtxos);
+        //console.log("getUtxosForSelectedInputs1", selectedUtxos, unSelectedUtxos);
         var boxFound = false, boxIndex = -1;
         for (const j in tokens) {
-            console.log("getUtxosForSelectedInputs12", tokensAmountToSend[j]);
-            if (tokenFloatToAmount(tokensAmountToSend[j]) > BigInt(0) && !boxFound) {
-                console.log("getUtxosForSelectedInputs2", tokens[j].tokenId, tokensAmountToSend[j], boxFound, unSelectedUtxos);
+            //console.log("getUtxosForSelectedInputs12", tokens[j].tokenId, tokensAmountToSend[j]);
+            if (tokenFloatToAmount(tokensAmountToSend[j], tokens[j].decimals) > BigInt(0) && !boxFound) {
+                //console.log("getUtxosForSelectedInputs2", boxFound, unSelectedUtxos);
                 boxIndex = unSelectedUtxos.findIndex(utxo => utxo.assets.map(tok => tok.tokenId).includes(tokens[j].tokenId))
                 boxFound = boxIndex > -1;
-                console.log("getUtxosForSelectedInputs3 boxIndex", boxIndex);
+                //console.log("getUtxosForSelectedInputs3 boxIndex", boxIndex);
             }
         }
         if (boxIndex > -1) {
@@ -149,8 +149,8 @@ export async function getUtxosForSelectedInputs(inputAddressList, ergAmount, tok
         }
         i++
     }
-    // Select boxes until we meet Erg requirement
-    while (BigInt(Math.round(ergAmount * NANOERG_TO_ERG)) > getUtxosListValue(selectedUtxos) && unSelectedUtxos.length > 0) {
+    // Select boxes until we meet Erg requirement + 0.001 for the minimal change box value
+    while (BigInt(Math.round((ergAmount + 0.001) * NANOERG_TO_ERG)) >= getUtxosListValue(selectedUtxos) && unSelectedUtxos.length > 0) {
         selectedUtxos.push(unSelectedUtxos.shift());
     }
     return selectedUtxos;
@@ -185,61 +185,62 @@ async function getBoxValueAmount(valueInt) {
     return (await ergolib).BoxValue.from_i64((await ergolib).I64.from_str(valueInt.toString()));
 }
 
-export async function createTxOutputs(selectedUtxos, sendToAddress, changeAddress, amountToSendFloat, feeFloat, tokens, tokenAmountToSend, tokenToMint = {}) {
+export async function createTxOutputs(selectedUtxos, sendToAddress, changeAddress, amountToSendFloat, feeFloat, tokens, tokenAmountToSend, tokenToMint = {}, burnMode = false) {
     const creationHeight = await currentHeight() - 20; // allow some lag between explorer and node
-    const amountNano = BigInt(Math.round((amountToSendFloat * NANOERG_TO_ERG)));
     const feeNano = BigInt(Math.round((feeFloat * NANOERG_TO_ERG)));
-    console.log("createTxOutputs", amountNano, feeNano);
+    var amountNano = BigInt(Math.round((amountToSendFloat * NANOERG_TO_ERG)));
+    //console.log("createTxOutputs", amountNano, feeNano);
     const outputCandidates = (await ergolib).ErgoBoxCandidates.empty();
-    // prepare the payment box
-    var paymentBox = new (await ergolib).ErgoBoxCandidateBuilder(
-        await getBoxValueAmount(amountNano),
-        (await ergolib).Contract.pay_to_address((await ergolib).Address.from_base58(sendToAddress)),
-        creationHeight);
-    for (const i in tokens) {
-        if (tokenAmountToSend[i] > 0) {
-            console.log("createTxOutputs tokenAmountToSend", tokenAmountToSend[i])
-            paymentBox.add_token((await ergolib).TokenId.from_str(tokens[i].tokenId),
-                (await ergolib).TokenAmount.from_i64((await ergolib).I64.from_str(tokenAmountToSend[i].toString())
-                ));
+    if (!burnMode) {
+        // prepare the payment box
+        var paymentBox = new (await ergolib).ErgoBoxCandidateBuilder(
+            await getBoxValueAmount(amountNano),
+            (await ergolib).Contract.pay_to_address((await ergolib).Address.from_base58(sendToAddress)),
+            creationHeight);
+        for (const i in tokens) {
+            if (tokenAmountToSend[i] > 0) {
+                //console.log("createTxOutputs tokenAmountToSend", tokenAmountToSend[i])
+                paymentBox.add_token((await ergolib).TokenId.from_str(tokens[i].tokenId),
+                    (await ergolib).TokenAmount.from_i64((await ergolib).I64.from_str(tokenAmountToSend[i].toString())
+                    ));
+            }
         }
+        if (Object.keys(tokenToMint).includes("amount")) { // mint token
+            // { amount: "12365.56", name: "my_token", description: "my token is great", decimals: 2 }
+            const tokenAmountAdjusted = BigInt(tokenToMint.amount * Math.pow(10, tokenToMint.decimals)).toString();
+            const token = new (await ergolib).Token(
+                (await ergolib).TokenId.from_box_id((await ergolib).BoxId.from_str(selectedUtxos[0].boxId)),
+                (await ergolib).TokenAmount.from_i64((await ergolib).I64.from_str(tokenAmountAdjusted)));
+            paymentBox.mint_token(token, tokenToMint.name, tokenToMint.description, tokenToMint.decimals);
+        }
+        outputCandidates.add(paymentBox.build());
+    } else {
+        amountNano = BigInt(0);
     }
-    if (Object.keys(tokenToMint).includes("amount")) { // mint token
-        // { amount: "12365.56", name: "my_token", description: "my token is great", decimals: 2 }
-        const tokenAmountAdjusted = BigInt(tokenToMint.amount * Math.pow(10, tokenToMint.decimals)).toString();
-        const token = new (await ergolib).Token(
-            (await ergolib).TokenId.from_box_id((await ergolib).BoxId.from_str(selectedUtxos[0].boxId)),
-            (await ergolib).TokenAmount.from_i64((await ergolib).I64.from_str(tokenAmountAdjusted)));
-        paymentBox.mint_token(token, tokenToMint.name, tokenToMint.description, tokenToMint.decimals);
-    }
-    outputCandidates.add(paymentBox.build());
 
     // prepare the miner fee box
-    const feeBox = (await ergolib).ErgoBoxCandidate.new_miner_fee_box(await getBoxValueAmount(feeNano), currentHeight);
+    const feeBox = (await ergolib).ErgoBoxCandidate.new_miner_fee_box(await getBoxValueAmount(feeNano), creationHeight);
     outputCandidates.add(feeBox);
 
     // prepare the change box
     const changeAmountNano = getUtxosListValue(selectedUtxos) - amountNano - feeNano;
-    if (changeAmountNano > 0) {
-        console.log("createTxOutputs changeAmountNano", getUtxosListValue(selectedUtxos), amountNano, feeNano, changeAmountNano);
-        var changeBox = new (await ergolib).ErgoBoxCandidateBuilder(
-            await getBoxValueAmount(changeAmountNano),
-            (await ergolib).Contract.pay_to_address((await ergolib).Address.from_base58(changeAddress)),
-            creationHeight);
-        const inputsTokens = getTokenListFromUtxos(selectedUtxos);
-        for (const tokId of Object.keys(inputsTokens)) {
-            const missingOutputToken = inputsTokens[tokId] - (tokenAmountToSend[tokens.findIndex(tok => tok.tokenId === tokId)] ?? BigInt(0));
-            if (missingOutputToken > 0) {
-                changeBox.add_token((await ergolib).TokenId.from_str(tokId),
-                    (await ergolib).TokenAmount.from_i64((await ergolib).I64.from_str(missingOutputToken.toString())
-                    ));
-            }
+    //console.log("createTxOutputs changeAmountNano", getUtxosListValue(selectedUtxos), amountNano, feeNano, changeAmountNano);
+    var changeBox = new (await ergolib).ErgoBoxCandidateBuilder(
+        await getBoxValueAmount(changeAmountNano),
+        (await ergolib).Contract.pay_to_address((await ergolib).Address.from_base58(changeAddress)),
+        creationHeight);
+    const inputsTokens = getTokenListFromUtxos(selectedUtxos);
+    for (const tokId of Object.keys(inputsTokens)) {
+        const missingOutputToken = inputsTokens[tokId] - (tokenAmountToSend[tokens.findIndex(tok => tok.tokenId === tokId)] ?? BigInt(0));
+        if (missingOutputToken > 0) {
+            changeBox.add_token((await ergolib).TokenId.from_str(tokId),
+                (await ergolib).TokenAmount.from_i64((await ergolib).I64.from_str(missingOutputToken.toString())
+                ));
         }
-        outputCandidates.add(changeBox.build());
     }
+    outputCandidates.add(changeBox.build());
 
     return outputCandidates;
-
 }
 
 export async function createUnsignedTransaction(selectedUtxos, outputCandidates, dataInputs = []) {
