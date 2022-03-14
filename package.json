@@ -1,6 +1,6 @@
 {
   "name": "safew-wallet",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "private": true,
   "dependencies": {
     "@coinbarn/ergo-ts": "^0.3.0",
@@ -10,7 +10,7 @@
     "@testing-library/user-event": "^12.1.10",
     "bip39": "^3.0.4",
     "crypto-js": "^4.1.1",
-    "ergo-lib-wasm-browser": "^0.15.0-alpha-f7a9ee0",
+    "ergo-lib-wasm-browser": "^0.15.0",
     "ipfs-http-client": "^56.0.1",
     "json-bigint": "^1.0.0",
     "qrcode": "^1.5.0",
