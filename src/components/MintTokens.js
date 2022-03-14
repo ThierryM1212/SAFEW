@@ -170,7 +170,7 @@ export default class MintTokens extends React.Component {
         const unsignedTransaction = await createUnsignedTransaction(selectedUtxos, outputCandidates);
         var jsonUnsignedTx = JSONBigInt.parse(unsignedTransaction.to_json());
         const tokenType = this.state.tokenType;
-        console.log ("getTransactionJson", this.state, tokenType);
+        console.log("getTransactionJson", this.state, tokenType);
         if (tokenType !== 'Standard') { // add NFT type, hash, and url
             const input0BoxId = jsonUnsignedTx.inputs[0].boxId ?? "";
             for (const i in jsonUnsignedTx.outputs) {
@@ -186,10 +186,10 @@ export default class MintTokens extends React.Component {
                         if (this.state.tokenMediaHash !== "") {
                             register["R8"] = await encodeStr(this.state.tokenMediaHash);
                         } else {
-                            const hash = await downloadAndSetSHA256(this.state.tokenMediaAddress, this.setTokenMediaHash);
+                            const hash = await downloadAndSetSHA256(this.state.tokenMediaAddress);
                             register["R8"] = await encodeStr(hash);
                         }
-                        
+
                         register["R9"] = await encodeStr(this.state.tokenMediaAddress);
                         output.additionalRegisters = register;
                         jsonUnsignedTx.outputs[i] = output;
@@ -203,143 +203,161 @@ export default class MintTokens extends React.Component {
     }
 
     render() {
-        const selectedWallet = getWalletById(this.state.selectedWalletId);
+        const selectedWallet = getWalletById(this.state.selectedWalletId) ?? {};
         const walletAddressList = getWalletAddressList(selectedWallet);
-
+        console.log("selectedWallet", selectedWallet)
         var appTips = "The application is intended mint tokens followin EIP-004 format.<br />";
         appTips += "Images, sounds and videos tokens needs to have 0 decimals.<br />";
 
         return (
             <Fragment >
-                <div className="w-100 container">
-                    <div className="d-flex flex-row justify-content-center align-items-center m-1 p-1">
-                        <h4>Mint tokens</h4>&nbsp;
-                        <ImageButton id="help-tx-builder" icon="help_outline"
-                            tips={appTips} />
-                    </div>
-                    <div className="w-100 container-xxl ">
-                        <div className="card p-1 m-2 w-100">
-                            <div className="d-flex flex-row align-items-center justify-content-center">
-                                <div className="d-flex flex-row align-items-center ">
-                                    <h5>Wallet</h5>&nbsp;
-                                    {
-                                        selectedWallet ?
-                                            <div className="d-flex flex-row align-items-center">
-                                                <SelectWallet selectedWalletId={this.state.selectedWalletId}
-                                                    setWallet={this.setWallet} />
+                {
+                    Object.keys(selectedWallet).includes("accounts") ?
+                        <Fragment >
+                            <div className="w-100 container">
+                                <div className="d-flex flex-row justify-content-center align-items-center m-1 p-1">
+                                    <h4>Mint tokens</h4>&nbsp;
+                                    <ImageButton id="help-tx-builder" icon="help_outline"
+                                        tips={appTips} />
+                                </div>
+                                <div className="w-100 container-xxl ">
+                                    <div className="card p-1 m-2 w-100">
+                                        <div className="d-flex flex-row align-items-center justify-content-center">
+                                            <div className="d-flex flex-row align-items-center ">
+                                                <h5>Wallet</h5>&nbsp;
+                                                {
+                                                    selectedWallet ?
+                                                        <div className="d-flex flex-row align-items-center">
+                                                            <SelectWallet selectedWalletId={this.state.selectedWalletId}
+                                                                setWallet={this.setWallet} />
+                                                        </div>
+                                                        : null
+                                                }
                                             </div>
-                                            : null
-                                    }
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
-                <div className="w-100 container">
-                    <div className="card p-1 m-2 w-100">
-                        <div className='d-flex flex-row justify-content-between align-items-center m-1 p-1'>
-                            <label htmlFor="tokenName" className='col-sm-3'>Token name</label>
-                            <input type="text"
-                                id="tokenName"
-                                className="form-control col-sm"
-                                onChange={e => this.setTokenName(e.target.value)}
-                                value={this.state.tokenName}
-                            />
-                        </div>
-                        <div className='d-flex flex-row justify-content-between align-items-center m-1 p-1'>
-                            <label htmlFor="tokenDescription" className='col-sm-3'>Token description</label>
-                            <textarea id="tokenDescription"
-                                className="form-control col-sm"
-                                onChange={e => this.setTokenDescription(e.target.value)}
-                                value={this.state.tokenDescription}
-                                rows="4"
-                            />
-                        </div>
-                        <div className='d-flex flex-row justify-content-between align-items-center m-1 p-1'>
-                            <label htmlFor="tokenAmount" className='col-sm-3'>Token amount</label>
-                            <input type="text"
-                                id="tokenAmount"
-                                className="form-control col-sm"
-                                onChange={e => this.setTokenAmount(e.target.value)}
-                                value={this.state.tokenAmount}
-                            />
-                        </div>
-                        <div className='d-flex flex-row align-items-center m-1 p-1'>
-                            <label htmlFor="tokenDecimals" className='col-sm-3'>Token decimals</label>
-                            <Select id="tokenDecimals"
-                                className='selectReact'
-                                value={{
-                                    value: this.state.tokenDecimals,
-                                    label: this.state.tokenDecimals
-                                }}
-                                onChange={(dec) => this.setTokenDecimals(dec.value)}
-                                options={this.state.optionsDecimals}
-                                isSearchable={false}
-                                isMulti={false}
-                                isDisabled={this.state.tokenType !== 'Standard'}
-                            />
-                        </div>
-                        <div className='d-flex flex-row align-items-center m-1 p-1'>
-                            <label htmlFor="tokenType" className='col-sm-3'>Token type</label>
-                            <Select id="tokenType"
-                                className='selectReact'
-                                value={{
-                                    value: this.state.tokenType,
-                                    label: this.state.tokenType
-                                }}
-                                onChange={(type) => this.setTokenType(type.value)}
-                                options={optionsType}
-                                isSearchable={false}
-                                isMulti={false}
-                            />
-                        </div>
-                        {
-                            this.state.tokenType === "Standard" ? null
-                                :
-                                <Fragment>
+                            <div className="w-100 container">
+                                <div className="card p-1 m-2 w-100">
                                     <div className='d-flex flex-row justify-content-between align-items-center m-1 p-1'>
-                                        <label htmlFor="tokenMediaAddr" className='col-sm-3'>{this.state.tokenType} URL</label>
+                                        <label htmlFor="tokenName" className='col-sm-3'>Token name</label>
                                         <input type="text"
-                                            id="tokenMediaAddr"
+                                            id="tokenName"
                                             className="form-control col-sm"
-                                            onChange={e => this.setTokenMediaAddress(e.target.value)}
-                                            value={this.state.tokenMediaAddress}
-                                            disabled={this.state.tokenMediaHash !== '' || this.state.tokenMediaAddressUploaded !== ''}
+                                            onChange={e => this.setTokenName(e.target.value)}
+                                            value={this.state.tokenName}
+                                        />
+                                    </div>
+                                    <div className='d-flex flex-row justify-content-between align-items-center m-1 p-1'>
+                                        <label htmlFor="tokenDescription" className='col-sm-3'>Token description</label>
+                                        <textarea id="tokenDescription"
+                                            className="form-control col-sm"
+                                            onChange={e => this.setTokenDescription(e.target.value)}
+                                            value={this.state.tokenDescription}
+                                            rows="4"
+                                        />
+                                    </div>
+                                    <div className='d-flex flex-row justify-content-between align-items-center m-1 p-1'>
+                                        <label htmlFor="tokenAmount" className='col-sm-3'>Token amount</label>
+                                        <input type="text"
+                                            id="tokenAmount"
+                                            className="form-control col-sm"
+                                            onChange={e => this.setTokenAmount(e.target.value)}
+                                            value={this.state.tokenAmount}
                                         />
                                     </div>
                                     <div className='d-flex flex-row align-items-center m-1 p-1'>
-                                        <label htmlFor="tokenMediaUpload" className='col-sm-3'>Upload {this.state.tokenType}</label>
-                                        <div className='d-flex flex-col align-items-center m-1 p-1' id="tokenMediaUpload">
-                                            {
-                                                this.state.tokenMediaAddressUploaded === '' ?
-                                                    this.state.tokenType === "Picture" ?
-                                                        <ImageUpload setUrl={this.setTokenMediaAddressUploaded} setHash={this.setTokenMediaHash} />
-                                                        :
-                                                        <FileUpload setUrl={this.setTokenMediaAddressUploaded} setHash={this.setTokenMediaHash} />
-                                                    : null
-                                            }
-                                            <a href={this.state.tokenMediaAddressUploaded} target='_blank' rel='noopener noreferrer'>
-                                                {this.state.tokenMediaAddressUploaded}
-                                            </a>
-                                        </div>
+                                        <label htmlFor="tokenDecimals" className='col-sm-3'>Token decimals</label>
+                                        <Select id="tokenDecimals"
+                                            className='selectReact'
+                                            value={{
+                                                value: this.state.tokenDecimals,
+                                                label: this.state.tokenDecimals
+                                            }}
+                                            onChange={(dec) => this.setTokenDecimals(dec.value)}
+                                            options={this.state.optionsDecimals}
+                                            isSearchable={false}
+                                            isMulti={false}
+                                            isDisabled={this.state.tokenType !== 'Standard'}
+                                        />
                                     </div>
-                                </Fragment>
-                        }
+                                    <div className='d-flex flex-row align-items-center m-1 p-1'>
+                                        <label htmlFor="tokenType" className='col-sm-3'>Token type</label>
+                                        <Select id="tokenType"
+                                            className='selectReact'
+                                            value={{
+                                                value: this.state.tokenType,
+                                                label: this.state.tokenType
+                                            }}
+                                            onChange={(type) => this.setTokenType(type.value)}
+                                            options={optionsType}
+                                            isSearchable={false}
+                                            isMulti={false}
+                                        />
+                                    </div>
+                                    {
+                                        this.state.tokenType === "Standard" ? null
+                                            :
+                                            <Fragment>
+                                                <div className='d-flex flex-row justify-content-between align-items-center m-1 p-1'>
+                                                    <label htmlFor="tokenMediaAddr" className='col-sm-3'>{this.state.tokenType} URL</label>
+                                                    <input type="text"
+                                                        id="tokenMediaAddr"
+                                                        className="form-control col-sm"
+                                                        onChange={e => this.setTokenMediaAddress(e.target.value)}
+                                                        value={this.state.tokenMediaAddress}
+                                                        disabled={this.state.tokenMediaHash !== '' || this.state.tokenMediaAddressUploaded !== ''}
+                                                    />
+                                                </div>
+                                                <div className='d-flex flex-row align-items-center m-1 p-1'>
+                                                    <label htmlFor="tokenMediaUpload" className='col-sm-3'>Upload {this.state.tokenType}</label>
+                                                    <div className='d-flex flex-col align-items-center m-1 p-1' id="tokenMediaUpload">
+                                                        {
+                                                            this.state.tokenMediaAddressUploaded === '' ?
+                                                                this.state.tokenType === "Picture" ?
+                                                                    <ImageUpload setUrl={this.setTokenMediaAddressUploaded} setHash={this.setTokenMediaHash} />
+                                                                    :
+                                                                    <FileUpload setUrl={this.setTokenMediaAddressUploaded} setHash={this.setTokenMediaHash} />
+                                                                : null
+                                                        }
+                                                        <a href={this.state.tokenMediaAddressUploaded} target='_blank' rel='noopener noreferrer'>
+                                                            {this.state.tokenMediaAddressUploaded}
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </Fragment>
+                                    }
 
-                    </div>
-                </div>
-                <div className="w-100 container">
-                    <div className="card p-1 m-2 w-100">
-                        <SignTransaction walletId={this.state.selectedWalletId}
-                            isValidTx={this.isValidTransaction()}
-                            sendToAddress={selectedWallet.changeAddress}
-                            signAddressList={walletAddressList}
-                            txFee={"0.0011"}
-                            setPage={this.state.setPage}
-                            getTransactionJson={this.getTransactionJson}
-                        />
-                    </div>
-                </div>
+                                </div>
+                            </div>
+                            <div className="w-100 container">
+                                <div className="card p-1 m-2 w-100">
+                                    <SignTransaction walletId={this.state.selectedWalletId}
+                                        isValidTx={this.isValidTransaction()}
+                                        sendToAddress={selectedWallet.changeAddress}
+                                        signAddressList={walletAddressList}
+                                        txFee={"0.0011"}
+                                        setPage={this.state.setPage}
+                                        getTransactionJson={this.getTransactionJson}
+                                    />
+                                </div>
+                            </div>
+                        </Fragment>
+                        :
+                        <div className="w-100 container">
+                            <div className="d-flex flex-row justify-content-center align-items-center m-1 p-1">
+                                <h4>Mint tokens</h4>&nbsp;
+                                <ImageButton id="help-tx-builder" icon="help_outline"
+                                    tips={appTips} />
+                            </div>
+                            <div className="w-100 container-xxl ">
+                                <div className="card p-2 m-2 w-100 d-flex flex-row justify-content-between align-items-center">
+                                    <h5>Create a wallet with at least 0.005 ERG to mint tokens</h5>
+                                </div>
+                            </div>
+                        </div>
+                }
             </Fragment>
         )
     }

@@ -141,6 +141,7 @@ export default class SignTransaction extends React.Component {
 
     async openInTxBuilder() {
         const txJson = (await this.state.getTransactionJson())[0];
+        // console.log("openInTxBuilder txJson", txJson);
         this.state.setPage('txbuilder', this.state.walletId, txJson);
     }
 

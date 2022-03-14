@@ -246,9 +246,11 @@ export function getOtherWalletNames(walletId) {
 
 export function getWalletAddressList(wallet) {
     let addressList = [];
-    for (var account of wallet.accounts) {
-        for (var address of account.addresses) {
-            addressList.push(address.address);
+    if (Object.keys(wallet).includes('accounts')) {
+        for (var account of wallet.accounts) {
+            for (var address of account.addresses) {
+                addressList.push(address.address);
+            }
         }
     }
     return addressList;

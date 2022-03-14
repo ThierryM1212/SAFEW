@@ -3,6 +3,7 @@ import { addressHasTransactions, currentHeight, unspentBoxesFor } from './explor
 import { byteArrayToBase64, getErgoStateContext, tokenFloatToAmount } from './serializer';
 import JSONBigInt from 'json-bigint';
 import { getTokenListFromUtxos, getUtxosListValue, parseUtxos } from './utxos';
+import { errorAlert } from '../utils/Alerts';
 let ergolib = import('ergo-lib-wasm-browser');
 
 /* global BigInt */
@@ -222,23 +223,39 @@ export async function createTxOutputs(selectedUtxos, sendToAddress, changeAddres
     const feeBox = (await ergolib).ErgoBoxCandidate.new_miner_fee_box(await getBoxValueAmount(feeNano), creationHeight);
     outputCandidates.add(feeBox);
 
-    // prepare the change box
+    // prepare the change box if required
     const changeAmountNano = getUtxosListValue(selectedUtxos) - amountNano - feeNano;
-    //console.log("createTxOutputs changeAmountNano", getUtxosListValue(selectedUtxos), amountNano, feeNano, changeAmountNano);
-    var changeBox = new (await ergolib).ErgoBoxCandidateBuilder(
-        await getBoxValueAmount(changeAmountNano),
-        (await ergolib).Contract.pay_to_address((await ergolib).Address.from_base58(changeAddress)),
-        creationHeight);
+    var remainingTokenToAdd = false;
     const inputsTokens = getTokenListFromUtxos(selectedUtxos);
     for (const tokId of Object.keys(inputsTokens)) {
         const missingOutputToken = inputsTokens[tokId] - (tokenAmountToSend[tokens.findIndex(tok => tok.tokenId === tokId)] ?? BigInt(0));
         if (missingOutputToken > 0) {
-            changeBox.add_token((await ergolib).TokenId.from_str(tokId),
-                (await ergolib).TokenAmount.from_i64((await ergolib).I64.from_str(missingOutputToken.toString())
-                ));
+            remainingTokenToAdd = true;
         }
     }
-    outputCandidates.add(changeBox.build());
+
+    if (changeAmountNano < 0.001 * NANOERG_TO_ERG && remainingTokenToAdd) {
+        errorAlert("Error generating the transaction", "Not enough ergs to generate the change box");
+        return;
+    }
+
+    //console.log("createTxOutputs changeAmountNano", getUtxosListValue(selectedUtxos), amountNano, feeNano, changeAmountNano);
+    if (changeAmountNano >= 0.001 * NANOERG_TO_ERG) {
+        var changeBox = new (await ergolib).ErgoBoxCandidateBuilder(
+            await getBoxValueAmount(changeAmountNano),
+            (await ergolib).Contract.pay_to_address((await ergolib).Address.from_base58(changeAddress)),
+            creationHeight);
+        
+        for (const tokId of Object.keys(inputsTokens)) {
+            const missingOutputToken = inputsTokens[tokId] - (tokenAmountToSend[tokens.findIndex(tok => tok.tokenId === tokId)] ?? BigInt(0));
+            if (missingOutputToken > 0) {
+                changeBox.add_token((await ergolib).TokenId.from_str(tokId),
+                    (await ergolib).TokenAmount.from_i64((await ergolib).I64.from_str(missingOutputToken.toString())
+                    ));
+            }
+        }
+        outputCandidates.add(changeBox.build());
+    }
 
     return outputCandidates;
 }
