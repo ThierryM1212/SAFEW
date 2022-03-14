@@ -27,10 +27,10 @@ const ergoInitialAPIFunctions = `
           try {
               return (typeof ergo.get_balance !== "undefined");
           } catch(e) {
-            return new Promise.resolve(false);
+            return false;
           }
       } else {
-          return new Promise.resolve(false);
+          return false;
       }
   }
 
