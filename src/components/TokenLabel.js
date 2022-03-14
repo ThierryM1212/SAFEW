@@ -17,6 +17,8 @@ export default function TokenLabel(props) {
                         <div>&nbsp;<VerifiedTokenImage tokenId={props.tokenId} /></div>
                         : null
                 }
+            </div>
+            <div className='d-flex flex-row align-items-center'>
                 {
                     props.decimals === 0 ?
                         <div className='d-flex flex-row'>
@@ -25,8 +27,6 @@ export default function TokenLabel(props) {
                         </div>
                         : null
                 }
-            </div>
-            <div className='d-flex flex-row row-reverse'>
                 <ImageButton
                     id={"tokId" + props.tokenId}
                     color={"blue"}

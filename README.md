@@ -118,3 +118,7 @@ v0.4.4
 - Mint tokens, Images, Audio and Videos
 - Burn tokens
 - Bug fixes
+
+v0.4.5
+- Fix Ergodex connection
+- UI adjustment

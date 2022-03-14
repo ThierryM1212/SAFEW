@@ -128,9 +128,7 @@ export default class AddressListContent extends React.Component {
                                             tokens.map((tok, index) =>
                                                 <tr key={index}>
                                                     <td>
-                                                        <div className='d-flex flex-row justify-content-between align-items-center'>
-                                                            <TokenLabel name={tok.name} tokenId={tok.tokenId} decimals={tok.decimals} />
-                                                        </div>
+                                                        <TokenLabel name={tok.name} tokenId={tok.tokenId} decimals={tok.decimals} />
                                                     </td>
                                                     <td>{formatTokenAmount(tok.amount, tok.decimals)}</td>
                                                     <td>
