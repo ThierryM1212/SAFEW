@@ -26,6 +26,10 @@
   outline-color: #aa292d;
 }
 
+input:disabled {
+    background-color: rgb(161, 161, 161) !important;
+  }
+
 .card {
   background-color: rgb(51, 51, 51);
   border-color: rgb(141, 140, 143);
@@ -78,3 +82,4 @@ th {
 .walletName {
     flex-basis: 200rem;
 }
+
