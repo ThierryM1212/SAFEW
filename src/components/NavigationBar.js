@@ -23,18 +23,11 @@ export default function NavigationBar(props) {
                     onClick={() => { props.setPage('home') }}
                 />
                 <ImageButton
-                    id={"config"}
+                    id={"mintTokens"}
                     color={"blue"}
-                    icon={"settings"}
-                    tips={"Settings"}
-                    onClick={() => { props.setPage('config') }}
-                />
-                <ImageButton
-                    id={"disconnectWallets"}
-                    color={"blue"}
-                    icon={"link_off"}
-                    tips={"Disconnect wallets"}
-                    onClick={() => { props.setPage('disconnect') }}
+                    icon={"add_circle_outline"}
+                    tips={"Mint tokens"}
+                    onClick={() => { props.setPage('mint') }}
                 />
                 <ImageButton
                     id={"ergoMixer"}
@@ -42,13 +35,6 @@ export default function NavigationBar(props) {
                     icon={"blender"}
                     tips={"Ergo mixer"}
                     onClick={() => { props.setPage('mixer') }}
-                />
-                <ImageButton
-                    id={"mintTokens"}
-                    color={"blue"}
-                    icon={"add_circle_outline"}
-                    tips={"Mint tokens"}
-                    onClick={() => { props.setPage('mint') }}
                 />
                 {
                     expertMode ?
@@ -61,6 +47,20 @@ export default function NavigationBar(props) {
                         />
                         : null
                 }
+                <ImageButton
+                    id={"disconnectWallets"}
+                    color={"blue"}
+                    icon={"link_off"}
+                    tips={"Disconnect wallets"}
+                    onClick={() => { props.setPage('disconnect') }}
+                />
+                <ImageButton
+                    id={"config"}
+                    color={"blue"}
+                    icon={"settings"}
+                    tips={"Settings"}
+                    onClick={() => { props.setPage('config') }}
+                />
                 {
                     debug ?
                         <Fragment>

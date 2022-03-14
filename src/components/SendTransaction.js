@@ -2,7 +2,7 @@ import React, { Fragment } from 'react';
 import Address from './Address';
 import ValidInput from './ValidInput';
 import ImageButton from './ImageButton';
-import { NANOERG_TO_ERG, SUGGESTED_TRANSACTION_FEE } from '../utils/constants';
+import { NANOERG_TO_ERG, SUGGESTED_TRANSACTION_FEE, VERIFIED_TOKENS } from '../utils/constants';
 import { waitingAlert } from '../utils/Alerts';
 import { getWalletById, getWalletAddressList, formatERGAmount, formatTokenAmount, getSummaryFromAddressListContent, getSummaryFromSelectedAddressListContent, getAddressListContent, decryptMnemonic, formatLongString, getWalletUsedAddressList, getUnconfirmedTransactionsForAddressList } from '../utils/walletUtils';
 import { createTxOutputs, createUnsignedTransaction, getUtxosForSelectedInputs, isValidErgAddress } from '../ergo-related/ergolibUtils';
@@ -10,6 +10,7 @@ import { tokenFloatToAmount } from '../ergo-related/serializer';
 import TokenLabel from './TokenLabel';
 import JSONBigInt from 'json-bigint';
 import SignTransaction from './SignTransaction';
+import Switch from "react-switch";
 
 /* global BigInt */
 
@@ -35,26 +36,51 @@ export default class SendTransaction extends React.Component {
             txFee: SUGGESTED_TRANSACTION_FEE / NANOERG_TO_ERG,
             isValidTxFee: true,
             isSendAll: false,
+            burnMode: false,
         };
         this.setSendToAddress = this.setSendToAddress.bind(this);
         this.setErgsToSend = this.setErgsToSend.bind(this);
         this.setTokenToSend = this.setTokenToSend.bind(this);
         this.validateTokenAmount = this.validateTokenAmount.bind(this);
         this.setSendAll = this.setSendAll.bind(this);
+        this.toggleBurnMode = this.toggleBurnMode.bind(this);
         this.getTransactionJson = this.getTransactionJson.bind(this);
     }
-
     async setSendToAddress(address) {
         const isValid = await isValidErgAddress(address);
-        console.log("setSendToAddress", address, isValid);
         this.setState({
             sendToAddress: address,
             isValidSendToAddress: isValid,
         })
     }
-
-    toggleSelectedAddresses = () => {
-        this.setState(prevState => ({ viewSelectAddress: !prevState.viewSelectAddress }))
+    toggleSelectedAddresses = () => { this.setState(prevState => ({ viewSelectAddress: !prevState.viewSelectAddress })) }
+    toggleBurnMode = () => {
+        const wallet = getWalletById(this.state.walletId);
+        const walletAddressList = getWalletAddressList(wallet);
+        if (!this.state.burnMode) {
+            this.setState(prevState => ({
+                burnMode: !prevState.burnMode,
+                tokenAmountToSend: new Array(this.state.tokens.length).fill('0'),
+                isValidTokenAmountToSend: new Array(this.state.tokens.length).fill(true),
+                selectedAddresses: new Array(walletAddressList.length).fill(true),
+                sendToAddress: wallet.changeAddress,
+                isValidSendToAddress: true,
+                ergsToSend: "0.002",
+                isValidErgToSend: this.validateErgAmount("0.002", this.state.txFee),
+                isSendAll: false,
+            }));
+        } else {
+            this.setState(prevState => ({
+                burnMode: !prevState.burnMode,
+                tokenAmountToSend: new Array(this.state.tokens.length).fill('0'),
+                isValidTokenAmountToSend: new Array(this.state.tokens.length).fill(true),
+                selectedAddresses: new Array(walletAddressList.length).fill(true),
+                sendToAddress: '',
+                isValidSendToAddress: false,
+                ergsToSend: "0",
+                isValidErgToSend: false,
+            }));
+        }
     }
 
     async selectUnselectAddresses(id) {
@@ -90,7 +116,7 @@ export default class SendTransaction extends React.Component {
         this.setState({
             tokens: tokens,
             nanoErgs: nanoErgs,
-            tokenAmountToSend: new Array(tokens.length).fill('0.0'),
+            tokenAmountToSend: new Array(tokens.length).fill('0'),
             isValidTokenAmountToSend: new Array(tokens.length).fill(true),
             selectedAddresses: new Array(walletAddressList.length).fill(true),
             addressContentList: addressContentList,
@@ -222,14 +248,14 @@ export default class SendTransaction extends React.Component {
         const selectedAddresses = this.state.walletAddressList.filter((addr, id) => this.state.selectedAddresses[id]);
         const selectedUtxos = await getUtxosForSelectedInputs(selectedAddresses,
             totalAmountToSendFloat, this.state.tokens, this.state.tokenAmountToSend);
-        //console.log("this.state.tokenAmountToSend", this.state.tokenAmountToSend)
+        //console.log("this.state.tokenAmountToSend", this.state.tokens, this.state.tokenAmountToSend)
         const tokenAmountToSendInt = this.state.tokenAmountToSend.map((amountFloat, id) =>
             tokenFloatToAmount(amountFloat.toString(), this.state.tokens[id].decimals)
         );
         //console.log("getTransactionJson", tokenAmountToSendInt)
         //console.log("sendTransaction", amountToSendFloat, feeFloat, wallet);
         const outputCandidates = await createTxOutputs(selectedUtxos, this.state.sendToAddress, wallet.changeAddress,
-            amountToSendFloat, feeFloat, this.state.tokens, tokenAmountToSendInt);
+            amountToSendFloat, feeFloat, this.state.tokens, tokenAmountToSendInt, {}, this.state.burnMode);
         const unsignedTransaction = await createUnsignedTransaction(selectedUtxos, outputCandidates);
         const jsonUnsignedTx = JSONBigInt.parse(unsignedTransaction.to_json());
         //console.log("sendTransaction unsignedTransaction", jsonUnsignedTx);
@@ -245,7 +271,31 @@ export default class SendTransaction extends React.Component {
                 >
                     <div className='d-flex flex-row justify-content-between align-items-center'>
                         <h5>Send ERGs and tokens - Wallet {wallet.name}</h5>
-                        <div className='d-flex flex-row '>
+                        <div className='d-flex flex-row align-items-center '>
+                            <div className='d-flex flex-row align-items-baseline'>
+                                <h5>Burn mode</h5>
+                                <ImageButton
+                                    id={"burnModeInfo"}
+                                    color={"white"}
+                                    icon={"info"}
+                                    tips={"Create a transaction to burn tokens.<br/>Certified tokens like SigUSD or SigRSV cannot be added to the burn transaction."}
+                                />
+                            </div>
+                            <Switch
+                                checked={this.state.burnMode}
+                                onChange={this.toggleBurnMode}
+                                onColor="#216A94"
+                                onHandleColor="#2693e6"
+                                handleDiameter={30}
+                                uncheckedIcon={false}
+                                checkedIcon={false}
+                                boxShadow="0px 1px 5px rgba(0, 0, 0, 0.6)"
+                                activeBoxShadow="0px 0px 1px 10px rgba(0, 0, 0, 0.2)"
+                                height={20}
+                                width={48}
+                                className="react-switch col-sm"
+                                id="switch"
+                            />
                         </div>
                     </div>
                     <div className='d-flex flex-row justify-content-left align-items-center card m-1 p-1'>
@@ -256,6 +306,7 @@ export default class SendTransaction extends React.Component {
                             onChange={e => this.setSendToAddress(e.target.value)}
                             value={this.state.sendToAddress}
                             className={this.state.isValidSendToAddress ? "validInput m-1 col-sm" : "invalidInput m-1 col-sm"}
+                            disabled={this.state.burnMode}
                         />
                         <ValidInput
                             id="isValidSendToAddress"
@@ -328,7 +379,7 @@ export default class SendTransaction extends React.Component {
                                                 className="form-control"
                                                 onChange={e => this.setErgsToSend(e.target.value)}
                                                 value={this.state.ergsToSend}
-                                                disabled={this.state.isSendAll}
+                                                disabled={this.state.isSendAll || this.state.burnMode}
                                             />
                                             <ValidInput id="OKerg"
                                                 isValid={this.state.isValidErgToSend}
@@ -351,7 +402,12 @@ export default class SendTransaction extends React.Component {
                                                         color={"blue"}
                                                         icon={"select_all"}
                                                         tips={"Select all"}
-                                                        onClick={() => this.setTokenToSend(index, (tok.amount / Math.pow(10, tok.decimals)).toString())}
+                                                        onClick={() => {
+                                                            if (!(this.state.burnMode && Object.keys(VERIFIED_TOKENS).includes(tok.tokenId))) {
+                                                                this.setTokenToSend(index, (tok.amount / Math.pow(10, tok.decimals)).toString())
+                                                            }
+                                                        }
+                                                    }
                                                     />
                                                     <input type="text"
                                                         pattern={parseInt(tok.decimals) > 0 ? "[0-9]+([\\.,][0-9]{0," + tok.decimals + "})?" : "[0-9]+"}
@@ -360,16 +416,16 @@ export default class SendTransaction extends React.Component {
                                                         className="form-control"
                                                         onChange={e => this.setTokenToSend(index, e.target.value)}
                                                         value={this.state.tokenAmountToSend[index]}
-                                                        disabled={this.state.isSendAll}
+                                                        disabled={this.state.isSendAll || (this.state.burnMode && Object.keys(VERIFIED_TOKENS).includes(tok.tokenId))}
                                                     />
                                                     <ValidInput id={"isValidTokAmount" + tok.tokenId}
                                                         isValid={this.state.isValidTokenAmountToSend[index]}
                                                         validMessage='OK'
                                                         invalidMessage='Invalid ERG amount' />
-
                                                 </div>
                                             </td>
-                                        </tr>)
+                                        </tr>
+                                    )
                                 }
                             </tbody>
                         </table>
@@ -384,6 +440,7 @@ export default class SendTransaction extends React.Component {
                                     id={"sendAllChkBox"}
                                     defaultChecked={this.state.isSendAll}
                                     onChange={this.setSendAll}
+                                    disabled={this.state.burnMode}
                                 />
                             </div>
                             <div className='d-flex flex-row align-items-baseline justify-content-end'>

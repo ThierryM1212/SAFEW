@@ -31,10 +31,6 @@ export default class WalletList extends React.Component {
         await this.updateWalletAddressListContent();
     }
 
-    componentDidUpdate(prevProps, prevState) {
-        console.log("WalletList componentDidUpdate", prevProps, prevState, this.props, this.state);
-    }
-
     componentWillUnmount() {
         clearInterval(this.state.intervalId);
     }

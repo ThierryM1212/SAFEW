@@ -41,7 +41,7 @@ export default class SignTransaction extends React.Component {
     setTxFee = (txFee) => { this.setState({ txFee: txFee }); };
 
     componentDidUpdate(prevProps, prevState) {
-        console.log("SignTransaction componentDidUpdate", prevProps, this.props)
+        //console.log("SignTransaction componentDidUpdate", prevProps, this.props)
         if (prevProps.walletId !== this.props.walletId) { this.setWalletId(this.props.walletId); }
         if (prevProps.isValidTx !== this.props.isValidTx) { this.setIsValidTx(this.props.isValidTx); }
         if (prevProps.sendToAddress !== this.props.sendToAddress) { this.setSendToAddress(this.props.sendToAddress); }

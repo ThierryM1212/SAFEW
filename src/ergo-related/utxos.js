@@ -66,14 +66,14 @@ export async function enrichUtxos(utxos, addExtension = false) {
         if ("id" in utxos[i]) {
             key = "id";
         }
-        console.log("enrichUtxos1", utxos[i][key]);
+        //console.log("enrichUtxos1", utxos[i][key]);
         var box = await boxByBoxId(utxos[i][key]);
         var newAssets = []
         for (var token of box.assets) {
             var newToken = { ...token }
-            console.log("enrichUtxos2", token.tokenId);
+            //console.log("enrichUtxos2", token.tokenId);
             const tokenDesc = await getTokenBoxV1(token.tokenId);
-            console.log("enrichUtxos2_1", tokenDesc);
+            //console.log("enrichUtxos2_1", tokenDesc);
             newToken["name"] = tokenDesc.name;
             newToken["decimals"] = tokenDesc.decimals;
             newAssets.push(newToken)
@@ -312,9 +312,9 @@ async function getUtxoContentForAddressList(utxos, addressList, input0BoxId = ""
                 utxo.assets = [];
             }
             for (var token of utxo.assets) {
-                console.log("getUtxoContentForAddressList_4", token.name)
+                //console.log("getUtxoContentForAddressList_4", token.name)
                 if (token.tokenId === input0BoxId && (token.name === null || token.name === undefined)) { //minted token
-                    console.log("getUtxoContentForAddressList_4 minted token", )
+                    //console.log("getUtxoContentForAddressList_4 minted token", )
                     if(Object.keys(utxo).includes("additionalRegisters")) {
                         if(Object.keys(utxo.additionalRegisters).includes("R4")){
                             token.name = await decodeString(utxo.additionalRegisters.R4);
