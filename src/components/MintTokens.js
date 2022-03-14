@@ -8,7 +8,7 @@ import { FileUpload } from './FileUpload';
 import SignTransaction from './SignTransaction';
 import JSONBigInt from 'json-bigint';
 import { createTxOutputs, createUnsignedTransaction, getUtxosForSelectedInputs } from '../ergo-related/ergolibUtils';
-import { isValidHttpUrl } from '../utils/utils';
+import { downloadAndSetSHA256, isValidHttpUrl } from '../utils/utils';
 import { NTF_TYPES } from '../utils/constants';
 import { encodeStr } from '../ergo-related/serializer';
 
@@ -75,6 +75,7 @@ export default class MintTokens extends React.Component {
             tokenDecimals: dec,
             tokenMediaAddress: '',
             tokenMediaAddressUploaded: '',
+            tokenMediaHash: '',
         });
         if (dec === '0') {
             this.setTokenAmount(this.state.tokenAmount.split('.')[0]);
@@ -169,6 +170,7 @@ export default class MintTokens extends React.Component {
         const unsignedTransaction = await createUnsignedTransaction(selectedUtxos, outputCandidates);
         var jsonUnsignedTx = JSONBigInt.parse(unsignedTransaction.to_json());
         const tokenType = this.state.tokenType;
+        console.log ("getTransactionJson", this.state, tokenType);
         if (tokenType !== 'Standard') { // add NFT type, hash, and url
             const input0BoxId = jsonUnsignedTx.inputs[0].boxId ?? "";
             for (const i in jsonUnsignedTx.outputs) {
@@ -181,7 +183,13 @@ export default class MintTokens extends React.Component {
                     if (outputTokenList.includes(input0BoxId)) {
                         var register = output.additionalRegisters;
                         register["R7"] = NTF_TYPES[tokenType];
-                        register["R8"] = await encodeStr(this.state.tokenMediaHash);
+                        if (this.state.tokenMediaHash !== "") {
+                            register["R8"] = await encodeStr(this.state.tokenMediaHash);
+                        } else {
+                            const hash = await downloadAndSetSHA256(this.state.tokenMediaAddress, this.setTokenMediaHash);
+                            register["R8"] = await encodeStr(hash);
+                        }
+                        
                         register["R9"] = await encodeStr(this.state.tokenMediaAddress);
                         output.additionalRegisters = register;
                         jsonUnsignedTx.outputs[i] = output;
@@ -190,7 +198,7 @@ export default class MintTokens extends React.Component {
             }
         }
 
-        //console.log("sendTransaction unsignedTransaction", jsonUnsignedTx);
+        console.log("getTransactionJson unsignedTransaction", jsonUnsignedTx);
         return [jsonUnsignedTx, selectedUtxos];
     }
 

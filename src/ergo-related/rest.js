@@ -62,6 +62,16 @@ export async function get(url, apiKey = '') {
     }
 }
 
+export async function getBlob(url) {
+    try {
+        const result = await fetch(url).then(res => res.blob());
+        return result;
+    } catch (e) {
+        console.error(e);
+        return [];
+    }
+}
+
 export async function get2(url, apiKey = '') {
     const result = await fetch(url, {
         headers: {

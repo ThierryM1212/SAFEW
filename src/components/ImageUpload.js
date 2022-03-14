@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Form, Image, Button, ProgressBar, Container, Badge } from 'react-bootstrap';
 import { create as ipfsHttpClient } from 'ipfs-http-client';
-var CryptoJS = require("crypto-js");
+import { computeSHA256 } from '../utils/utils';
 const ipfs = ipfsHttpClient('https://ipfs.infura.io:5001/api/v0')
 
 export const ImageUpload = ({ setUrl, setHash }) => {
@@ -27,14 +27,7 @@ export const ImageUpload = ({ setUrl, setHash }) => {
         try {
             const added = await ipfs.add(image)
             const url = `https://ipfs.infura.io/ipfs/${added.path}`
-            var reader = new FileReader();
-            reader.onload = function (event) {
-                var data = event.target.result;
-                var hash = CryptoJS.SHA256(data);
-                console.log('ImageHash: ' + hash);
-                setHash(hash);
-            };
-            reader.readAsBinaryString(image);
+            computeSHA256(image, setHash);
             setUrl(url)
             setImagePreview(url)
             setUploaded(true)

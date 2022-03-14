@@ -2,7 +2,6 @@ const webpack = require('webpack');
 const CopyPlugin = require('copy-webpack-plugin');
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const { ModifySourcePlugin } = require('modify-source-webpack-plugin');
 
 const config = {
     entry: [
@@ -51,19 +50,6 @@ const config = {
         }
     },
     plugins: [
-        new ModifySourcePlugin({
-            // fix react-ipfs-uploader import that breaks SAFEW UI
-            rules: [
-                {
-                    test: /index\.modern\.js$/,
-                    modifications: [{
-                        type: 2,
-                        searchValue: "import 'bootstrap/dist/css/bootstrap.min.css';",
-                        replaceValue: ""
-                    }]
-                }
-            ]
-        }),
         new CopyPlugin({
             patterns: [{ from: 'public' }],
         }),

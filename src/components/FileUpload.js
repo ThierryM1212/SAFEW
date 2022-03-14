@@ -1,30 +1,23 @@
 import React, { useState } from 'react'
 import { Form, Button, Badge, ProgressBar, Container } from 'react-bootstrap'
 import { create as ipfsHttpClient } from 'ipfs-http-client'
-var CryptoJS = require("crypto-js");
+import { computeSHA256 } from '../utils/utils';
 const ipfs = ipfsHttpClient('https://ipfs.infura.io:5001/api/v0')
 
 export const FileUpload = ({ setUrl, setHash }) => {
-    const [file, setFile] = useState({})
-    const [fileUrl, setFileUrl] = useState('')
-    const [loading, setLoading] = useState(false)
-    const [uploaded, setUploaded] = useState(false)
+    const [file, setFile] = useState({});
+    const [fileUrl, setFileUrl] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [uploaded, setUploaded] = useState(false);
 
     const uploadFile = async (e) => {
-        setLoading(true)
-        e.preventDefault()
+        setLoading(true);
+        e.preventDefault();
 
         try {
-            const added = await ipfs.add(file)
-            const url = `https://ipfs.infura.io/ipfs/${added.path}`
-            var reader = new FileReader();
-            reader.onload = function (event) {
-                var data = event.target.result;
-                var hash = CryptoJS.SHA256(data);
-                console.log('ImageHash: ' + hash);
-                setHash(hash);
-            };
-            reader.readAsBinaryString(file);
+            const added = await ipfs.add(file);
+            const url = `https://ipfs.infura.io/ipfs/${added.path}`;
+            computeSHA256(file, setHash);
             setUrl(url)
             setFileUrl(url)
             setUploaded(true)
@@ -36,9 +29,9 @@ export const FileUpload = ({ setUrl, setHash }) => {
 
     const preUpload = (e) => {
         if (e.target.value !== '') {
-            setFile(e.target.files[0])
+            setFile(e.target.files[0]);
         } else {
-            setFile({})
+            setFile({});
         }
     }
 
