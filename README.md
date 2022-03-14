@@ -29,6 +29,9 @@ Wallet features:
    - How to burn tokens: https://youtu.be/OcyziMIXTtk
    - How to send asset to several addresses: https://youtu.be/3N7Qn2BgH0U
  - Export wallet transactions as csv
+ - Display NFT pictures, audio and videos
+ - Mint tokens, pictures, audio and videos
+ - Burn tokens
 
 ## Security
 The wallets are stored in the local storage of the SAFEW browser extension.<br/>
@@ -104,3 +107,14 @@ v0.4.2
 - Fix Utxo selection when sending multiple assets
 - Display token details in transaction builder unspent boxes
 - Technical: Remove react-app-rewired, allow to "watch" the build directory (Thanks SoCool)
+
+v0.4.3
+- Display NFT images
+- Fix csv transaction export
+- Fix send tokens that was failing to generate the transaction for some assets
+
+v0.4.4
+- Display NFT Images (improved), Audio, Videos
+- Mint tokens, Images, Audio and Videos
+- Burn tokens
+- Bug fixes
