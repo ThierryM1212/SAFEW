@@ -1,6 +1,8 @@
 import { VERIFIED_TOKENS } from "../utils/constants";
+import { getUnconfirmedTransactionsForAddressList } from "../utils/walletUtils";
 import { boxByBoxId, currentHeight, getTokenBoxV1, unspentBoxesForV1 } from "./explorer";
 import { decodeString, encodeContract, ergoTreeToAddress } from "./serializer";
+import ls from 'localstorage-slim';
 
 /* global BigInt */
 
@@ -36,6 +38,10 @@ export function parseUtxo(json, addExtention = true, mode = 'input') {
 
     res["creationHeight"] = json.creationHeight;
 
+    if ("address" in json) {
+        res["address"] = json.address;
+    }
+
     if (mode === 'input') {
         if ("txId" in json) {
             res["transactionId"] = json.txId;
@@ -60,25 +66,38 @@ export function parseUtxos(utxos, addExtention, mode = 'input') {
 
 export async function enrichUtxos(utxos, addExtension = false) {
     var utxosFixed = [];
+    ls.flush();
+    var cache_newBoxes = ls.get('cache_newBoxes') ?? [];
+    var cache_spentBoxes = ls.get('cache_spentBoxes') ?? [];
 
     for (const i in utxos) {
+        var newBox = {};
         var key = "boxId";
         if ("id" in utxos[i]) {
             key = "id";
         }
-        //console.log("enrichUtxos1", utxos[i][key]);
-        var box = await boxByBoxId(utxos[i][key]);
-        var newAssets = []
-        for (var token of box.assets) {
-            var newToken = { ...token }
-            //console.log("enrichUtxos2", token.tokenId);
-            const tokenDesc = await getTokenBoxV1(token.tokenId);
-            //console.log("enrichUtxos2_1", tokenDesc);
-            newToken["name"] = tokenDesc.name;
-            newToken["decimals"] = tokenDesc.decimals;
-            newAssets.push(newToken)
+        var box = {};
+        if (cache_newBoxes.map(b => b.boxId).includes(utxos[i][key])) {
+            box = cache_newBoxes.find(b => b.boxId === utxos[i][key]);
+        } else if (cache_spentBoxes.map(b => b.boxId).includes(utxos[i][key])) {
+            box = cache_spentBoxes.find(b => b.boxId === utxos[i][key]);
+        } else {
+            box = await boxByBoxId(utxos[i][key]);
         }
-        var newBox = {};
+        //console.log("enrichUtxos1", utxos[i][key]);
+        var newAssets = []
+        if (Array.isArray(box.assets)) {
+            for (var token of box.assets) {
+                var newToken = { ...token }
+                //console.log("enrichUtxos2", token.tokenId);
+                const tokenDesc = await getTokenBoxV1(token.tokenId);
+                //console.log("enrichUtxos2_1", tokenDesc);
+                newToken["name"] = tokenDesc.name;
+                newToken["decimals"] = tokenDesc.decimals;
+                newAssets.push(newToken)
+            }
+        }
+        
         for (const key of Object.keys(box)) {
             if (key === "assets") {
                 newBox[key] = newAssets;
@@ -285,21 +304,30 @@ function isDict(v) {
 async function getUtxoContentForAddressList(utxos, addressList, input0BoxId = "") {
     var value = BigInt(0), tokens = [];
     //console.log("getUtxoContentForAddressList_0", utxos, addressList)
+    const cache_newBoxes = ls.get('cache_newBoxes') ?? [];
+    //console.log("getUtxoContentForAddressList cache_newBoxes", cache_newBoxes);
     for (var utxo of utxos) {
+        if ("id" in utxo) {
+            utxo["boxId"] = utxo.id;
+            delete utxo["id"];
+        }
+        if (cache_newBoxes.map(b => b.boxId).includes(utxo.boxId)) {
+            utxo = cache_newBoxes.find(b => b.boxId === utxo.boxId);
+            //console.log("getUtxoContentForAddressList UTXO new box found in cache", utxo);
+        }
         if (!("address" in utxo)) {
             if (!("assets" in utxo)) {
-                if ("id" in utxo) {
-                    utxo = await boxByBoxId(utxo.id);
-                } else {
-                    utxo = await boxByBoxId(utxo.boxId);
-                }
+                utxo = await boxByBoxId(utxo.boxId);
                 //console.log("getUtxoContentForAddressList_1 enriched", utxo)
             }
-            try {
-                utxo["address"] = await ergoTreeToAddress(utxo.ergoTree);
-                //console.log("getUtxoContentForAddressList_2 address", utxo);
-            } catch (e) {
-                console.log(e);
+            if (!("address" in utxo) && "ergoTree" in utxo) {
+                try {
+                    //console.log("getUtxoContentForAddressList_2 address", utxo);
+                    utxo["address"] = await ergoTreeToAddress(utxo.ergoTree);
+                    //console.log("getUtxoContentForAddressList_22 address", utxo);
+                } catch (e) {
+                    console.log(e);
+                }
             }
         }
         if (addressList.includes(utxo.address)) {
@@ -315,11 +343,11 @@ async function getUtxoContentForAddressList(utxos, addressList, input0BoxId = ""
                 //console.log("getUtxoContentForAddressList_4", token.name)
                 if (token.tokenId === input0BoxId && (token.name === null || token.name === undefined)) { //minted token
                     //console.log("getUtxoContentForAddressList_4 minted token", )
-                    if(Object.keys(utxo).includes("additionalRegisters")) {
-                        if(Object.keys(utxo.additionalRegisters).includes("R4")){
+                    if (Object.keys(utxo).includes("additionalRegisters")) {
+                        if (Object.keys(utxo.additionalRegisters).includes("R4")) {
                             token.name = await decodeString(utxo.additionalRegisters.R4);
                         }
-                        if(Object.keys(utxo.additionalRegisters).includes("R6")){
+                        if (Object.keys(utxo.additionalRegisters).includes("R6")) {
                             token.decimals = await decodeString(utxo.additionalRegisters.R6);
                         }
                     }
@@ -396,4 +424,22 @@ export async function getUnspentBoxesForAddressList(addressList) {
     return boxList.flat().sort(function (a, b) {
         return a.globalIndex - b.globalIndex;
     });
+}
+
+export async function getSpentAndUnspentBoxesFromMempool(addressList) {
+    var unconfirmedTxs = (await getUnconfirmedTransactionsForAddressList(addressList, false))
+        .map(tx => tx.transactions)
+        .flat();
+    console.log("getSpentAndUnspentBoxesFromMempool", unconfirmedTxs)
+    var spentBoxes = [];
+    var newBoxes = [];
+    if (unconfirmedTxs.length > 0) {
+        spentBoxes = unconfirmedTxs.map(tx => tx.inputs).flat();
+        for (const i in spentBoxes) {
+            spentBoxes[i].boxId = spentBoxes[i].id
+        }
+        newBoxes = unconfirmedTxs.map(tx => tx.outputs).flat().filter(box => addressList.includes(box.address));
+    }
+    console.log("getSpentAndUnspentBoxesFromMempool", spentBoxes, newBoxes)
+    return [spentBoxes, newBoxes];
 }

@@ -9,6 +9,7 @@ import { decryptMnemonic, formatERGAmount, formatLongString, formatTokenAmount, 
 import BigQRCode from './BigQRCode';
 import ImageButton from './ImageButton';
 import JSONBigInt from 'json-bigint';
+import { postTxMempool } from '../ergo-related/explorer';
 
 
 export default class SignTransaction extends React.Component {
@@ -72,7 +73,7 @@ export default class SignTransaction extends React.Component {
         const wallet = getWalletById(this.state.walletId);
         const feeFloat = parseFloat(this.state.txFee);
         const selectedAddresses = this.state.signAddressList;
-        const [jsonUnsignedTx, selectedUtxos] = await this.state.getTransactionJson();
+        const [jsonUnsignedTx, selectedUtxos, memPoolTransaction] = await this.state.getTransactionJson();
         const walletAddressList = getWalletAddressList(wallet);
 
         if (wallet.ergoPayOnly) {
@@ -133,7 +134,14 @@ export default class SignTransaction extends React.Component {
                 errorAlert("Failed to sign transaction", e);
                 return;
             }
-            await sendTx(signedTx);
+            if (true) {
+                await postTxMempool(signedTx);
+                console.log("Transaction sent to mempool", signedTx);
+            } else {
+                await sendTx(signedTx);
+                console.log("Transaction sent to node", signedTx);
+            }
+            
             //await delay(3000);
             this.state.setPage('transactions', this.state.walletId);
         }
@@ -148,7 +156,7 @@ export default class SignTransaction extends React.Component {
     render() {
         const wallet = getWalletById(this.state.walletId);
         const expertMode = (localStorage.getItem('expertMode') === 'true') ?? false;
-        console.log("render SignTransaction", this.state);
+        //console.log("render SignTransaction", this.state);
         return (
             <Fragment>
                 {

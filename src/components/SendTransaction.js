@@ -241,12 +241,13 @@ export default class SendTransaction extends React.Component {
     }
 
     async getTransactionJson() {
+        waitingAlert("Preparing the transactions...");
         const amountToSendFloat = parseFloat(this.state.ergsToSend);
         const feeFloat = parseFloat(this.state.txFee);
         const totalAmountToSendFloat = amountToSendFloat + feeFloat;
         const wallet = getWalletById(this.state.walletId);
         const selectedAddresses = this.state.walletAddressList.filter((addr, id) => this.state.selectedAddresses[id]);
-        const selectedUtxos = await getUtxosForSelectedInputs(selectedAddresses,
+        const [selectedUtxos, memPoolTransaction] = await getUtxosForSelectedInputs(selectedAddresses,
             totalAmountToSendFloat, this.state.tokens, this.state.tokenAmountToSend);
         //console.log("this.state.tokenAmountToSend", this.state.tokens, this.state.tokenAmountToSend)
         const tokenAmountToSendInt = this.state.tokenAmountToSend.map((amountFloat, id) =>
@@ -257,9 +258,16 @@ export default class SendTransaction extends React.Component {
         const outputCandidates = await createTxOutputs(selectedUtxos, this.state.sendToAddress, wallet.changeAddress,
             amountToSendFloat, feeFloat, this.state.tokens, tokenAmountToSendInt, {}, this.state.burnMode);
         const unsignedTransaction = await createUnsignedTransaction(selectedUtxos, outputCandidates);
-        const jsonUnsignedTx = JSONBigInt.parse(unsignedTransaction.to_json());
-        //console.log("sendTransaction unsignedTransaction", jsonUnsignedTx);
-        return [jsonUnsignedTx, selectedUtxos];
+        var jsonUnsignedTx = JSONBigInt.parse(unsignedTransaction.to_json());
+        //for (const i in jsonUnsignedTx.inputs) {
+        //    for (const j in selectedUtxos) {
+        //        if (selectedUtxos[j].boxId === jsonUnsignedTx.inputs[i].boxId) {
+        //            jsonUnsignedTx.inputs[i] = selectedUtxos[j];
+        //        }
+        //    }
+        //}
+        console.log("sendTransaction unsignedTransaction", jsonUnsignedTx);
+        return [jsonUnsignedTx, selectedUtxos, memPoolTransaction];
     }
 
     render() {

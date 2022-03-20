@@ -2,9 +2,11 @@ import { MAX_NUMBER_OF_UNUSED_ADDRESS_PER_ACCOUNT, NANOERG_TO_ERG } from '../uti
 import { addressHasTransactions, currentHeight, unspentBoxesFor } from './explorer';
 import { byteArrayToBase64, getErgoStateContext, tokenFloatToAmount } from './serializer';
 import JSONBigInt from 'json-bigint';
-import { getTokenListFromUtxos, getUtxosListValue, parseUtxos } from './utxos';
+import { getSpentAndUnspentBoxesFromMempool, getTokenListFromUtxos, getUtxosListValue, parseUtxos } from './utxos';
 import { errorAlert } from '../utils/Alerts';
+import ls from 'localstorage-slim';
 let ergolib = import('ergo-lib-wasm-browser');
+
 
 /* global BigInt */
 
@@ -131,8 +133,23 @@ export async function getUtxosForSelectedInputs(inputAddressList, ergAmount, tok
         return await unspentBoxesFor(address);
     })).then(boxListList => boxListList.flat()));
 
+    // replace spent boxes from Mempool by new generated boxes for chained transaction
+    var [spentBoxes, newBoxes] = await getSpentAndUnspentBoxesFromMempool(inputAddressList);
+    ls.flush();
+    if (newBoxes.length > 0) {
+        for (const i in newBoxes) {
+            newBoxes[i]["boxId"] = newBoxes[i].id;
+            delete newBoxes[i].id;
+        }
+        var cache_newBoxes = ls.get('cache_newBoxes') ?? [];
+        ls.set('cache_newBoxes', newBoxes.concat(cache_newBoxes), { ttl: 600 });
+        //console.log('getUtxosForSelectedInputs cache_newBoxes', ls.get('cache_newBoxes'))
+    }
+    const spentInputBoxIds = spentBoxes.map(box => box.boxId);
+    const adjustedUtxos = parseUtxos(newBoxes).concat(utxos).filter(box => !spentInputBoxIds.includes(box.boxId));
+
     // Select boxes to meet tokens selected
-    var selectedUtxos = [], unSelectedUtxos = utxos, i = 0;
+    var selectedUtxos = [], unSelectedUtxos = adjustedUtxos, i = 0;
     while (!hasEnoughSelectedTokens(selectedUtxos, tokens, tokensAmountToSend) && i < 1000) {
         //console.log("getUtxosForSelectedInputs1", selectedUtxos, unSelectedUtxos);
         var boxFound = false, boxIndex = -1;
@@ -154,7 +171,14 @@ export async function getUtxosForSelectedInputs(inputAddressList, ergAmount, tok
     while (BigInt(Math.round((ergAmount + 0.001) * NANOERG_TO_ERG)) >= getUtxosListValue(selectedUtxos) && unSelectedUtxos.length > 0) {
         selectedUtxos.push(unSelectedUtxos.shift());
     }
-    return selectedUtxos;
+    // keep trace of unconfirmed spent boxes for chained transactions
+    var memPoolTransaction = false;
+    if (spentBoxes && Array.isArray(spentBoxes) && spentBoxes.length > 0) {
+        memPoolTransaction = true;
+        var cache_spentBoxes = ls.get('cache_spentBoxes') ?? [];
+        ls.set('cache_spentBoxes', utxos.filter(b => spentInputBoxIds.includes(b.boxId)).concat(cache_spentBoxes), { ttl: 600 });
+    }
+    return [selectedUtxos, memPoolTransaction];
 }
 
 
@@ -245,7 +269,7 @@ export async function createTxOutputs(selectedUtxos, sendToAddress, changeAddres
             await getBoxValueAmount(changeAmountNano),
             (await ergolib).Contract.pay_to_address((await ergolib).Address.from_base58(changeAddress)),
             creationHeight);
-        
+
         for (const tokId of Object.keys(inputsTokens)) {
             const missingOutputToken = inputsTokens[tokId] - (tokenAmountToSend[tokens.findIndex(tok => tok.tokenId === tokId)] ?? BigInt(0));
             if (missingOutputToken > 0) {
@@ -277,14 +301,14 @@ export async function createUnsignedTransaction(selectedUtxos, outputCandidates,
 
 // https://github.com/ergoplatform/eips/pull/37 ergopay:<txBase64safe>
 export async function getTxReducedB64Safe(json, inputs, dataInputs = []) {
-    console.log("getTxReducedB64Safe", json, inputs, dataInputs);
+    //console.log("getTxReducedB64Safe", json, inputs, dataInputs);
     const [txId, reducedTx] = await getTxReduced(json, inputs, dataInputs);
-    console.log("getTxReducedB64Safe1", json, inputs, dataInputs);
+    //console.log("getTxReducedB64Safe1", json, inputs, dataInputs);
     // Reduced transaction is encoded with Base64
     const txReducedBase64 = byteArrayToBase64(reducedTx.sigma_serialize_bytes());
-    console.log("getTxReducedB64Safe2", json, inputs, dataInputs);
+    //console.log("getTxReducedB64Safe2", json, inputs, dataInputs);
     const ergoPayTx = "ergopay:" + txReducedBase64.replace(/\//g, '_').replace(/\+/g, '-');
-    console.log("getTxReducedB64Safe3", json, inputs, dataInputs);
+    //console.log("getTxReducedB64Safe3", json, inputs, dataInputs);
     // split by chunk of 1000 char to generates the QR codes
     return [txId, ergoPayTx.match(/.{1,1000}/g)];
 }

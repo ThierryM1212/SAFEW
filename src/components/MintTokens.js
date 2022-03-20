@@ -11,6 +11,7 @@ import { createTxOutputs, createUnsignedTransaction, getUtxosForSelectedInputs }
 import { downloadAndSetSHA256, isValidHttpUrl } from '../utils/utils';
 import { NTF_TYPES } from '../utils/constants';
 import { encodeStr } from '../ergo-related/serializer';
+import { waitingAlert } from '../utils/Alerts';
 
 const MAX_SIGNIFICANT_NUMBER_TOKEN = 19;
 const AMOUNT_SENT = "0.002";
@@ -150,12 +151,13 @@ export default class MintTokens extends React.Component {
     }
 
     async getTransactionJson() {
+        const alert = waitingAlert("Preparing the transaction...");
         const amountToSendFloat = parseFloat(AMOUNT_SENT);
         const feeFloat = parseFloat(TX_FEE);
         const totalAmountToSendFloat = amountToSendFloat + feeFloat;
         const wallet = getWalletById(this.state.selectedWalletId);
         const selectedAddresses = getWalletAddressList(wallet);
-        const selectedUtxos = await getUtxosForSelectedInputs(selectedAddresses,
+        const [selectedUtxos, memPoolTransaction] = await getUtxosForSelectedInputs(selectedAddresses,
             totalAmountToSendFloat, [], []);
 
         //console.log("sendTransaction", amountToSendFloat, feeFloat, wallet);
@@ -199,7 +201,7 @@ export default class MintTokens extends React.Component {
         }
 
         console.log("getTransactionJson unsignedTransaction", jsonUnsignedTx);
-        return [jsonUnsignedTx, selectedUtxos];
+        return [jsonUnsignedTx, selectedUtxos, memPoolTransaction];
     }
 
     render() {

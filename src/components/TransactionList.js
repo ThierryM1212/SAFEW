@@ -1,6 +1,5 @@
 import React, { Fragment } from 'react';
 import { updateErgoPrice } from '../ergo-related/ergoprice';
-import { getUtxoBalanceForAddressList } from '../ergo-related/utxos';
 import { waitingAlert } from '../utils/Alerts';
 import { getAddressListContent, getTransactionsForAddressList, getUnconfirmedTransactionsForAddressList, getWalletAddressList, getWalletById } from '../utils/walletUtils';
 import AddressListContent from './AddressListContent';
@@ -19,12 +18,11 @@ export default class TransactionList extends React.Component {
             addressContentList: props.addressContentList,
             transactionList: [],
             unconfirmedTransactionList: [],
-            limit: 10,
+            limit: 5,
             numberOfTransactions: 0,
         };
         this.updateTransactionList = this.updateTransactionList.bind(this);
         this.setLimit = this.setLimit.bind(this);
-        this.timer = this.timer.bind(this);
     }
 
     setLimit = (limit) => {
@@ -39,7 +37,6 @@ export default class TransactionList extends React.Component {
         const walletAddressList = getWalletAddressList(wallet);
         const addressContentList = await getAddressListContent(walletAddressList);
         this.setState({ addressContentList: addressContentList, });
-        await updateErgoPrice();
         const unConfirmedTxByAddressList = (await getUnconfirmedTransactionsForAddressList(walletAddressList))
             .map(txForAddr => txForAddr.transactions)
             .flat()
@@ -52,26 +49,19 @@ export default class TransactionList extends React.Component {
         const transactionList = transactionByAddressList.map(txForAddr => txForAddr.transactions).flat();
         const transactionListFiltered = transactionList.filter((e, i) => transactionList.findIndex(a => a.id === e.id) === i)
             .sort(function (a, b) {
-                return a.numConfirmations - b.numConfirmations;
+                return parseInt(a.numConfirmations) - parseInt(b.numConfirmations);
             })
             .slice(0, 2 * this.state.limit, Infinity);
-        this.setState({ transactionList: transactionListFiltered, numberOfTransactions: numberOfTransactions });
+        this.setState({ transactionList: transactionListFiltered, numberOfTransactions: parseInt(numberOfTransactions) });
         if (showAlert) { alert.close() };
     }
 
     async componentDidMount() {
-        var intervalId = setInterval(this.timer, 30000);
-        this.setState({ intervalId: intervalId });
-        this.setLimit(10);
-        await this.updateTransactionList();
+        await this.updateTransactionList(true);
     }
 
     componentWillUnmount() {
         clearInterval(this.state.intervalId);
-    }
-
-    timer() {
-        this.updateTransactionList(false);
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -79,21 +69,25 @@ export default class TransactionList extends React.Component {
         if (prevState.limit !== this.state.limit) {
             this.updateTransactionList(false);
         }
+        if (prevState.numberOfTransactions !== this.state.numberOfTransactions) {
+            this.setState({
+                numberOfTransactions: this.state.numberOfTransactions,
+            });
+        }
         if (prevState.transactionList.length > 0) {
-            if (prevState.transactionList[0].numConfirmations !== this.state.transactionList[0].numConfirmations) {
+            if (prevState.transactionList[0].numConfirmations !== this.state.transactionList[0].numConfirmations
+                || prevState.transactionList.length !== this.state.transactionList.length) {
                 this.updateTransactionList(false);
             }
         }
-        if (prevProps.numberOfTransactions !== this.props.numberOfTransactions) {
-            this.setState({
-                numberOfTransactions: this.props.numberOfTransactions,
-            });
+        if (prevState.unconfirmedTransactionList.length !== this.state.unconfirmedTransactionList.length) {
+            this.updateTransactionList(false);
         }
     }
 
     render() {
         const wallet = getWalletById(this.state.walletId);
-        
+
         return (
             <Fragment>
                 <div className='container card m-1 p-1 d-flex flex-column w-75 '

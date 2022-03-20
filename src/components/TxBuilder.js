@@ -8,13 +8,13 @@ import ImageButton from './ImageButton';
 import ImageButtonLabeled from './TransactionBuilder/ImageButtonLabeled';
 import ReactJson from 'react-json-view';
 import { UtxoItem } from './TransactionBuilder/UtxoItem';
-import { unspentBoxesForV1, boxByBoxId, currentHeight } from '../ergo-related/explorer';
+import { unspentBoxesForV1, boxByBoxId, currentHeight, postTxMempool } from '../ergo-related/explorer';
 import { parseUtxo, parseUtxos, enrichUtxos, buildBalanceBox, getUnspentBoxesForAddressList, parseSignedTx, enrichTokenInfoFromUtxos, getUtxoBalanceForAddressList } from '../ergo-related/utxos';
 import { getWalletForAddresses, signTransaction } from '../ergo-related/serializer';
 import JSONBigInt from 'json-bigint';
 import { errorAlert, promptPassword, waitingAlert } from '../utils/Alerts';
 import { sendTx } from '../ergo-related/node';
-import { getTxReducedB64Safe } from '../ergo-related/ergolibUtils';
+import { getTxReducedB64Safe, getUtxosForSelectedInputs } from '../ergo-related/ergolibUtils';
 import BigQRCode from './BigQRCode';
 import SelectWallet from './SelectWallet';
 import { decryptMnemonic, formatERGAmount, formatTokenAmount, getUnconfirmedTransactionsForAddressList, getWalletAddressList, getWalletById } from '../utils/walletUtils';
@@ -62,6 +62,7 @@ export default class TxBuilder extends React.Component {
             signedTransaction: '',
             txJsonRaw: '',
             tokenInfo: VERIFIED_TOKENS,
+            memPoolTransaction: false,
         };
         this.setWallet = this.setWallet.bind(this);
         this.setSearchAddress = this.setSearchAddress.bind(this);
@@ -132,12 +133,14 @@ export default class TxBuilder extends React.Component {
         const wallet = getWalletById(this.state.selectedWalletId);
         const addressList = getWalletAddressList(wallet);
         var alert = waitingAlert("Fetching wallet unspent boxes...")
-        const utxos = await getUnspentBoxesForAddressList(addressList);
+        //const utxos = await getUnspentBoxesForAddressList(addressList);
+        const [utxos, memPoolTransaction] = await getUtxosForSelectedInputs(addressList, '1000000000', [], []);
         const newTokenInfo = enrichTokenInfoFromUtxos(utxos, this.state.tokenInfo);
         alert.close();
         this.setState({
             addressBoxList: parseUtxos(utxos),
             tokenInfo: newTokenInfo,
+            memPoolTransaction: memPoolTransaction,
         });
     }
 
@@ -344,14 +347,22 @@ export default class TxBuilder extends React.Component {
         const signedTx = await this.signTx();
         console.log("signAndSendTx signedTx", signedTx);
         if (signedTx && signedTx.inputs) {
-            await sendTx(signedTx);
+            if (this.state.memPoolTransaction) {
+                await postTxMempool(signedTx);
+            } else {
+                await sendTx(signedTx);
+            }
             //await delay(3000);
             this.state.setPage('transactions', this.state.selectedWalletId);
         }
     }
 
     async sendSignedTx() {
-        await sendTx(this.state.signedTransaction);
+        if (this.state.memPoolTransaction) {
+            await postTxMempool(signedTx);
+        } else {
+            await sendTx(signedTx);
+        }
         //await delay(3000);
         this.state.setPage('transactions', this.state.selectedWalletId);
     }
