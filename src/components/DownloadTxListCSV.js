@@ -2,7 +2,8 @@ import React from 'react';
 import { CSVLink } from "react-csv";
 import { getUtxoBalanceForAddressList } from '../ergo-related/utxos';
 import { errorAlert, promptNumTx, waitingAlert } from '../utils/Alerts';
-import { formatERGAmount, formatTokenAmount, getTransactionsForAddressList, getWalletAddressList, getWalletById } from "../utils/walletUtils";
+import { NANOERG_TO_ERG } from '../utils/constants';
+import { formatTokenAmount, getTransactionsForAddressList, getWalletAddressList, getWalletById } from "../utils/walletUtils";
 import ImageButton from './ImageButton';
 
 export default class DownloadTxListCSV extends React.Component {
@@ -89,14 +90,14 @@ export default class DownloadTxListCSV extends React.Component {
                     var line = {};
                     var txDate = new Intl.DateTimeFormat();
                     if ("timestamp" in tx) {
-                        txDate = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'long' }).format(new Date(tx.timestamp));
+                        txDate = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'long', timeZone: 'UTC' }).format(new Date(tx.timestamp));
                     } else {
-                        txDate = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'long' }).format(new Date(tx.creationTimestamp));
+                        txDate = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'long', timeZone: 'UTC' }).format(new Date(tx.creationTimestamp));
                     }
                     line["transactionId"] = tx.id;
                     line["date"] = txDate;
                     line["assetName"] = "ERG";
-                    line["balance"] = formatERGAmount(bal.value);
+                    line["balance"] = parseFloat(parseInt(bal.value) / NANOERG_TO_ERG).toString();
                     line["tokenId"] = "";
                     csvList.push(line);
                     for (const tok of bal.tokens) {
