@@ -1,3 +1,4 @@
+
 /* global chrome BigInt */
 chrome.runtime.onInstalled.addListener(() => {
     console.log('SAFEW extension successfully installed!');
@@ -19,6 +20,8 @@ var signResponseHandlers = new Map();
 // transfer to popup
 var transactionsToSign = new Map();
 
+const explorerApi = localStorage.getItem("explorerAPIAddress") ?? "https://api.ergoplatform.com/";
+
 // launch extension popup
 function launchPopup(message, sender, param = '') {
     const searchParams = new URLSearchParams();
@@ -30,7 +33,7 @@ function launchPopup(message, sender, param = '') {
         console.log("launchPopup origin", origin, sender.url)
         searchParams.set('origin', origin);
     }
-    
+
     //searchParams.set('request', JSON.stringify(message.data));
     var type = message.data.type;
     console.log("launchPopup", message, type, param);
@@ -53,6 +56,48 @@ function launchPopup(message, sender, param = '') {
             focused: true,
         });
     });
+}
+
+// emulate localstorage-slim
+const APX = String.fromCharCode(0);
+function ls_slim_flush() {
+    Object.keys(localStorage).forEach((key) => {
+        const str = localStorage.getItem(key);
+        if (!str) return;
+        let item;
+        try {
+            item = JSON.parse(str);
+        } catch (e) {
+            return;
+        }
+        if (typeof item === 'object' && APX in item && (Date.now() > item.ttl)) {
+            localStorage.removeItem(key);
+        }
+    });
+}
+function ls_slim_get(key) {
+    const str = localStorage.getItem(key);
+    if (!str) {
+        return null;
+    }
+    let item = JSON.parse(str);
+    const hasTTL = typeof item === 'object' && APX in item;
+    if (!hasTTL) {
+        return item;
+    }
+    if (Date.now() > item.ttl) {
+        localStorage.removeItem(key);
+        return null;
+    }
+    return item[APX];
+}
+function ls_slim_set(key, value, ttl) {
+    try {
+        let val = ttl && ttl > 0 ? { [APX]: value, ttl: Date.now() + ttl * 1e3 } : value;
+        localStorage.setItem(key, JSON.stringify(val));
+    } catch (e) {
+        return false;
+    }
 }
 
 function getConnectedWalletName(url) {
@@ -87,7 +132,6 @@ async function get(url, apiKey = '') {
     return result;
 }
 async function post(url, body = {}, apiKey = '') {
-
     return fetch(url, {
         method: 'POST',
         headers: {
@@ -102,7 +146,12 @@ async function post(url, body = {}, apiKey = '') {
         .then(([responseOk, body]) => {
             if (responseOk) {
                 console.log("post1", body, responseOk)
-                return { result: true, data: body };
+                if (typeof body === 'object') {
+                    return { result: true, data: body.id };
+                } else {
+                    return { result: true, data: body };
+                }
+                
             } else {
                 return { result: false, data: body.detail };
             }
@@ -122,11 +171,27 @@ async function postRequest(url, body = {}, apiKey = '') {
         return { detail: { result: false, data: err.toString() } }
     }
 }
+async function postTxMempool(tx) {
+    try {
+        const res = await post(explorerApi + 'api/v1/mempool/transactions/submit', tx);
+        console.log("postTxMempool", tx, res);
+        return { detail: res };
+    } catch (err) {
+        console.log("postTxMempool", err);
+        return { detail: { result: false, data: err.toString() } }
+    }
+}
+
 async function sendTx(tx) {
-    return await postRequest("transactions", tx);
+    //return await postRequest("transactions", tx);
+    return await postTxMempool(tx);
+}
+async function getRequest(url, ttl = 0) {
+    return get(explorerApi + 'api/v0' + url, '').then(res => {
+        return { data: res };
+    });
 }
 async function getRequestV1(url) {
-    const explorerApi = localStorage.getItem("explorerAPIAddress") ?? "https://api.ergoplatform.com/";
     const res = await get(explorerApi + 'api/v1' + url);
     return { data: res };
 }
@@ -139,15 +204,21 @@ async function unspentBoxesForV1(address) {
     return res.data.items;
 }
 async function getUnspentBoxesForAddressList(addressList) {
-    const boxList = await Promise.all(addressList.map(async (address) => {
+    var boxList = await Promise.all(addressList.map(async (address) => {
         const addressBoxes = await unspentBoxesForV1(address);
-        console.log("getUnspentBoxesForAddressList", address, addressBoxes)
         return addressBoxes;
     }));
-    console.log("getUnspentBoxesForAddressList boxList", boxList, boxList.flat(), boxList.flat().sort(function (a, b) {
-        return a.globalIndex - b.globalIndex;
-    }));
-    return boxList.flat().sort(function (a, b) {
+    var [spentBoxes, newBoxes] = await getSpentAndUnspentBoxesFromMempool(addressList);
+    const spentInputBoxIds = spentBoxes.map(box => box.boxId);
+    const adjustedUtxos = newBoxes.concat(boxList).flat().filter(box => !spentInputBoxIds.includes(box.boxId));
+    //console.log("getUnspentBoxesForAddressList", spentBoxes, newBoxes, spentInputBoxIds, adjustedUtxos);
+    if (spentBoxes && Array.isArray(spentBoxes) && spentBoxes.length > 0) {
+        memPoolTransaction = true;
+        var cache_spentBoxes = ls_slim_get('cache_spentBoxes') ?? [];
+        ls_slim_set('cache_spentBoxes', boxList.filter(b => spentInputBoxIds.includes(b.boxId)).concat(cache_spentBoxes).flat(), 600);
+    }
+
+    return adjustedUtxos.flat().sort(function (a, b) {
         return a.globalIndex - b.globalIndex;
     });
 }
@@ -175,6 +246,43 @@ function getTokenListFromUtxos(utxos) {
     }
     return tokenList;
 }
+async function getUnconfirmedTxsFor(addr) {
+    return getRequest(`/transactions/unconfirmed/byAddress/${addr}`)
+        .then((res) => res.data)
+        .then((res) => res.items);
+}
+async function getUnconfirmedTransactionsForAddressList(addressList) {
+    const addressUnConfirmedTransactionsList = await Promise.all(addressList.map(async (address) => {
+        var addressTransactions = await getUnconfirmedTxsFor(address);
+        return addressTransactions;
+    }));
+    return addressUnConfirmedTransactionsList.flat();
+}
+async function getSpentAndUnspentBoxesFromMempool(addressList) {
+    var unconfirmedTxs = (await getUnconfirmedTransactionsForAddressList(addressList, false));
+    var spentBoxes = [];
+    var newBoxes = [];
+    if (unconfirmedTxs.length > 0) {
+        spentBoxes = unconfirmedTxs.map(tx => tx.inputs).flat();
+        for (const i in spentBoxes) {
+            spentBoxes[i].boxId = spentBoxes[i].id
+        }
+        newBoxes = unconfirmedTxs.map(tx => tx.outputs).flat().filter(box => addressList.includes(box.address));
+    }
+    ls_slim_flush();
+    if (newBoxes.length > 0) {
+        for (const i in newBoxes) {
+            newBoxes[i]["boxId"] = newBoxes[i].id;
+            delete newBoxes[i].id;
+        }
+        var cache_newBoxes = ls_slim_get('cache_newBoxes') ?? [];
+        ls_slim_set('cache_newBoxes', newBoxes.concat(cache_newBoxes), 600);
+        //console.log('getUtxosForSelectedInputs cache_newBoxes', ls.get('cache_newBoxes'))
+    }
+    console.log("getSpentAndUnspentBoxesFromMempool", spentBoxes, newBoxes)
+    return [spentBoxes, newBoxes];
+}
+
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     console.log("background addListener", message, sender, sendResponse);

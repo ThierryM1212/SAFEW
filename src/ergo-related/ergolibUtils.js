@@ -135,16 +135,6 @@ export async function getUtxosForSelectedInputs(inputAddressList, ergAmount, tok
 
     // replace spent boxes from Mempool by new generated boxes for chained transaction
     var [spentBoxes, newBoxes] = await getSpentAndUnspentBoxesFromMempool(inputAddressList);
-    ls.flush();
-    if (newBoxes.length > 0) {
-        for (const i in newBoxes) {
-            newBoxes[i]["boxId"] = newBoxes[i].id;
-            delete newBoxes[i].id;
-        }
-        var cache_newBoxes = ls.get('cache_newBoxes') ?? [];
-        ls.set('cache_newBoxes', newBoxes.concat(cache_newBoxes), { ttl: 600 });
-        //console.log('getUtxosForSelectedInputs cache_newBoxes', ls.get('cache_newBoxes'))
-    }
     const spentInputBoxIds = spentBoxes.map(box => box.boxId);
     const adjustedUtxos = parseUtxos(newBoxes).concat(utxos).filter(box => !spentInputBoxIds.includes(box.boxId));
 

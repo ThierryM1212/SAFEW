@@ -440,6 +440,16 @@ export async function getSpentAndUnspentBoxesFromMempool(addressList) {
         }
         newBoxes = unconfirmedTxs.map(tx => tx.outputs).flat().filter(box => addressList.includes(box.address));
     }
+    ls.flush();
+    if (newBoxes.length > 0) {
+        for (const i in newBoxes) {
+            newBoxes[i]["boxId"] = newBoxes[i].id;
+            delete newBoxes[i].id;
+        }
+        var cache_newBoxes = ls.get('cache_newBoxes') ?? [];
+        ls.set('cache_newBoxes', newBoxes.concat(cache_newBoxes), { ttl: 600 });
+        //console.log('getUtxosForSelectedInputs cache_newBoxes', ls.get('cache_newBoxes'))
+    }
     console.log("getSpentAndUnspentBoxesFromMempool", spentBoxes, newBoxes)
     return [spentBoxes, newBoxes];
 }
