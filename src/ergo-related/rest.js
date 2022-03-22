@@ -1,5 +1,6 @@
 import { displayTransaction, errorAlert } from "../utils/Alerts";
 import JSONBigInt from 'json-bigint';
+import ls from 'localstorage-slim';
 
 export async function postTx(url, body = {}, apiKey = '') {
     console.log("post", url)
@@ -16,8 +17,14 @@ export async function postTx(url, body = {}, apiKey = '') {
     }).then(response => Promise.all([response.ok, response.json()]))
         .then(([responseOk, body]) => {
             if (responseOk) {
-                displayTransaction(body)
-                return JSON.parse(body);
+                console.log("fetch1", body);
+                if (typeof body === 'object') {
+                    displayTransaction(body.id)
+                    return body.id;
+                } else {
+                    displayTransaction(body)
+                    return body;
+                }
             } else {
                 console.log("fetch2", body);
                 try {
@@ -46,16 +53,32 @@ export async function post(url, body = {}, apiKey = '') {
     });
 }
 
-export async function get(url, apiKey = '') {
+export async function get(url, apiKey = '', ttl = 0) {
+    //console.log("get", url, apiKey, ttl);
+    var res_cache = {};
     try {
+        if (ttl > 0) {
+            ls.flush();
+            res_cache = ls.get('web_cache_' + ttl.toString()) ?? {};
+            if (Object.keys(res_cache).includes(url)) {
+                //console.log("res_cache", res_cache[url])
+                return res_cache[url];
+            }
+        }
         const result = await fetch(url, {
             headers: {
                 Accept: 'application/json',
                 'Content-Type': 'application/json',
                 api_key: apiKey,
             }
-        }).then(res => res.json());
-        return result;
+        })
+        const resJson = await result.json();
+        if (ttl > 0) {
+            res_cache = ls.get('web_cache_' + ttl.toString()) ?? {};
+            res_cache[url] = resJson;
+            ls.set('web_cache_' + ttl.toString(), res_cache, { ttl: ttl })
+        }
+        return resJson;
     } catch (e) {
         console.error(e);
         return [];

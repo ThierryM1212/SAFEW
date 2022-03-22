@@ -17,16 +17,22 @@ export default class Transaction extends React.Component {
     async componentDidMount() {
         const walletAddressList = getWalletAddressList(this.state.wallet);
         const balance = await getUtxoBalanceForAddressList(this.state.transaction.inputs, this.state.transaction.outputs, walletAddressList);
-        this.setState({
-            balance: balance,
-        })
+        this.setState({ balance: balance })
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        if (prevProps.transaction && prevProps.transaction.numConfirmations) {
+            if (prevProps.transaction.numConfirmations !== this.props.transaction.numConfirmations) {
+                this.setState({ transaction: this.props.transaction })
+            }
+        }
     }
 
     render() {
         const tx = this.state.transaction;
         const balance = this.state.balance;
         var txDate = new Intl.DateTimeFormat();
-        if ("timestamp" in tx) {
+        if (Object.keys(tx).includes("timestamp")) {
             txDate = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'long' }).format(new Date(tx.timestamp));
         } else {
             txDate = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'long' }).format(new Date(tx.creationTimestamp));

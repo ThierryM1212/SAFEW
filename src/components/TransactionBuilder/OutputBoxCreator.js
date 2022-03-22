@@ -298,7 +298,7 @@ export default class OutputBoxCreator extends React.Component {
                             <ImageButton id="reset" color="red" onClick={this.state.reset} icon="restart_alt" tips="Reset" />
                             <ImageButton id="fee" color="blue" onClick={this.state.fee} icon="monetization_on" tips="Setup transaction fee output box<br/>(default 0.002 ERG)" />
                             <ImageButton id="balance" color="blue" onClick={this.state.balance} icon="balance" tips="Setup a change box to balance the transaction.<br/>Add not attribuated ERG and tokens in inputs to the box.<br/>Set the ergoTree to the configured wallet change address." />
-                            <ImageButton id="add" color="green" onClick={this.state.add} icon="add_box" tips="Add to transation output list" />
+                            <ImageButton id="add" color="green" onClick={this.state.add} icon="add_box" tips="Add to transaction output list" />
                         </div>
                     </div>
                     <OutputEditable json={this.state.json} onEdit={this.state.onEdit} />

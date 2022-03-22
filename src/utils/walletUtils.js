@@ -4,10 +4,10 @@ import { NANOERG_TO_ERG, PASSWORD_SALT, WALLET_VERSION } from "./constants";
 import '@sweetalert2/theme-dark/dark.css';
 import { enrichUtxos } from "../ergo-related/utxos";
 import { hexToRgbA } from "./utils";
-import { waitingAlert } from "./Alerts";
 import { ExplorerTokenMarket } from 'ergo-market-lib/dist/ExplorerTokenMarket';
-import { renderFractions, math } from 'ergo-market-lib/dist/math';
+import ls from 'localstorage-slim';
 var CryptoJS = require("crypto-js");
+
 
 
 export const MIN_CHAR_WALLET_NAME = 3;

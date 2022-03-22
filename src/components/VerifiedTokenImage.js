@@ -1,5 +1,5 @@
 import React from 'react';
-import { TOKENID_ERDOGE, TOKENID_ERGOPAD, TOKENID_KUSHTI, TOKENID_LUNADOG, TOKENID_NETA, TOKENID_SIGRSV, TOKENID_SIGUSD } from '../utils/constants';
+import { TOKENID_COMET, TOKENID_ERDOGE, TOKENID_ERGOPAD, TOKENID_KUSHTI, TOKENID_LUNADOG, TOKENID_MI_GOREN, TOKENID_MI_GORENG, TOKENID_NETA, TOKENID_SIGRSV, TOKENID_SIGUSD } from '../utils/constants';
 
 import sigusdLogo from '../resources/tokens/token-sigusd.svg';
 import sigrsvLogo from '../resources/tokens/token-sigrsv.svg';
@@ -8,6 +8,8 @@ import erdogeLogo from '../resources/tokens/token-erdoge.svg';
 import ergopadLogo from '../resources/tokens/token-ergopad.svg';
 import lunadogLogo from '../resources/tokens/token-lunadog.svg';
 import netaLogo from '../resources/tokens/token-neta.svg';
+import miGorengLogo from '../resources/tokens/token-mi-goreng.svg';
+import cometLogo from '../resources/tokens/token-comet.svg';
 import unknown from '../resources/tokens/token-unknown.png';
 
 
@@ -37,6 +39,10 @@ export default class VerifiedTokenImage extends React.Component {
                 return lunadogLogo;
             case TOKENID_NETA:
                 return netaLogo;
+            case TOKENID_MI_GORENG:
+                return miGorengLogo;
+            case TOKENID_COMET:
+                return cometLogo;
             default:
                 return unknown;
         }
@@ -44,7 +50,7 @@ export default class VerifiedTokenImage extends React.Component {
 
     render() {
         return (
-            <img src={this.renderSwitch(this.state.tokenId)} alt={this.state.tokenId}/>
+            <img src={this.renderSwitch(this.state.tokenId)} alt={this.state.tokenId} />
         )
     }
 }
