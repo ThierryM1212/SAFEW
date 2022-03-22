@@ -45,6 +45,7 @@ const ergoInitialAPIFunctions = `
 
 const injected_script_1 = `
   var connectRequests = [];
+  var ergopayRequests = [];
   var responseHandlers = new Map();
   var requestId = 0;
 
@@ -74,6 +75,20 @@ const injected_script_1 = `
   window.ergo_check_read_access = function () {
       console.warn("deprecated auth method, use ergoConnector.safew.isConnected()")
       return ergoConnector.safew.isConnected();
+  }
+
+  window.ergopay_get_request = function (url) {
+    return new Promise(function (resolve, reject) {
+        window.dispatchEvent(
+            new CustomEvent('safew_injected_script_message', {
+                detail: {
+                    type: "ergopay_request",
+                    url: window.location.origin,
+                    data: url,
+                }
+            }));
+        ergopayRequests.push({ resolve: resolve, reject: reject });
+    });
   }
   
   window.addEventListener("safew_contentscript_message", function (event) {

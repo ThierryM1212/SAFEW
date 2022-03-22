@@ -302,6 +302,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             return true;
         }
 
+        if (message.data && message.data.type === "ergopay_request") {
+            console.log("ergopay_request received:", message.data);
+
+
+
+        }
+
         if (message.data && message.data.type === "ergo_api") {
             const wallet = getConnectedWalletByURL(message.data.url);
             const addressList = wallet.accounts.map(account => account.addresses).flat();
