@@ -4,7 +4,7 @@ import { byteArrayToBase64, getErgoStateContext, tokenFloatToAmount } from './se
 import JSONBigInt from 'json-bigint';
 import { getTokenListFromUtxos, getUtxosListValue, parseUtxos } from './utxos';
 import { errorAlert } from '../utils/Alerts';
-let ergolib = import('ergo-lib-wasm-browser');
+import ergolib from 'ergo-lib-browser.asm';
 
 /* global BigInt */
 
