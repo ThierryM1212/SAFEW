@@ -89,6 +89,8 @@ export default class TxBuilder extends React.Component {
         this.timer = this.timer.bind(this);
         this.setTxJsonRaw = this.setTxJsonRaw.bind(this);
         this.loadTxFromJsonRaw = this.loadTxFromJsonRaw.bind(this);
+        this.getSignedTransaction = this.getSignedTransaction.bind(this);
+        this.getTransaction = this.getTransaction.bind(this);
     }
     setWallet = (walletId) => { this.setState({ selectedWalletId: walletId }); };
     setSearchAddress = (address) => { this.setState({ searchAddress: address }); };
@@ -301,6 +303,14 @@ export default class TxBuilder extends React.Component {
         };
     }
 
+    getSignedTransaction() {
+        console.log("getSignedTransaction", this.state.signedTransaction);
+        if (this.state.signedTransaction === '') {
+            return {}
+        }
+        return {...this.state.signedTransaction};
+    }
+
     async signTx() {
         const wallet = getWalletById(this.state.selectedWalletId);
         const walletAddressList = getWalletAddressList(wallet);
@@ -359,9 +369,9 @@ export default class TxBuilder extends React.Component {
 
     async sendSignedTx() {
         if (this.state.memPoolTransaction) {
-            await postTxMempool(signedTx);
+            await postTxMempool(this.state.signedTransaction);
         } else {
-            await sendTx(signedTx);
+            await sendTx(this.state.signedTransaction);
         }
         //await delay(3000);
         this.state.setPage('transactions', this.state.selectedWalletId);
@@ -673,16 +683,11 @@ export default class TxBuilder extends React.Component {
                                             onClick={this.sendSignedTx}
                                         />
                                     </div>
-                                    <div>
-                                        <ReactJson
-                                            id="signed-tx-json"
-                                            src={this.state.signedTransaction}
-                                            theme="monokai"
-                                            collapsed={true}
-                                            name={false}
-                                            collapseStringsAfterLength={60}
-                                        />
-                                    </div>
+                                    <textarea
+                                        id="signed-tx-json"
+                                        value={JSONBigInt.stringify(this.getSignedTransaction(), null, 4)}
+                                        rows="10"
+                                    />
                                 </div>
                             </div>
                     }
