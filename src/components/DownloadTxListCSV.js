@@ -70,6 +70,9 @@ export default class DownloadTxListCSV extends React.Component {
                 const allTxList = (await getTransactionsForAddressList(walletAddressList, numberOfTx))
                     .map(res => res.transactions)
                     .flat()
+                    .filter((t, index, self) => {
+                        return self.findIndex(tx => tx.id === t.id) === index;
+                    })
                     .sort(function (a, b) {
                         return a.numConfirmations - b.numConfirmations;
                     });
