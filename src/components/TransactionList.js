@@ -1,5 +1,4 @@
 import React, { Fragment } from 'react';
-import { updateErgoPrice } from '../ergo-related/ergoprice';
 import { waitingAlert } from '../utils/Alerts';
 import { getAddressListContent, getTransactionsForAddressList, getUnconfirmedTransactionsForAddressList, getWalletAddressList, getWalletById } from '../utils/walletUtils';
 import AddressListContent from './AddressListContent';
@@ -15,7 +14,7 @@ export default class TransactionList extends React.Component {
             walletId: props.walletId,
             setPage: props.setPage,
             color: props.color,
-            addressContentList: props.addressContentList,
+            addressContentList: [],
             transactionList: [],
             unconfirmedTransactionList: [],
             limit: 5,
@@ -42,6 +41,9 @@ export default class TransactionList extends React.Component {
             .flat()
             .filter((t, index, self) => {
                 return self.findIndex(tx => tx.id === t.id) === index;
+            })
+            .sort(function (a, b) {
+                return parseInt(a.numConfirmations) - parseInt(b.numConfirmations);
             });
         this.setState({ unconfirmedTransactionList: unConfirmedTxByAddressList });
         const transactionByAddressList = await getTransactionsForAddressList(walletAddressList, this.state.limit);
