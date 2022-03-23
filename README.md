@@ -32,6 +32,7 @@ Wallet features:
  - Display NFT pictures, audio and videos
  - Mint tokens, pictures, audio and videos
  - Burn tokens
+ - Chained transactions
 
 ## Security
 The wallets are stored in the local storage of the SAFEW browser extension.<br/>
@@ -122,3 +123,9 @@ v0.4.4
 v0.4.5
 - Fix Ergodex connection
 - UI adjustment
+
+v0.4.6
+- Chained transactions support in wallet and with dApp connector
+- Improve csv export with UTC date and full ERG amount
+- Added COMET and Mi Goreng verified tokens
+- Bug fix
