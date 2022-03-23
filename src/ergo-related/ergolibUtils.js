@@ -201,6 +201,10 @@ async function getBoxValueAmount(valueInt) {
 }
 
 export async function createTxOutputs(selectedUtxos, sendToAddress, changeAddress, amountToSendFloat, feeFloat, tokens, tokenAmountToSend, tokenToMint = {}, burnMode = false) {
+    if (selectedUtxos.length === 0) {
+        errorAlert("Error generating the transaction", "No box found to be spent.");
+        return;
+    }
     const creationHeight = await currentHeight() - 20; // allow some lag between explorer and node
     const feeNano = BigInt(Math.round((feeFloat * NANOERG_TO_ERG)));
     var amountNano = BigInt(Math.round((amountToSendFloat * NANOERG_TO_ERG)));
