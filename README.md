@@ -32,7 +32,7 @@ Wallet features:
  - Display NFT pictures, audio and videos
  - Mint tokens, pictures, audio and videos
  - Burn tokens
- - Chained transactions
+ - Chained transactions (send another transaction as soon as your transaction is visible in Explorer in unconfirmed state)
 
 ## Security
 The wallets are stored in the local storage of the SAFEW browser extension.<br/>
@@ -85,6 +85,8 @@ Ledger signing (Waiting on ledger-ergo-app fix)<br/>
 ![Ergo mixer](./screens/ergo_mixer_mixes.png)
 ![Transaction builder](./screens/tx_builder.png)
 ![Sign with ErgoPay](./screens/sign_ergopay.png)
+![Mint NFTs, including image, audio or videos](./screens/mint_tokens.png)
+![Display NFTs](./screens/display_nft.png)
 
 ## Release notes
 v0.3
