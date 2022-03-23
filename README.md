@@ -126,6 +126,7 @@ v0.4.5
 
 v0.4.6
 - Chained transactions support in wallet and with dApp connector
+- Add caching for some explorer requests
 - Improve csv export with UTC date and full ERG amount
 - Added COMET and Mi Goreng verified tokens
 - Bug fix
