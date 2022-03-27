@@ -8,6 +8,8 @@ import Select from 'react-select';
 import ValidInput from './ValidInput';
 import ImageButton from './ImageButton';
 import { MAX_NUMBER_OF_UNUSED_ADDRESS_PER_ACCOUNT } from '../utils/constants';
+import { DEFAULT_EXPLORER_WEBUI_ADDRESS } from '../utils/constants';
+import { LS } from '../utils/utils';
 
 export default class EditWallet extends React.Component {
     constructor(props) {
@@ -34,6 +36,7 @@ export default class EditWallet extends React.Component {
             selectedChangeAddress: '',
             isValidAddressToAdd: false,
             addressToAdd: '',
+            explorerWebUIURL: DEFAULT_EXPLORER_WEBUI_ADDRESS,
         };
         this.updateWalletName = this.updateWalletName.bind(this);
         this.updateWalletColor = this.updateWalletColor.bind(this);
@@ -50,9 +53,9 @@ export default class EditWallet extends React.Component {
         this.addAddress = this.addAddress.bind(this);
     }
 
-    setWalletName = (name) => {
+    async setWalletName(name) {
         const minWalletNameChar = 2;
-        const walletNameAlreadyExists = getWalletNames().includes(name);
+        const walletNameAlreadyExists = (await getWalletNames()).includes(name);
         var invalidMessage = ' ';
         if (name.length <= minWalletNameChar) { invalidMessage += INVALID_NAME_LENGTH_MSG };
         if (walletNameAlreadyExists) invalidMessage += " Wallet name already exists !";
@@ -64,30 +67,30 @@ export default class EditWallet extends React.Component {
         });
     };
 
-    updateWalletName = () => {
-        var wallet = getWalletById(this.state.walletId);
+    async updateWalletName() {
+        var wallet = await getWalletById(this.state.walletId);
         const oldWalletName = wallet.name;
         wallet.name = this.state.walletName;
-        updateWallet(wallet, this.state.walletId);
+        await updateWallet(wallet, this.state.walletId);
         // update wallet name in connected site list
-        var connectedSites = JSON.parse(localStorage.getItem('connectedSites'));
+        var connectedSites = await LS.getItem('connectedSites');
         for (const key of Object.keys(connectedSites)) {
             if (key === oldWalletName) {
                 connectedSites[this.state.walletName] = [...connectedSites[oldWalletName]];
                 delete connectedSites[oldWalletName];
             }
         }
-        localStorage.setItem('connectedSites', JSON.stringify(connectedSites));
+        LS.setItem('connectedSites', connectedSites);
 
-        this.setWalletName(this.state.walletName);
+        await this.setWalletName(this.state.walletName);
         successAlert(this.state.walletName, "Wallet name updated");
     }
 
-    updateWalletColor = () => {
-        var wallet = getWalletById(this.state.walletId);
+    async updateWalletColor() {
+        var wallet = await getWalletById(this.state.walletId);
         wallet.color = this.state.color;
-        updateWallet(wallet, this.state.walletId);
-        this.setWalletName(this.state.walletName);
+        await updateWallet(wallet, this.state.walletId);
+        await this.setWalletName(this.state.walletName);
         this.setState({
             color: this.state.color,
             wallerColor: this.state.color,
@@ -95,12 +98,12 @@ export default class EditWallet extends React.Component {
         successAlert(this.state.walletName, "Wallet color updated");
     }
 
-    updateWalletPassword = () => {
-        var wallet = getWalletById(this.state.walletId);
+    async updateWalletPassword() {
+        var wallet = await getWalletById(this.state.walletId);
         const oldEncryptedMnemonic = wallet.mnemonic;
         const newEncryptedMnemonic = changePassword(oldEncryptedMnemonic, this.state.passwordOld, this.state.password1);
         wallet.mnemonic = newEncryptedMnemonic;
-        updateWallet(wallet, this.state.walletId);
+        await updateWallet(wallet, this.state.walletId);
         this.setPasswordOld('');
         this.setPassword1('');
         this.setPassword2('');
@@ -121,10 +124,10 @@ export default class EditWallet extends React.Component {
         setChangeAddress(this.state.walletId, addr.value);
     };
 
-    setPasswordOld = (password) => {
+    async setPasswordOld (password) {
         this.setState({
             passwordOld: password,
-            isValidPasswordOld: passwordIsValid(getWalletById(this.state.walletId).mnemonic, password),
+            isValidPasswordOld: passwordIsValid((await getWalletById(this.state.walletId)).mnemonic, password),
         });
     }
     setPassword1 = (password) => {
@@ -149,11 +152,11 @@ export default class EditWallet extends React.Component {
             invalidPassword2Message: validPasswordMessage,
         }));
     };
-    setAddressToAdd = (address) => {
+    async setAddressToAdd(address) {
         this.setState({
             addressToAdd: address
         });
-        const wallet = getWalletById(this.state.walletId);
+        const wallet = await getWalletById(this.state.walletId);
         const walletAddressList = getWalletAddressList(wallet);
         if (walletAddressList.includes(address)) {
             this.setState({ isValidAddressToAdd: false });
@@ -169,28 +172,29 @@ export default class EditWallet extends React.Component {
         return (this.state.color !== this.state.walletColor);
     }
 
-    componentDidMount() {
-        const wallet = getWalletById(this.state.walletId);
+    async componentDidMount() {
+        const wallet = await getWalletById(this.state.walletId);
         const walletAddressList = getWalletAddressList(wallet);
-        console.log("EditWallet componentDidMount wallet", wallet);
+        const explorerUIaddr = (await LS.getItem('explorerWebUIAddress')) ?? DEFAULT_EXPLORER_WEBUI_ADDRESS;
         this.setState({
             walletName: wallet.name,
             walletColor: wallet.color,
             color: wallet.color,
             selectedChangeAddress: wallet.changeAddress,
             walletAddressList: walletAddressList,
+            explorerUIaddr: explorerUIaddr,
         })
     }
 
     async searchAddresses() {
-        var wallet = getWalletById(this.state.walletId);
+        var wallet = await getWalletById(this.state.walletId);
         const password = await promptPassword("Spending password for<br/>" + wallet.name, "", "Search");
         const mnemonic = decryptMnemonic(wallet.mnemonic, password);
         if (mnemonic === null) { return; }
         if (mnemonic !== '') {
             const swal = waitingAlert("Searching addresses");
             wallet.accounts = await discoverAddresses(mnemonic);
-            updateWallet(wallet, this.state.walletId);
+            await updateWallet(wallet, this.state.walletId);
             swal.close();
             this.state.setPage('home');
         } else {
@@ -216,9 +220,9 @@ export default class EditWallet extends React.Component {
         confirmAlert("Delete the mnemonic for " + this.state.walletName + "?",
             message,
             "Delete")
-            .then(res => {
+            .then(async res => {
                 if (res.isConfirmed) {
-                    convertToErgoPay(this.state.walletId);
+                    await convertToErgoPay(this.state.walletId);
                     this.state.setPage('home');
                 }
             })
@@ -228,22 +232,22 @@ export default class EditWallet extends React.Component {
         confirmAlert("Delete the wallet " + this.state.walletName + "?",
             "The wallet will be deleted from the application but will stay in the Ergo blockchain.<br/>It can be restored at any time with the mnemonic.",
             "Delete")
-            .then(res => {
+            .then(async res => {
                 if (res.isConfirmed) {
                     // remove wallet from connected site list
-                    var connectedSites = JSON.parse(localStorage.getItem('connectedSites'));
-                    delete connectedSites[this.state.walletName];
-                    localStorage.setItem('connectedSites', JSON.stringify(connectedSites));
-                    deleteWallet(this.state.walletId);
-
-                    this.state.setPage('home');
+                    LS.getItem('connectedSites').then(async connectedSites => {
+                        delete connectedSites[this.state.walletName];
+                        LS.setItem('connectedSites', JSON.stringify(connectedSites))
+                        await deleteWallet(this.state.walletId);
+                        this.state.setPage('home');
+                    })
                 }
             })
     }
 
-    deleteAddress = (address) => {
-        deleteWalletAddress(this.state.walletId, address);
-        const wallet = getWalletById(this.state.walletId);
+    async deleteAddress(address) {
+        await deleteWalletAddress(this.state.walletId, address);
+        const wallet = await getWalletById(this.state.walletId);
         this.setState({
             walletAddressList: getWalletAddressList(wallet),
         });
@@ -252,7 +256,7 @@ export default class EditWallet extends React.Component {
     async addAddress() {
         if (this.state.isValidAddressToAdd) {
             await addWalletAddress(this.state.walletId, this.state.addressToAdd);
-            const wallet = getWalletById(this.state.walletId);
+            const wallet = await getWalletById(this.state.walletId);
             this.setState({
                 walletAddressList: getWalletAddressList(wallet),
                 addressToAdd: '',
@@ -261,8 +265,8 @@ export default class EditWallet extends React.Component {
         }
     }
 
-    backupWallet = () => {
-        const wallet = getWalletById(this.state.walletId);
+    async backupWallet() {
+        const wallet = await getWalletById(this.state.walletId);
         var _myArray = JSON.stringify(wallet, null, 4);
         var vLink = document.createElement('a'),
             vBlob = new Blob([_myArray], { type: "octet/stream" }),
@@ -361,7 +365,7 @@ export default class EditWallet extends React.Component {
                                                         icon={"open_in_new"}
                                                         tips={"Open in Explorer"}
                                                         onClick={() => {
-                                                            const url = localStorage.getItem('explorerWebUIAddress') + 'en/addresses/' + address;
+                                                            const url = this.state.explorerWebUIURL + 'en/addresses/' + address;
                                                             window.open(url, '_blank').focus();
                                                         }}
                                                     />

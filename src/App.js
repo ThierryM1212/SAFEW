@@ -16,40 +16,26 @@ import { confirmAlert } from './utils/Alerts';
 import { isUpgradeWalletRequired, upgradeWallets } from './utils/walletUtils';
 import TxBuilder from './components/TxBuilder';
 import MintTokens from './components/MintTokens';
+import { LS } from './utils/utils';
 
 export default class App extends React.Component {
     constructor(props) {
         super(props);
         var iniPage = 'empty';
-        const disclaimerAccepted = (localStorage.getItem('disclaimerAccepted') === "true") ?? false;
-        if (disclaimerAccepted) iniPage = 'home';
-        console.log("App ini", disclaimerAccepted, iniPage);
         this.state = {
             page: iniPage,
             walletId: 0,
             mixerAvailable: false,
-            disclaimerAccepted: disclaimerAccepted,
+            disclaimerAccepted: false,
             setPageParam: {
                 address: '',
                 amount: 0,
                 tokens: [],
             },
+            debug: false,
+            expertMode: false,
         };
         this.setPage = this.setPage.bind(this);
-
-        // init the config
-        localStorage.setItem('explorerAPIAddress', localStorage.getItem('explorerAPIAddress') ?? DEFAULT_EXPLORER_API_ADDRESS);
-        localStorage.setItem('explorerWebUIAddress', localStorage.getItem('explorerWebUIAddress') ?? DEFAULT_EXPLORER_WEBUI_ADDRESS);
-        localStorage.setItem('nodeAddress', localStorage.getItem('nodeAddress') ?? DEFAULT_NODE_ADDRESS);
-        localStorage.setItem('mixerAddress', localStorage.getItem('mixerAddress') ?? DEFAULT_MIXER_ADDRESS);
-        localStorage.setItem('connectedSites', localStorage.getItem('connectedSites') ?? JSON.stringify({}));
-        localStorage.setItem('walletList', localStorage.getItem('walletList') ?? JSON.stringify([]));
-        localStorage.setItem('expertMode', localStorage.getItem('expertMode') ?? "false");
-        localStorage.setItem('hideUsedEmptyAddress', localStorage.getItem('hideUsedEmptyAddress') ?? "true");
-        // handle wallet version and upgrade
-        if (isUpgradeWalletRequired()) {
-            upgradeWallets();
-        }
     }
 
     setPage = (page, walletId = 0, setPageParam = {
@@ -65,12 +51,34 @@ export default class App extends React.Component {
         });
     };
 
-    componentDidMount() {
-        const debug = (localStorage.getItem('debug') === 'true') ?? false;
-        if (!this.state.disclaimerAccepted && !debug) {
+    async componentDidMount() {
+        const disclaimerAccepted = (await LS.getItem('disclaimerAccepted')) ?? false;
+        console.log("componentDidMount", disclaimerAccepted, (await LS.getItem('disclaimerAccepted')));
+        if (disclaimerAccepted) this.setState({ page: 'home' });
+
+        // init the config
+        LS.setItem('explorerAPIAddress', (await LS.getItem('explorerAPIAddress')) ?? DEFAULT_EXPLORER_API_ADDRESS);
+        LS.setItem('explorerWebUIAddress', (await LS.getItem('explorerWebUIAddress')) ?? DEFAULT_EXPLORER_WEBUI_ADDRESS);
+        LS.setItem('nodeAddress', (await LS.getItem('nodeAddress')) ?? DEFAULT_NODE_ADDRESS);
+        LS.setItem('mixerAddress', (await LS.getItem('mixerAddress')) ?? DEFAULT_MIXER_ADDRESS);
+        LS.setItem('connectedSites', (await LS.getItem('connectedSites')) ?? {});
+        const walletList = (await LS.getItem('walletList')) ?? [];
+        LS.setItem('walletList', walletList);
+        LS.setItem('expertMode', (await LS.getItem('expertMode')) ?? false);
+        LS.setItem('hideUsedEmptyAddress', (await LS.getItem('hideUsedEmptyAddress')) ?? true);
+        // handle wallet version and upgrade
+
+        if (isUpgradeWalletRequired(walletList)) {
+            upgradeWallets();
+        }
+
+        const debug = (await LS.getItem('debug')) ?? false;
+        const expertMode = (await LS.getItem('expertMode')) ?? false;
+        this.setState({ debug: debug, expertMode: expertMode });
+        if (!disclaimerAccepted && !debug) {
             confirmAlert("Disclaimer", DISCLAIMER_TEXT, "Use SAFEW", "Refuse").then(res => {
                 if (res.isConfirmed) {
-                    localStorage.setItem('disclaimerAccepted', "true");
+                    LS.setItem('disclaimerAccepted', true);
                     this.setState({ disclaimerAccepted: true });
                     this.setPage('home');
                 } else {
@@ -154,7 +162,11 @@ export default class App extends React.Component {
 
                 {popup ? null :
                     <div className='App container-xxl w-100'>
-                        <NavigationBar setPage={this.setPage} mixerAvailable={this.state.mixerAvailable} />
+                        <NavigationBar setPage={this.setPage}
+                            mixerAvailable={this.state.mixerAvailable}
+                            debug={this.state.debug}
+                            expertMode={this.state.expertMode}
+                        />
                         {page}
                     </div>
                 }

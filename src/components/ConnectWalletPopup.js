@@ -1,4 +1,5 @@
 import React, { Fragment } from 'react';
+import { LS } from '../utils/utils';
 
 /* global chrome */
 
@@ -9,12 +10,19 @@ export default class ConnectWalletPopup extends React.Component {
         //console.log("ConnectWalletPopup url", window.location, url);
         this.state = {
             selectedOption: "",
-            walletList: JSON.parse(localStorage.getItem('walletList')) ?? [],
+            walletList: [],
+            connectedSites: {},
             url: url.searchParams.get("origin"),
             accepted: false,
         };
         this.handleFormSubmit = this.handleFormSubmit.bind(this);
         this.handleOptionChange = this.handleOptionChange.bind(this);
+    }
+
+    async componentDidMount() {
+        const walletList = (await LS.getItem('walletList')) ?? [];
+        const connectedSites = (await LS.getItem('connectedSites')) ?? {};
+        this.setState({ walletList: walletList, connectedSites: connectedSites });
     }
 
     handleOptionChange = changeEvent => {
@@ -34,7 +42,7 @@ export default class ConnectWalletPopup extends React.Component {
             }
         });
         this.setState({ accepted: true });
-        var connectedSites = JSON.parse(localStorage.getItem('connectedSites')) ?? {};
+        var connectedSites = { ...this.state.connectedSites };
         if (Object.keys(connectedSites).includes(this.state.selectedOption)) {
             if (!connectedSites[this.state.selectedOption].includes(this.state.url)) {
                 connectedSites[this.state.selectedOption].push(this.state.url);
@@ -42,7 +50,7 @@ export default class ConnectWalletPopup extends React.Component {
         } else {
             connectedSites[this.state.selectedOption] = [this.state.url]
         }
-        localStorage.setItem('connectedSites', JSON.stringify(connectedSites));
+        LS.setItem('connectedSites', connectedSites);
         window.close();
     };
 
@@ -76,7 +84,7 @@ export default class ConnectWalletPopup extends React.Component {
         //console.log("ConnectWalletPopup walletList", this.state.walletList);
         return (
             <Fragment>
-                <br/>
+                <br />
                 <h5>
                     Connect Wallet to {this.state.url}
                 </h5>
@@ -87,7 +95,7 @@ export default class ConnectWalletPopup extends React.Component {
                             this.state.walletList.map(wallet =>
                                 <div key={wallet.name}
                                     className='card p-2 m-2 walletCard form-check'
-                                    style={{ 
+                                    style={{
                                         borderColor: `rgba(${wallet.color.r},${wallet.color.g},${wallet.color.b}, 0.95)`,
                                     }}>
                                     <div>
@@ -108,8 +116,8 @@ export default class ConnectWalletPopup extends React.Component {
                         }
                         {
                             parseInt(this.state.walletList.length) === parseInt(0) ?
-                            <div>No wallet found, restore or create a new wallet</div>
-                            : null
+                                <div>No wallet found, restore or create a new wallet</div>
+                                : null
                         }
                         <div className="form-group d-flex flex-row justify-content-between align-items-center">
                             <div></div><div></div>

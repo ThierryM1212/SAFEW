@@ -16,6 +16,7 @@ export default class Mix extends React.Component {
             setPage: props.setPage,
             mixedTokenInfo: props.mixedTokenInfo,
             mixBoxes: [],
+            mixerURL: props.mixerAddress,
         };
         this.updateBoxes = this.updateBoxes.bind(this);
         this.timer = this.timer.bind(this);
@@ -83,7 +84,7 @@ export default class Mix extends React.Component {
                                 icon={mix.status === "queued" ? "schedule" : mix.status === "compare_arrows" ? "blue" : "autorenew"}
                                 tips={"Status: " + mix.status}
                                 onClick={() => {
-                                    const url = getMixURL(mix.id);
+                                    const url = getMixURL(this.state.mixerURL, mix.id);
                                     window.open(url, '_blank').focus();
                                 }}
                             />

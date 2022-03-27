@@ -19,6 +19,7 @@ export default class TransactionList extends React.Component {
             unconfirmedTransactionList: [],
             limit: 5,
             numberOfTransactions: 0,
+            wallet: undefined,
         };
         this.updateTransactionList = this.updateTransactionList.bind(this);
         this.setLimit = this.setLimit.bind(this);
@@ -31,7 +32,7 @@ export default class TransactionList extends React.Component {
     async updateTransactionList(showAlert = true) {
         var alert = "";
         if (showAlert) { alert = waitingAlert("Loading transations..."); };
-        const wallet = getWalletById(this.state.walletId);
+        const wallet = await getWalletById(this.state.walletId);
         this.setState({ color: wallet.color });
         const walletAddressList = getWalletAddressList(wallet);
         const addressContentList = await getAddressListContent(walletAddressList);
@@ -59,6 +60,8 @@ export default class TransactionList extends React.Component {
     }
 
     async componentDidMount() {
+        const wallet = await getWalletById(this.state.walletId);
+        this.setState({ wallet: wallet });
         await this.updateTransactionList(true);
     }
 
@@ -88,18 +91,21 @@ export default class TransactionList extends React.Component {
     }
 
     render() {
-        const wallet = getWalletById(this.state.walletId);
+        var walletColor = { r: 141, g: 140, b: 143, a: 1 };
+        if (this.state.wallet) {
+            walletColor = this.state.wallet.color;
+        }
 
         return (
             <Fragment>
                 <div className='container card m-1 p-1 d-flex flex-column w-75 '
                     style={{
-                        borderColor: `rgba(${wallet.color.r},${wallet.color.g},${wallet.color.b}, 0.95)`,
+                        borderColor: `rgba(${walletColor.r},${walletColor.g},${walletColor.b}, 0.95)`,
                     }}
                 >
                     <div className='m-1 p-1 d-flex flex-row justify-content-between align-items-center'>
                         <div className='m-1 p-1 d-flex flex-column'>
-                            <h4>Transactions list for {wallet.name}</h4>
+                            <h4>Transactions list for {this.state.wallet ? this.state.wallet.name : null}</h4>
                             <div className='m-1 p-1 d-flex flex-row'>
                                 Number of transactions:&nbsp;<h5>{this.state.numberOfTransactions}</h5>
                             </div>
@@ -128,8 +134,22 @@ export default class TransactionList extends React.Component {
 
                         </div>
                     </div>
-                    {this.state.unconfirmedTransactionList.map(tx => <Transaction key={tx.id} transaction={tx} wallet={wallet} />)}
-                    {this.state.transactionList.map(tx => <Transaction key={tx.id} transaction={tx} wallet={wallet} />)}
+                    {
+                        this.state.wallet ?
+                            this.state.unconfirmedTransactionList.map(tx =>
+                                <Transaction key={tx.id} transaction={tx} wallet={this.state.wallet}
+                                />)
+                            :
+                            null
+                    }
+                    {
+                        this.state.wallet ?
+                            this.state.transactionList.map(tx =>
+                                <Transaction key={tx.id} transaction={tx} wallet={this.state.wallet}
+                                />)
+                            :
+                            null
+                    }
                     <br />
 
                     <div className='m-1 p-1 d-flex flex-row justify-content-center'>

@@ -6,6 +6,7 @@ import ImageButton from './ImageButton';
 import Account from './Account';
 import Address from './Address';
 import { errorAlert, promptPassword } from '../utils/Alerts';
+import { LS } from '../utils/utils';
 
 export default class Wallet extends React.Component {
     constructor(props) {
@@ -17,7 +18,7 @@ export default class Wallet extends React.Component {
             addressContentList: props.addressContentList,
             showAccounts: false,
             updateWalletList: props.updateWalletList,
-            expertMode: (localStorage.getItem('expertMode') === 'true') ?? false,
+            expertMode: false,
             ergoPayOnly: props.wallet.ergoPayOnly ?? false,
             tokenRatesDict: props.tokenRatesDict,
         };
@@ -78,6 +79,11 @@ export default class Wallet extends React.Component {
                 tokenRatesDict: this.props.tokenRatesDict,
             });
         }
+    }
+
+    async componentDidMount() {
+        const expertMode = (await LS.getItem('expertMode')) ?? false;
+        this.setState({expertMode: expertMode});
     }
 
     render() {

@@ -31,6 +31,7 @@ export default class SendTransaction extends React.Component {
             isValidTokenAmountToSend: [],
             viewSelectAddress: false,
             walletAddressList: [],
+            wallet: undefined,
             selectedAddresses: [],
             addressContentList: [],
             txFee: SUGGESTED_TRANSACTION_FEE / NANOERG_TO_ERG,
@@ -54,8 +55,8 @@ export default class SendTransaction extends React.Component {
         })
     }
     toggleSelectedAddresses = () => { this.setState(prevState => ({ viewSelectAddress: !prevState.viewSelectAddress })) }
-    toggleBurnMode = () => {
-        const wallet = getWalletById(this.state.walletId);
+    async toggleBurnMode () {
+        const wallet = await getWalletById(this.state.walletId);
         const walletAddressList = getWalletAddressList(wallet);
         if (!this.state.burnMode) {
             this.setState(prevState => ({
@@ -101,7 +102,7 @@ export default class SendTransaction extends React.Component {
 
     async componentDidMount() {
         const alert = waitingAlert("Loading wallet content...");
-        const wallet = getWalletById(this.state.walletId);
+        const wallet = await getWalletById(this.state.walletId);
         var walletAddressList = getWalletAddressList(wallet);
         var addressContentList = await getAddressListContent(walletAddressList);
         // remove 0 erg addresses
@@ -121,6 +122,7 @@ export default class SendTransaction extends React.Component {
             selectedAddresses: new Array(walletAddressList.length).fill(true),
             addressContentList: addressContentList,
             walletAddressList: walletAddressList,
+            wallet: wallet,
         });
 
         // init the transaction from iniTran param
@@ -245,7 +247,7 @@ export default class SendTransaction extends React.Component {
         const amountToSendFloat = parseFloat(this.state.ergsToSend);
         const feeFloat = parseFloat(this.state.txFee);
         const totalAmountToSendFloat = amountToSendFloat + feeFloat;
-        const wallet = getWalletById(this.state.walletId);
+        const wallet = await getWalletById(this.state.walletId);
         const selectedAddresses = this.state.walletAddressList.filter((addr, id) => this.state.selectedAddresses[id]);
         const [selectedUtxos, memPoolTransaction] = await getUtxosForSelectedInputs(selectedAddresses,
             totalAmountToSendFloat, this.state.tokens, this.state.tokenAmountToSend);
@@ -271,14 +273,17 @@ export default class SendTransaction extends React.Component {
     }
 
     render() {
-        const wallet = getWalletById(this.state.walletId);
+        var walletColor = { r: 141, g: 140, b: 143, a: 1 };
+        if(this.state.wallet){
+            walletColor = this.state.wallet.color;
+        }
         return (
             <Fragment>
                 <div className='container card m-1 p-1 d-flex flex-column w-75'
-                    style={{ borderColor: `rgba(${wallet.color.r},${wallet.color.g},${wallet.color.b}, 0.95)`, }}
+                    style={{ borderColor: `rgba(${walletColor.r},${walletColor.g},${walletColor.b}, 0.95)`, }}
                 >
                     <div className='d-flex flex-row justify-content-between align-items-center'>
-                        <h5>Send ERGs and tokens - Wallet {wallet.name}</h5>
+                        <h5>Send ERGs and tokens - Wallet {this.state.wallet ? this.state.wallet.name : null }</h5>
                         <div className='d-flex flex-row align-items-center '>
                             <div className='d-flex flex-row align-items-baseline'>
                                 <h5>Burn mode</h5>

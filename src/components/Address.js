@@ -1,15 +1,28 @@
-import React, { Fragment, useState } from 'react';
+import React, { Fragment, useState, useEffect } from 'react';
 import ImageButton from './ImageButton';
 import AddressListContent from './AddressListContent';
 import { copySuccess } from '../utils/Alerts';
 import QR from './QRCode';
 import { setAddressUsed } from '../utils/walletUtils';
+import { DEFAULT_EXPLORER_WEBUI_ADDRESS } from '../utils/constants';
+
 
 export default function Address(props) {
     const [QRcode, toggleQR] = useState(0);
+    const [hideUsedEmptyAddress, setHideUsedEmptyAddress] = useState(true);
+    useEffect(() => {
+        chrome.storage.local.get("hideUsedEmptyAddress", (result) => {
+            setHideUsedEmptyAddress(result);
+        });
+    }, []);
+    const [explorerWebUIAddress, setExplorerWebUIAddress] = useState(DEFAULT_EXPLORER_WEBUI_ADDRESS);
+    useEffect(() => {
+        chrome.storage.local.get("explorerWebUIAddress", (result) => {
+            setExplorerWebUIAddress(result);
+        });
+    }, []);
 
     var address = props.addressContent.address;
-    const hideUsedEmptyAddress = (localStorage.getItem('hideUsedEmptyAddress') === 'true') ?? true;
 
     if (!props.used && (props.addressContent.content.nanoErgs > 0 || props.addressContent.unconfirmed.nanoErgs > 0)) {
         setAddressUsed(address);
@@ -40,7 +53,7 @@ export default function Address(props) {
                                 icon={"open_in_new"}
                                 tips={"Open in Explorer"}
                                 onClick={() => {
-                                    const url = localStorage.getItem('explorerWebUIAddress') + 'en/addresses/' + address;
+                                    const url = explorerWebUIAddress + 'en/addresses/' + address;
                                     window.open(url, '_blank').focus();
                                 }}
                             />
@@ -67,7 +80,7 @@ export default function Address(props) {
                                 }
                             </div>
                             {
-                                props.used ? <AddressListContent addressContentList={[props.addressContent]} tokenRatesDict={props.tokenRatesDict}/>
+                                props.used ? <AddressListContent addressContentList={[props.addressContent]} tokenRatesDict={props.tokenRatesDict} />
                                     : <div>Unused</div>
                             }
 

@@ -3,6 +3,8 @@ import { getUtxoBalanceForAddressList } from '../ergo-related/utxos';
 import { formatLongString, getWalletAddressList } from '../utils/walletUtils';
 import { formatERGAmount, formatTokenAmount } from '../utils/walletUtils';
 import ImageButton from './ImageButton';
+import { LS } from '../utils/utils';
+import { DEFAULT_EXPLORER_WEBUI_ADDRESS } from '../utils/constants';
 
 export default class Transaction extends React.Component {
     constructor(props) {
@@ -10,14 +12,19 @@ export default class Transaction extends React.Component {
         this.state = {
             transaction: props.transaction,
             wallet: props.wallet,
-            balance: {value: 0,tokens:[]}
+            balance: {value: 0,tokens:[]},
+            explorerWebUIAddress: DEFAULT_EXPLORER_WEBUI_ADDRESS,
         };
     }
 
     async componentDidMount() {
+        const explorerWebUIAddress = (await LS.getItem('explorerWebUIAddress')) ?? DEFAULT_EXPLORER_WEBUI_ADDRESS;
         const walletAddressList = getWalletAddressList(this.state.wallet);
         const balance = await getUtxoBalanceForAddressList(this.state.transaction.inputs, this.state.transaction.outputs, walletAddressList);
-        this.setState({ balance: balance })
+        this.setState({ 
+            balance: balance,
+            explorerWebUIAddress: explorerWebUIAddress,
+         })
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -52,7 +59,7 @@ export default class Transaction extends React.Component {
                                     icon={"open_in_new"}
                                     tips={"Open the transaction " + tx.id + " in Explorer"}
                                     onClick={() => {
-                                        const url = localStorage.getItem('explorerWebUIAddress') + 'en/transactions/' + tx.id;
+                                        const url = this.state.explorerWebUIAddress + 'en/transactions/' + tx.id;
                                         window.open(url, '_blank').focus();
                                     }}
                                 />

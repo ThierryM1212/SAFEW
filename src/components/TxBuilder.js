@@ -19,6 +19,7 @@ import BigQRCode from './BigQRCode';
 import SelectWallet from './SelectWallet';
 import { decryptMnemonic, formatERGAmount, formatTokenAmount, getUnconfirmedTransactionsForAddressList, getWalletAddressList, getWalletById } from '../utils/walletUtils';
 import { VERIFIED_TOKENS } from '../utils/constants';
+import { LS } from '../utils/utils';
 /* global BigInt */
 
 var initCreateBox = {
@@ -44,10 +45,11 @@ export default class TxBuilder extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            walletList: JSON.parse(localStorage.getItem('walletList')) ?? [],
+            walletList: [],
             setPage: props.setPage,
             initTx: props.iniTran,
             selectedWalletId: props.walletId,
+            wallet: undefined,
             addressBoxList: [],
             searchAddress: '',
             searchBoxId: '',
@@ -92,16 +94,21 @@ export default class TxBuilder extends React.Component {
         this.getSignedTransaction = this.getSignedTransaction.bind(this);
         this.getTransaction = this.getTransaction.bind(this);
     }
-    setWallet = (walletId) => { this.setState({ selectedWalletId: walletId }); };
+    async setWallet(walletId) { 
+        const wallet = await getWalletById(walletId);
+        this.setState({ selectedWalletId: walletId, wallet: wallet }); 
+    };
     setSearchAddress = (address) => { this.setState({ searchAddress: address }); };
     setSearchBoxId = (boxId) => { this.setState({ searchBoxId: boxId }); };
     setTxJsonRaw = (textAreaInput) => { this.setState({ txJsonRaw: textAreaInput }); }
 
     async componentDidMount() {
+        const wallet = await getWalletById(this.state.selectedWalletId);
         const currentHeigth = await currentHeight();
+        const walletList = (await LS.getItem('walletList')) ?? [];
         initCreateBox.creationHeight = currentHeigth;
         feeBox.creationHeight = currentHeigth;
-        this.setState({ outputCreateJson: { ...initCreateBox } });
+        this.setState({ outputCreateJson: { ...initCreateBox }, walletList: walletList, wallet: wallet });
         const initTx = this.state.initTx;
         if (initTx.inputs && initTx.outputs && initTx.dataInputs) {
             try {
@@ -117,7 +124,7 @@ export default class TxBuilder extends React.Component {
     }
 
     async timer() {
-        const wallet = getWalletById(this.state.selectedWalletId);
+        const wallet = await getWalletById(this.state.selectedWalletId);
         const walletAddressList = getWalletAddressList(wallet);
         const unconfirmedTransactions = await getUnconfirmedTransactionsForAddressList(walletAddressList, false);
         const unconfirmedTransactionsIdFiltered = unconfirmedTransactions.map(tx => tx.transactions).flat();
@@ -132,7 +139,7 @@ export default class TxBuilder extends React.Component {
     }
 
     async fetchWalletBoxes() {
-        const wallet = getWalletById(this.state.selectedWalletId);
+        const wallet = await getWalletById(this.state.selectedWalletId);
         const addressList = getWalletAddressList(wallet);
         var alert = waitingAlert("Fetching wallet unspent boxes...")
         //const utxos = await getUnspentBoxesForAddressList(addressList);
@@ -282,7 +289,7 @@ export default class TxBuilder extends React.Component {
     async setBalanceBoxJson() {
         var changeAddress = '';
         try {
-            changeAddress = getWalletById(this.state.selectedWalletId).changeAddress;
+            changeAddress = (await getWalletById(this.state.selectedWalletId)).changeAddress;
         } catch (e) {
             errorAlert("No change address found, configure a wallet");
             return;
@@ -312,7 +319,7 @@ export default class TxBuilder extends React.Component {
     }
 
     async signTx() {
-        const wallet = getWalletById(this.state.selectedWalletId);
+        const wallet = await getWalletById(this.state.selectedWalletId);
         const walletAddressList = getWalletAddressList(wallet);
         const jsonUnsignedTx = this.getTransaction();
         const txBalance = await getUtxoBalanceForAddressList(jsonUnsignedTx.inputs, jsonUnsignedTx.outputs, walletAddressList);
@@ -430,7 +437,7 @@ export default class TxBuilder extends React.Component {
 
     render() {
         const txJson = this.getTransaction();
-        const selectedWallet = getWalletById(this.state.selectedWalletId);
+        const selectedWallet = this.state.wallet;
         const tokenInfo = this.state.tokenInfo;
 
         var appTips = "The application is intended to manipulate json of Ergo transactions.<br />";
@@ -687,6 +694,7 @@ export default class TxBuilder extends React.Component {
                                         id="signed-tx-json"
                                         value={JSONBigInt.stringify(this.getSignedTransaction(), null, 4)}
                                         rows="10"
+                                        readOnly
                                     />
                                 </div>
                             </div>

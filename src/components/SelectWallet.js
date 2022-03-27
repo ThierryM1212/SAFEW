@@ -1,8 +1,13 @@
-import React, { Fragment } from 'react';
+import React, { Fragment, useState, useEffect } from 'react';
 import Select from 'react-select';
 
 export default function SelectWallet(props) {
-
+    const [walletList, setWalletList] = useState([]);
+    useEffect(() => {
+        chrome.storage.local.get("walletList", (result) => {
+            setWalletList(result.walletList);
+        });
+    }, []);
 
     const customStyles = (wallet) => {
         return {
@@ -17,11 +22,13 @@ export default function SelectWallet(props) {
             }),
         }
     };
-
-    const walletList = JSON.parse(localStorage.getItem('walletList')) ?? [];
+    console.log("SelectWallet walletList",walletList)
     const optionWalletList = walletList.map((wallet, id) => ({ value: id, label: wallet.name }));
-    const selectedWallet = walletList[props.selectedWalletId];
-
+    var selectedWallet = undefined;
+    if (walletList.length>0) {
+        selectedWallet = walletList[props.selectedWalletId]
+    }
+    
     return (
         <Fragment>
             <div>

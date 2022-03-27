@@ -5,7 +5,8 @@ import { confirmAlert } from '../utils/Alerts';
 import { formatERGAmount, formatTokenAmount } from '../utils/walletUtils';
 import ImageButton from './ImageButton';
 import ValidInput from './ValidInput';
-
+import { LS } from '../utils/utils';
+import { DEFAULT_EXPLORER_WEBUI_ADDRESS } from '../utils/constants';
 
 export default class MixBox extends React.Component {
     constructor(props) {
@@ -18,6 +19,7 @@ export default class MixBox extends React.Component {
             mixedTokenInfo: props.mixedTokenInfo,
             isValidAddress: false,
             setPage: props.setPage,
+            explorerWebUIURL: DEFAULT_EXPLORER_WEBUI_ADDRESS,
         };
         this.setAddress = this.setAddress.bind(this);
         this.setWithdrawAddress = this.setWithdrawAddress.bind(this);
@@ -36,6 +38,7 @@ export default class MixBox extends React.Component {
     async componentDidMount() {
         this.setState({
             isValidAddress: await isValidErgAddress(this.state.address),
+            explorerWebUIURL: (await LS.getItem('explorerWebUIAddress')) ?? DEFAULT_EXPLORER_WEBUI_ADDRESS,
         });
     }
 
@@ -141,7 +144,7 @@ export default class MixBox extends React.Component {
                                                             icon={"price_check"}
                                                             tips={"Withdrawn<br/>View transaction"}
                                                             onClick={() => {
-                                                                const url = localStorage.getItem('explorerWebUIAddress') + 'en/transactions/' + this.state.box.withdrawTxId;
+                                                                const url = this.state.explorerWebUIURL + 'en/transactions/' + this.state.box.withdrawTxId;
                                                                 window.open(url, '_blank').focus();
                                                             }}
                                                         />
@@ -152,7 +155,7 @@ export default class MixBox extends React.Component {
                                                         icon={"price_check"}
                                                         tips={"Withdrawn<br/>View transaction"}
                                                         onClick={() => {
-                                                            const url = localStorage.getItem('explorerWebUIAddress') + 'en/transactions/' + this.state.box.withdrawTxId;
+                                                            const url = this.state.explorerWebUIURL + 'en/transactions/' + this.state.box.withdrawTxId;
                                                             window.open(url, '_blank').focus();
                                                         }}
                                                     />

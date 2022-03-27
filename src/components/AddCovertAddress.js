@@ -4,6 +4,8 @@ import { isValidErgAddress } from '../ergo-related/ergolibUtils';
 import { addCovertAddress } from '../ergo-related/mixer';
 import ImageButton from './ImageButton';
 import ValidInput from './ValidInput';
+import { DEFAULT_EXPLORER_WEBUI_ADDRESS } from '../utils/constants';
+import { LS } from '../utils/utils';
 
 export default class AddCovertAddress extends React.Component {
     constructor(props) {
@@ -15,6 +17,7 @@ export default class AddCovertAddress extends React.Component {
             addressToAdd: '',
             isValidAddressToAdd: false,
             updateCoverList: props.updateCoverList,
+            explorerWebUIURL: DEFAULT_EXPLORER_WEBUI_ADDRESS,
         };
         this.setCovertName = this.setCovertName.bind(this);
         this.setMixingRounds = this.setMixingRounds.bind(this);
@@ -68,6 +71,11 @@ export default class AddCovertAddress extends React.Component {
             addressToAdd: '',
             isValidAddressToAdd: false,
         });
+    }
+
+    async componentWillUnmount() {
+        const explorerUIaddr = (await LS.getItem('explorerWebUIAddress')) ?? DEFAULT_EXPLORER_WEBUI_ADDRESS;
+        this.setState({explorerUIaddr: explorerUIaddr});
     }
 
     render() {
@@ -140,7 +148,7 @@ export default class AddCovertAddress extends React.Component {
                                     icon={"open_in_new"}
                                     tips={"Open in Explorer"}
                                     onClick={() => {
-                                        const url = localStorage.getItem('explorerWebUIAddress') + 'en/addresses/' + address;
+                                        const url = this.state.explorerWebUIURL + 'en/addresses/' + address;
                                         window.open(url, '_blank').focus();
                                     }}
                                 />

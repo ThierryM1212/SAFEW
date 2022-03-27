@@ -1,12 +1,21 @@
 import React, { Fragment } from 'react';
 import ImageButton from './ImageButton';
+import { LS } from '../utils/utils';
 
 export default class DisconnectWallet extends React.Component {
     constructor(props) {
         super(props);
-        const walletList = JSON.parse(localStorage.getItem('walletList')) ?? [];
+        this.state = {
+            connectedSites: {},
+            walletList: [],
+        };
+        //this.updateWalletName = this.updateWalletName.bind(this);
+    }
+
+    async componentDidMount() {
+        const walletList = (await LS.getItem('walletList')) ?? [];
         const walletNameList = walletList.map(wallet => wallet.name);
-        const connectedSites = JSON.parse(localStorage.getItem('connectedSites')) ?? {};
+        const connectedSites = (await LS.getItem('connectedSites')) ?? {};
         // filter connected site list by the existing wallets... silent cleanup...
         var newConnectedSites = {};
         for (const wName of Object.keys(connectedSites)) {
@@ -14,12 +23,11 @@ export default class DisconnectWallet extends React.Component {
                 newConnectedSites[wName] = connectedSites[wName];
             }
         }
-        localStorage.setItem('connectedSites', JSON.stringify(newConnectedSites))
+        LS.setItem('connectedSites', newConnectedSites)
         this.state = {
-            connectedSites: newConnectedSites,
+            connectedSites: connectedSites,
             walletList: walletList,
         };
-        //this.updateWalletName = this.updateWalletName.bind(this);
     }
 
     disconnectWallet(walletName, site) {
@@ -39,12 +47,12 @@ export default class DisconnectWallet extends React.Component {
                 newConnectedSites[wName] = this.state.connectedSites[wName];
             }
         }
-        localStorage.setItem('connectedSites', JSON.stringify(newConnectedSites))
+        LS.setItem('connectedSites', newConnectedSites)
         this.setState({connectedSites: newConnectedSites});
     }
 
     render() {
-        // oompute wallet colors
+        // compute wallet colors
         var walletColors = {};
         for (const wallet of this.state.walletList) {
             walletColors[wallet.name] = wallet.color;

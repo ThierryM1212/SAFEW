@@ -4,7 +4,7 @@ import { byteArrayToBase64, getErgoStateContext, tokenFloatToAmount } from './se
 import JSONBigInt from 'json-bigint';
 import { getSpentAndUnspentBoxesFromMempool, getTokenListFromUtxos, getUtxosListValue, parseUtxos } from './utxos';
 import { errorAlert } from '../utils/Alerts';
-import ls from 'localstorage-slim';
+import { ls_slim_get, ls_slim_set } from '../utils/utils';
 let ergolib = import('ergo-lib-wasm-browser');
 
 
@@ -165,8 +165,8 @@ export async function getUtxosForSelectedInputs(inputAddressList, ergAmount, tok
     var memPoolTransaction = false;
     if (spentBoxes && Array.isArray(spentBoxes) && spentBoxes.length > 0) {
         memPoolTransaction = true;
-        var cache_spentBoxes = ls.get('cache_spentBoxes') ?? [];
-        ls.set('cache_spentBoxes', utxos.filter(b => spentInputBoxIds.includes(b.boxId)).concat(cache_spentBoxes), { ttl: 600 });
+        var cache_spentBoxes = await ls_slim_get('cache_spentBoxes') ?? [];
+        ls_slim_set('cache_spentBoxes', utxos.filter(b => spentInputBoxIds.includes(b.boxId)).concat(cache_spentBoxes), { ttl: 600 });
     }
     return [selectedUtxos, memPoolTransaction];
 }

@@ -8,6 +8,7 @@ import { MAX_NUMBER_OF_UNUSED_ADDRESS_PER_ACCOUNT } from '../utils/constants';
 import { addressHasTransactions } from '../ergo-related/explorer';
 import { errorAlert, promptPassword, successAlert } from '../utils/Alerts';
 import { getAddress } from '../ergo-related/ergolibUtils';
+import { LS } from '../utils/utils';
 
 export default class Account extends React.Component {
     constructor(props) {
@@ -20,6 +21,7 @@ export default class Account extends React.Component {
             color: props.color,
             addressContentList: props.addressContentList,
             tokenRatesDict: props.tokenRatesDict,
+            walletAddressList: [],
         };
         this.addNewAddress = this.addNewAddress.bind(this);
         this.setAccountName = this.setAccountName.bind(this);
@@ -30,10 +32,10 @@ export default class Account extends React.Component {
     async addNewAddress() {
         //const address = await addNewAddress(this.state.walletId, this.state.account.id);
         const accountId = this.state.account.id;
-        var wallet = getWalletById(this.state.walletId);
+        var wallet = await getWalletById(this.state.walletId);
         const account = wallet.accounts[accountId];
         var unusedAddresses = 0, maxAddrIndex = 0, usedAddresses = 0;
-        for (const address of account.addresses){
+        for (const address of account.addresses) {
             if (!await addressHasTransactions(address.address)) {
                 unusedAddresses++;
             } else {
@@ -42,7 +44,7 @@ export default class Account extends React.Component {
             maxAddrIndex = Math.max(maxAddrIndex, address.id)
         }
         //console.log("addNewAddress",unusedAddresses,maxAddrIndex)
-        if (unusedAddresses < MAX_NUMBER_OF_UNUSED_ADDRESS_PER_ACCOUNT){
+        if (unusedAddresses < MAX_NUMBER_OF_UNUSED_ADDRESS_PER_ACCOUNT) {
             if (usedAddresses > 0) {
                 const password = await promptPassword("Spending password for<br/>" + wallet.name, "", "Search");
                 const mnemonic = decryptMnemonic(wallet.mnemonic, password);
@@ -52,9 +54,9 @@ export default class Account extends React.Component {
                     wallet.accounts[accountId].addresses = [...wallet.accounts[accountId].addresses, { id: maxAddrIndex + 1, address: newAddr, used: false }];
                     updateWallet(wallet, this.state.walletId);
                     successAlert("Address " + newAddr + " added")
-                    .then(res=>{
-                        window.location.reload();
-                    });
+                        .then(res => {
+                            window.location.reload();
+                        });
                 } else {
                     errorAlert("Failed to decrypt Mnemonic", "incorrect password");
                     return -1;
@@ -64,20 +66,16 @@ export default class Account extends React.Component {
                 return -1;
             }
         } else {
-            errorAlert("Failed to create new address", "More than "+MAX_NUMBER_OF_UNUSED_ADDRESS_PER_ACCOUNT+" are unused")
+            errorAlert("Failed to create new address", "More than " + MAX_NUMBER_OF_UNUSED_ADDRESS_PER_ACCOUNT + " are unused")
             return -1;
         }
     }
 
-    setAccountName = (newName) => {
+    async setAccountName(newName) {
         if (newName) {
-            setAccountName(this.state.walletId, this.state.account.id, newName);
-            console.log("setAccountName", JSON.parse(localStorage.getItem("walletList"))[this.state.walletId].accounts[this.state.account.id]);
-            setTimeout(() => {
-                this.setState({
-                    account: JSON.parse(localStorage.getItem("walletList"))[this.state.walletId].accounts[this.state.account.id]
-                })
-            }, 100);
+            await setAccountName(this.state.walletId, this.state.account.id, newName);
+            const walletList = (await LS.getItem("walletList"));
+            this.setState({ account: walletList[this.state.walletId].accounts[this.state.account.id] })
         }
     }
 
@@ -92,7 +90,7 @@ export default class Account extends React.Component {
             this.setState({
                 addressContentList: this.props.addressContentList,
             });
-        } 
+        }
         if (prevProps.tokenRatesDict !== this.props.tokenRatesDict) {
             this.setState({
                 tokenRatesDict: this.props.tokenRatesDict,
@@ -100,9 +98,14 @@ export default class Account extends React.Component {
         }
     }
 
-    render() {
-        const wallet = getWalletById(this.state.walletId);
+    async componentDidMount() {
+        const wallet = await getWalletById(this.state.walletId);
         const walletAddressList = wallet.accounts.map(account => account.addresses).flat();
+        this.setState({ walletAddressList: walletAddressList });
+    }
+
+    render() {
+
         //console.log("Account", this.state.account);
         //console.log("Account this.state.tokenRatesDict", this.state.tokenRatesDict);
         return (
@@ -138,13 +141,13 @@ export default class Account extends React.Component {
                     <div className='d-flex flex-column'>
                         {this.state.showAddresses ?
                             this.state.account.addresses.map((address, id) =>
-                                <Address 
-                                key={address.address} 
-                                address={address.address} 
-                                color={this.state.color} 
-                                addressContent={this.state.addressContentList.find(addrContent => addrContent.address === address.address )}
-                                used={walletAddressList.find(addressW => addressW.address === address.address ).used}
-                                tokenRatesDict={this.state.tokenRatesDict}
+                                <Address
+                                    key={address.address}
+                                    address={address.address}
+                                    color={this.state.color}
+                                    addressContent={this.state.addressContentList.find(addrContent => addrContent.address === address.address)}
+                                    used={this.state.walletAddressList.find(addressW => addressW.address === address.address).used}
+                                    tokenRatesDict={this.state.tokenRatesDict}
                                 />
                             )
                             : null

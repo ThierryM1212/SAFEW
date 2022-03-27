@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Fragment } from 'react';
 import { CSVLink } from "react-csv";
 import { getUtxoBalanceForAddressList } from '../ergo-related/utxos';
 import { errorAlert, promptNumTx, waitingAlert } from '../utils/Alerts';
@@ -21,6 +21,7 @@ export default class DownloadTxListCSV extends React.Component {
                 { label: "tokenId", key: "tokenId" },
             ],
             loading: false,
+            wallet: undefined,
         };
         this.getData = this.getData.bind(this);
         this.csvLinkEl = React.createRef();
@@ -37,6 +38,11 @@ export default class DownloadTxListCSV extends React.Component {
                 });
             });
         }
+    }
+
+    async componentDidMount() {
+        const wallet = await getWalletById(this.state.walletId);
+        this.setState({ wallet: wallet })
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -65,7 +71,7 @@ export default class DownloadTxListCSV extends React.Component {
             });
             try {
                 const alert = waitingAlert("Loading transactions...");
-                const wallet = getWalletById(this.state.walletId);
+                const wallet = await getWalletById(this.state.walletId);
                 const walletAddressList = getWalletAddressList(wallet);
                 const allTxList = (await getTransactionsForAddressList(walletAddressList, numberOfTx))
                     .map(res => res.transactions)
@@ -123,25 +129,30 @@ export default class DownloadTxListCSV extends React.Component {
 
     render() {
         const csvDelimiter = this.getListSeparator();
-        const wallet = getWalletById(this.state.walletId);
         return (
-            <div>
-                <ImageButton
-                    id={"exportCSVTransactionList"}
-                    color={"blue"}
-                    icon={"file_upload"}
-                    tips={"Export transaction list as CSV"}
-                    onClick={this.downloadReport}
-                />
-                <CSVLink
-                    headers={this.state.headers}
-                    filename={"export_transactions_" + wallet.name + ".csv"}
-                    data={this.state.data}
-                    ref={this.csvLinkEl}
-                    enclosingCharacter={`"`}
-                    separator={csvDelimiter}
-                />
-            </div>
+            <Fragment>
+                {
+                    this.state.wallet ?
+                        <div>
+                            <ImageButton
+                                id={"exportCSVTransactionList"}
+                                color={"blue"}
+                                icon={"file_upload"}
+                                tips={"Export transaction list as CSV"}
+                                onClick={this.downloadReport}
+                            />
+                            <CSVLink
+                                headers={this.state.headers}
+                                filename={"export_transactions_" + this.state.wallet.name + ".csv"}
+                                data={this.state.data}
+                                ref={this.csvLinkEl}
+                                enclosingCharacter={`"`}
+                                separator={csvDelimiter}
+                            />
+                        </div>
+                        : null
+                }
+            </Fragment>
         );
     }
 

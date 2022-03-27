@@ -1,8 +1,8 @@
 import { VERIFIED_TOKENS } from "../utils/constants";
+import { ls_slim_flush, ls_slim_get, ls_slim_set } from "../utils/utils";
 import { getUnconfirmedTransactionsForAddressList } from "../utils/walletUtils";
 import { boxByBoxId, currentHeight, getTokenBoxV1, unspentBoxesForV1 } from "./explorer";
 import { decodeString, encodeContract, ergoTreeToAddress } from "./serializer";
-import ls from 'localstorage-slim';
 
 /* global BigInt */
 
@@ -66,9 +66,9 @@ export function parseUtxos(utxos, addExtention, mode = 'input') {
 
 export async function enrichUtxos(utxos, addExtension = false) {
     var utxosFixed = [];
-    ls.flush();
-    var cache_newBoxes = ls.get('cache_newBoxes') ?? [];
-    var cache_spentBoxes = ls.get('cache_spentBoxes') ?? [];
+    await ls_slim_flush();
+    var cache_newBoxes = await ls_slim_get('cache_newBoxes') ?? [];
+    var cache_spentBoxes = await ls_slim_get('cache_spentBoxes') ?? [];
 
     for (const i in utxos) {
         var newBox = {};
@@ -304,7 +304,7 @@ function isDict(v) {
 async function getUtxoContentForAddressList(utxos, addressList, input0BoxId = "") {
     var value = BigInt(0), tokens = [];
     //console.log("getUtxoContentForAddressList_0", utxos, addressList)
-    const cache_newBoxes = ls.get('cache_newBoxes') ?? [];
+    const cache_newBoxes = await ls_slim_get('cache_newBoxes') ?? [];
     //console.log("getUtxoContentForAddressList cache_newBoxes", cache_newBoxes);
     for (var utxo of utxos) {
         if ("id" in utxo) {
@@ -440,15 +440,14 @@ export async function getSpentAndUnspentBoxesFromMempool(addressList) {
         }
         newBoxes = unconfirmedTxs.map(tx => tx.outputs).flat().filter(box => addressList.includes(box.address));
     }
-    ls.flush();
+    await ls_slim_flush();
     if (newBoxes.length > 0) {
         for (const i in newBoxes) {
             newBoxes[i]["boxId"] = newBoxes[i].id;
             delete newBoxes[i].id;
         }
-        var cache_newBoxes = ls.get('cache_newBoxes') ?? [];
-        ls.set('cache_newBoxes', newBoxes.concat(cache_newBoxes), { ttl: 600 });
-        //console.log('getUtxosForSelectedInputs cache_newBoxes', ls.get('cache_newBoxes'))
+        var cache_newBoxes = await ls_slim_get('cache_newBoxes') ?? [];
+        ls_slim_set('cache_newBoxes', newBoxes.concat(cache_newBoxes), { ttl: 600 });
     }
     console.log("getSpentAndUnspentBoxesFromMempool", spentBoxes, newBoxes)
     return [spentBoxes, newBoxes];

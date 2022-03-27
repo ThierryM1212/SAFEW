@@ -1,28 +1,28 @@
 import { DEFAULT_EXPLORER_API_ADDRESS } from '../utils/constants';
+import { LS } from '../utils/utils';
 import { get, postTx } from './rest';
 
-const explorerURL = localStorage.getItem('explorerAPIAddress') ?? DEFAULT_EXPLORER_API_ADDRESS;
-export const trueAddress = '4MQyML64GnzMxZgm'; // dummy address to get unsigned tx from node, we only care about the boxes though in this case
-export const explorerApi = explorerURL + 'api/v0';
-export const explorerApiV1 = explorerURL + 'api/v1';
 
 const SHORT_CACHE = 15;
 const LONG_CACHE = 86400;
 
 async function getRequest(url, ttl = 0) {
-    return get(explorerApi + url, '', ttl).then(res => {
+    const explorerApi = (await LS.getItem('explorerAPIAddress')) ?? DEFAULT_EXPLORER_API_ADDRESS;
+    return get(explorerApi + 'api/v0' + url, '', ttl).then(res => {
         return { data: res };
     });
 }
 
 async function getRequestV1(url, ttl = 0) {
-    return get(explorerApiV1 + url, '', ttl).then(res => {
+    const explorerApi = (await LS.getItem('explorerAPIAddress')) ?? DEFAULT_EXPLORER_API_ADDRESS;
+    return get(explorerApi + 'api/v1' + url, '', ttl).then(res => {
         return { data: res };
     });
 }
 
 async function postRequestV1(url, body) {
-    return postTx(explorerApiV1 + url, body).then(res => {
+    const explorerApi = (await LS.getItem('explorerAPIAddress')) ?? DEFAULT_EXPLORER_API_ADDRESS;
+    return postTx(explorerApi + 'api/v1' + url, body).then(res => {
         return { data: res };
     });
 }

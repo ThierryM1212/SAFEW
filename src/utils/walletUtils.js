@@ -5,7 +5,7 @@ import '@sweetalert2/theme-dark/dark.css';
 import { enrichUtxos } from "../ergo-related/utxos";
 import { hexToRgbA } from "./utils";
 import { ExplorerTokenMarket } from 'ergo-market-lib/dist/ExplorerTokenMarket';
-import ls from 'localstorage-slim';
+import { LS } from '../utils/utils';
 var CryptoJS = require("crypto-js");
 
 
@@ -27,15 +27,15 @@ export function isValidPassword(password) {
 
 export async function addErgoPayWallet(name, address, color) {
     const walletAccounts = [{ id: 0, addresses: [{ id: 0, address, used: true }], name }];
-    return _addNewWallet(name, walletAccounts, color, " ", " ", true)
+    return await _addNewWallet(name, walletAccounts, color, " ", " ", true)
 }
 
 export async function addNewWallet(name, mnemonic, password, color) {
     const walletAccounts = await discoverAddresses(mnemonic);
-    return _addNewWallet(name, walletAccounts, color, mnemonic, password, false)
+    return await _addNewWallet(name, walletAccounts, color, mnemonic, password, false)
 }
 
-function _addNewWallet(name, walletAccounts, color, mnemonic, password, ergoPayOnly) {
+async function _addNewWallet(name, walletAccounts, color, mnemonic, password, ergoPayOnly) {
     var newWallet = {
         name: name,
         accounts: walletAccounts,
@@ -49,15 +49,15 @@ function _addNewWallet(name, walletAccounts, color, mnemonic, password, ergoPayO
     } else {
         newWallet["mnemonic"] = CryptoJS.AES.encrypt(mnemonic, password + PASSWORD_SALT).toString();
     }
-    var walletList = JSON.parse(localStorage.getItem('walletList'));
+    var walletList = await LS.getItem('walletList');
     walletList.push(newWallet);
-    localStorage.setItem('walletList', JSON.stringify(walletList));
+    LS.setItem('walletList', walletList);
     return walletList.length;
 }
 
-export function upgradeWallets() {
-    var walletList = JSON.parse(localStorage.getItem('walletList'));
-    localStorage.setItem('walletList', JSON.stringify(walletList.map(wallet => upgradeWallet(wallet))));
+export async function upgradeWallets() {
+    var walletList = await LS.getItem('walletList');
+    LS.setItem('walletList', walletList.map(wallet => upgradeWallet(wallet)));
 }
 export function upgradeWallet(wallet) {
     var upgradedWallet = { ...wallet };
@@ -84,8 +84,7 @@ export function upgradeWallet(wallet) {
     upgradedWallet["version"] = WALLET_VERSION;
     return upgradedWallet;
 }
-export function isUpgradeWalletRequired() {
-    const walletList = JSON.parse(localStorage.getItem('walletList'));
+export function isUpgradeWalletRequired(walletList) {
     // if a wallet miss the version field, upgrade is required
     if (walletList.filter(wallet => !Object.keys(wallet).includes("version")).length > 0) {
         return true;
@@ -97,43 +96,43 @@ export function isUpgradeWalletRequired() {
     return false;
 }
 
-export function getWalletById(id) {
-    const walletList = JSON.parse(localStorage.getItem('walletList'));
+export async function getWalletById(id) {
+    const walletList = await LS.getItem('walletList');
     return walletList[id];
 }
 
-export function updateWallet(wallet, id) {
-    var walletList = JSON.parse(localStorage.getItem('walletList'));
+export async function updateWallet(wallet, id) {
+    var walletList = await LS.getItem('walletList');
     walletList[id] = wallet;
-    localStorage.setItem('walletList', JSON.stringify(walletList));
+    LS.setItem('walletList', walletList);
 }
 
-export function addWallet(wallet) {
-    var walletList = JSON.parse(localStorage.getItem('walletList'));
+export async function addWallet(wallet) {
+    var walletList = await LS.getItem('walletList');
     walletList.push(wallet);
-    localStorage.setItem('walletList', JSON.stringify(walletList));
+    LS.setItem('walletList', walletList);
 }
 
-export function deleteWallet(walletId) {
-    var walletList = JSON.parse(localStorage.getItem('walletList'));
+export async function deleteWallet(walletId) {
+    var walletList = await LS.getItem('walletList');
     var newWalletList = walletList.filter((wallet, id) => id !== walletId);
-    localStorage.setItem('walletList', JSON.stringify(newWalletList));
+    LS.setItem('walletList', newWalletList);
 }
 
 export function changePassword(encryptedMnemonic, oldPassword, newPassword) {
     return CryptoJS.AES.encrypt(CryptoJS.AES.decrypt(encryptedMnemonic, oldPassword + PASSWORD_SALT).toString(CryptoJS.enc.Utf8), newPassword + PASSWORD_SALT).toString();
 }
 
-export function convertToErgoPay(walletId) {
-    var wallet = getWalletById(walletId);
+export async function convertToErgoPay(walletId) {
+    var wallet = await getWalletById(walletId);
     wallet.mnemonic = "";
     wallet.ergoPayOnly = true;
-    updateWallet(wallet, walletId);
+    await updateWallet(wallet, walletId);
 }
 
-export function deleteWalletAddress(walletId, address) {
+export async function deleteWalletAddress(walletId, address) {
     console.log("deleteWalletAddress", address);
-    var newWallet = getWalletById(walletId);
+    var newWallet = await getWalletById(walletId);
     var newAccounts = [];
     for (var i in newWallet.accounts) {
         var account = newWallet.accounts[i];
@@ -148,13 +147,13 @@ export function deleteWalletAddress(walletId, address) {
         newAccounts.push(account);
     }
     newWallet.accounts = newAccounts;
-    updateWallet(newWallet, walletId);
+    await updateWallet(newWallet, walletId);
 }
 
 export async function addWalletAddress(walletId, address) {
     // used for ErgoPay wallet, add to account 0
     console.log("addWalletAddress", address);
-    var newWallet = getWalletById(walletId);
+    var newWallet = await getWalletById(walletId);
     var newAccounts = [];
     for (var i in newWallet.accounts) {
         var account = newWallet.accounts[i];
@@ -172,7 +171,7 @@ export async function addWalletAddress(walletId, address) {
         newAccounts.push(account);
     }
     newWallet["accounts"] = newAccounts;
-    updateWallet(newWallet, walletId);
+    await updateWallet(newWallet, walletId);
 }
 
 
@@ -234,13 +233,14 @@ export function formatLongString(str, num) {
     }
 }
 
-export function getWalletNames() {
-    const walletList = JSON.parse(localStorage.getItem('walletList'));
+export async function getWalletNames() {
+    const walletList = (await LS.getItem('walletList')) ?? [];
+    console.log('getWalletNames', walletList);
     return walletList.map((wallet) => wallet.name);
 }
 
-export function getOtherWalletNames(walletId) {
-    const walletList = JSON.parse(localStorage.getItem('walletList'));
+export async function getOtherWalletNames(walletId) {
+    const walletList = (await LS.getItem('walletList')) ?? [];
     return walletList.filter((wallet, id) => id !== walletId).map((wallet) => wallet.name);
 }
 
@@ -277,8 +277,8 @@ export function getWalletUnusedAddressList(wallet) {
     }
     return addressList;
 }
-function getConnectedWalletName(url) {
-    const connectedSites = JSON.parse(localStorage.getItem('connectedSites')) ?? {};
+async function getConnectedWalletName(url) {
+    const connectedSites = (await LS.getItem('connectedSites')) ?? {};
     for (const walletName of Object.keys(connectedSites)) {
         if (connectedSites[walletName].includes(url)) {
             return walletName;
@@ -286,10 +286,10 @@ function getConnectedWalletName(url) {
     }
     return null;
 }
-export function getConnectedWalletByURL(url) {
-    const walletName = getConnectedWalletName(url);
+export async function getConnectedWalletByURL(url) {
+    const walletName = await getConnectedWalletName(url);
     if (walletName !== null) {
-        const walletList = JSON.parse(localStorage.getItem('walletList')) ?? [];
+        const walletList = (await LS.getItem('walletList')) ?? [];
         for (const wallet of walletList) {
             if (wallet.name === walletName) {
                 return wallet;
@@ -298,9 +298,9 @@ export function getConnectedWalletByURL(url) {
     }
     return null;
 }
-export function getWalletId(wallet) {
+export async function getWalletId(wallet) {
     var walletId = undefined;
-    const walletList = JSON.parse(localStorage.getItem('walletList')) ?? [];
+    const walletList = (await LS.getItem('walletList')) ?? [];
     for (const i in walletList) {
         if (wallet.name === walletList[i].name) {
             walletId = i;
@@ -365,16 +365,16 @@ export function passwordIsValid(mnemonicCrypted, password) {
     }
 }
 
-export function setAccountName(walletId, accountId, accountName) {
+export async function setAccountName(walletId, accountId, accountName) {
     console.log("setAccountName", walletId, accountId, accountName);
     var wallet = getWalletById(walletId);
     wallet.accounts.find(account => parseInt(account.id) === parseInt(accountId))["name"] = accountName;
     updateWallet(wallet, walletId);
 }
 
-export function setAddressUsed(addressToSet) {
+export async function setAddressUsed(addressToSet) {
     console.log("setAddressUsed", addressToSet);
-    var walletList = JSON.parse(localStorage.getItem('walletList'));
+    var walletList = await LS.getItem('walletList');
     for (var k in walletList) {
         var newWallet = { ...walletList[k] };
         for (var i in newWallet.accounts) {
@@ -383,7 +383,7 @@ export function setAddressUsed(addressToSet) {
                 var addr = account.addresses[j];
                 if (addr.address === addressToSet) {
                     newWallet.accounts[i].addresses[j]["used"] = true;
-                    updateWallet(newWallet, k);
+                    await updateWallet(newWallet, k);
                 }
             }
         }
@@ -392,7 +392,7 @@ export function setAddressUsed(addressToSet) {
 
 export async function updateUnusedAddresses() {
     //var alert = waitingAlert("Searching new used addresses");
-    var walletList = JSON.parse(localStorage.getItem('walletList'));
+    var walletList = await LS.getItem('walletList');
     for (var k in walletList) {
         var newWallet = { ...walletList[k] };
         const walletUnusedAddressList = getWalletUnusedAddressList(newWallet);
@@ -409,7 +409,7 @@ export async function updateUnusedAddresses() {
                 if (addrIndex > -1) {
                     newWallet.accounts[i].addresses[j]["used"] = checkResultList[addrIndex];
                     if (checkResultList[addrIndex]) {
-                        updateWallet(newWallet, k);
+                        await updateWallet(newWallet, k);
                     }
                 }
             }
@@ -418,10 +418,10 @@ export async function updateUnusedAddresses() {
     //alert.close();
 }
 
-export function setChangeAddress(walletId, address) {
-    var wallet = getWalletById(walletId);
+export async function setChangeAddress(walletId, address) {
+    var wallet = await getWalletById(walletId);
     wallet.changeAddress = address;
-    updateWallet(wallet, walletId);
+    await updateWallet(wallet, walletId);
 }
 
 export async function getTokenValue() {

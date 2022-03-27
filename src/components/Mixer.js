@@ -7,19 +7,20 @@ import CovertAddress from './CovertAddress';
 import ImageButton from './ImageButton';
 import Mix from './Mix';
 import SelectWallet from './SelectWallet';
+import { LS } from '../utils/utils';
 
 export default class Mixer extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
             mixerAvailable: false,
-            mixerAddress: localStorage.getItem('mixerAddress') ?? DEFAULT_MIXER_ADDRESS,
+            mixerAddress: DEFAULT_MIXER_ADDRESS,
             availableMixes: [],
             showAvailableMixes: false,
             availableCoverts: [],
             showAvailableCovert: false,
             mixedTokenInfo: {},
-            walletList: JSON.parse(localStorage.getItem('walletList')) ?? [],
+            walletList: [],
             selectedWalletId: 0,
             setPage: props.setPage,
         };
@@ -42,9 +43,13 @@ export default class Mixer extends React.Component {
     }
 
     async updateMixList() {
+        const mixerAddress = (await LS.getItem('mixerAddress')) ?? DEFAULT_MIXER_ADDRESS;
+        const walletList = (await LS.getItem('walletList')) ?? [];
         const mixerAvailable = await isMixerAvailable();
         this.setState({
             mixerAvailable: mixerAvailable,
+            mixerAddress: mixerAddress,
+            walletList: walletList,
         })
         if (mixerAvailable) {
             const availableMixes = (await getActiveMixes()).sort(function (a, b) { return b.status.localeCompare(a.status); });
@@ -147,6 +152,7 @@ export default class Mixer extends React.Component {
                                                     walletId={this.state.selectedWalletId}
                                                     setPage={this.state.setPage}
                                                     mixedTokenInfo={this.state.mixedTokenInfo}
+                                                    mixerAddress={this.state.mixerAddress}
                                                 />
                                             )
                                             : null
@@ -169,7 +175,7 @@ export default class Mixer extends React.Component {
                                             icon={"open_in_new"}
                                             tips={"Open in ErgoMixer"}
                                             onClick={() => {
-                                                const url = localStorage.getItem('mixerAddress') + 'dashboard/covert/';
+                                                const url = this.state.mixerAddress + 'dashboard/covert/';
                                                 window.open(url, '_blank').focus();
                                             }}
                                         />
@@ -183,6 +189,7 @@ export default class Mixer extends React.Component {
                                                     setPage={this.state.setPage}
                                                     mixedTokenInfo={this.state.mixedTokenInfo}
                                                     updateCovert={this.updateMixList}
+                                                    mixerAddress={this.state.mixerAddress}
                                                 />
                                             )
                                             : null

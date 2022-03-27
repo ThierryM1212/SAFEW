@@ -19,6 +19,7 @@ export default class AddressListContent extends React.Component {
             unconfirmedBalance: { value: BigInt(0), tokens: [] },
             nanoErgs: 0,
             tokens: [],
+            ergoPrice: '0',
         };
         this.toggleDetails = this.toggleDetails.bind(this);
         this.computeUncomfirmedBalance = this.computeUncomfirmedBalance.bind(this);
@@ -30,7 +31,7 @@ export default class AddressListContent extends React.Component {
         if (addressContentList !== undefined) {
             [nanoErgs, tokens] = getSummaryFromAddressListContent(addressContentList);
             addressList = addressContentList.map(addr => addr.address);
-            if (Array.isArray(addressContentList[0].unconfirmedTx)) {
+            if (addressContentList && addressContentList[0] && Object.keys(addressContentList[0]).includes("unconfirmedTx") && Array.isArray(addressContentList[0].unconfirmedTx)) {
                 const unconfirmedInputs = addressContentList[0].unconfirmedTx.map(tx => tx.inputs).flat();
                 const unconfirmedOutputs = addressContentList[0].unconfirmedTx.map(tx => tx.outputs).flat();
                 unconfirmedBalance = await getUtxoBalanceForAddressList(unconfirmedInputs, unconfirmedOutputs, addressList);
@@ -45,6 +46,9 @@ export default class AddressListContent extends React.Component {
     }
 
     async componentDidMount() {
+        const ergoPrice = await readErgoPrice();
+        console.log("componentDidMount AddressListContent", this.state.addressContentList, ergoPrice);
+        this.setState({ergoPrice: ergoPrice});
         await this.computeUncomfirmedBalance(this.state.addressContentList);
     }
 
@@ -64,7 +68,7 @@ export default class AddressListContent extends React.Component {
 
     render() {
         const details = this.state.details;
-        const ergoPrice = parseFloat(readErgoPrice());
+        const ergoPrice = parseFloat(this.state.ergoPrice);
         const tokenRatesDict = this.state.tokenRatesDict;
         const unconfirmedBalance = this.state.unconfirmedBalance;
         const nanoErgs = this.state.nanoErgs;

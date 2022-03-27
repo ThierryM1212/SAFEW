@@ -4,6 +4,7 @@ import Dropzone from './Dropzone';
 import { DEFAULT_EXPLORER_API_ADDRESS, DEFAULT_EXPLORER_WEBUI_ADDRESS, DEFAULT_MIXER_ADDRESS, DEFAULT_NODE_ADDRESS } from '../utils/constants';
 import ConfigURL from './ConfigURL';
 import ImageButton from './ImageButton';
+import { LS } from '../utils/utils';
 
 
 export default class Config extends React.Component {
@@ -12,28 +13,34 @@ export default class Config extends React.Component {
 
         this.state = {
             setPage: props.setPage,
-            expertMode: (localStorage.getItem('expertMode') === 'true') ?? false,
-            hideUsedEmptyAddress: (localStorage.getItem('hideUsedEmptyAddress') === 'true') ?? false,
+            expertMode: false,
+            hideUsedEmptyAddress: false,
         };
         this.setExpertMode = this.setExpertMode.bind(this);
         this.setHideUsedEmptyAddress = this.setHideUsedEmptyAddress.bind(this);
         this.backupSAFEW = this.backupSAFEW.bind(this);
     }
 
-    setExpertMode = () => {
-        const oldState = (localStorage.getItem('expertMode') === 'true');
+    async componentDidMount() {
+        const expertMode = (await LS.getItem('expertMode')) ?? false;
+        const hideUsedEmptyAddress = (await LS.getItem('hideUsedEmptyAddress')) ?? false;
+        this.setState({ expertMode: expertMode, hideUsedEmptyAddress: hideUsedEmptyAddress });
+    }
+
+    async setExpertMode() {
+        const oldState = await LS.getItem('expertMode');
         this.setState({ expertMode: !oldState });
-        localStorage.setItem('expertMode', !oldState);
+        LS.setItem('expertMode', !oldState);
     };
 
-    setHideUsedEmptyAddress = () => {
-        const oldState = (localStorage.getItem('hideUsedEmptyAddress') === 'true');
+    async setHideUsedEmptyAddress() {
+        const oldState = await LS.getItem('hideUsedEmptyAddress');
         this.setState({ hideUsedEmptyAddress: !oldState });
-        localStorage.setItem('hideUsedEmptyAddress', !oldState);
+        LS.setItem('hideUsedEmptyAddress', !oldState);
     };
 
-    backupSAFEW = () => {
-        var _myArray = JSON.stringify(localStorage, null, 4);
+    async backupSAFEW() {
+        var _myArray = JSON.stringify((await LS.getAllItems()), null, 4);
         var vLink = document.createElement('a'),
             vBlob = new Blob([_myArray], { type: "octet/stream" }),
             vName = 'backup_SAFEW_wallets.json',

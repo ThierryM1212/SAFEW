@@ -1,16 +1,43 @@
 
+const LS = {
+    getAllItems: () => {
+        // Immediately return a promise and start asynchronous work
+        return new Promise((resolve, reject) => {
+            // Asynchronously fetch all data from storage.sync.
+            chrome.storage.local.get(null, (items) => {
+                // Pass any observed errors down the promise chain.
+                if (chrome.runtime.lastError) {
+                    return reject(chrome.runtime.lastError);
+                }
+                // Pass the data retrieved from storage down the promise chain.
+                resolve(items);
+            });
+        });
+    },
+    getItem: (key) => {
+        return new Promise(function(resolve, reject) {
+            chrome.storage.local.get(key, function(items) {
+              if (chrome.runtime.lastError) {
+                console.error(chrome.runtime.lastError.message);
+                reject(chrome.runtime.lastError.message);
+              } else {
+                resolve(items[key]);
+              }
+            });
+          });
+    },
+    setItem: (key, val) => {
+        //console.log("setItem", key, val)
+        chrome.storage.local.set({ [key]: val })
+    },
+    removeItems: keys => chrome.storage.local.remove(keys),
+};
+
 /* global chrome BigInt */
 chrome.runtime.onInstalled.addListener(() => {
     console.log('SAFEW extension successfully installed!');
-    localStorage.setItem('disclaimerAccepted', "false")
+    LS.setItem('disclaimerAccepted', false)
     return;
-});
-
-// launch extension
-chrome.browserAction.onClicked.addListener(function (tab) {
-    chrome.tabs.create({
-        'url': chrome.runtime.getURL("index.html")
-    });
 });
 
 // handlers for extension popup response
@@ -19,8 +46,50 @@ var signResponseHandlers = new Map();
 
 // transfer to popup
 var transactionsToSign = new Map();
+var explorerApi = "https://api.ergoplatform.com/";
+var nodeApi = "http://213.239.193.208:9053/";
 
-const explorerApi = localStorage.getItem("explorerAPIAddress") ?? "https://api.ergoplatform.com/";
+
+// Where we will expose all the data we retrieve from storage.sync.
+const local_storage = {};
+// Asynchronously retrieve data from storage.sync, then cache it.
+const initStorageCache = getAllStorageSyncData().then(items => {
+    // Copy the data retrieved from storage into storageCache.
+    Object.assign(local_storage, items);
+});
+// Get local storage consts
+chrome.browserAction.onClicked.addListener(async (tab) => {
+    try {
+        await initStorageCache;
+    } catch (e) {
+        // Handle error that occurred during storage initialization.
+    }
+    explorerApi = local_storage["explorerAPIAddress"] ?? "https://api.ergoplatform.com/";
+    nodeApi = local_storage['nodeAddress'] ?? "http://213.239.193.208:9053/";
+
+    // launch extension
+    chrome.tabs.create({
+        'url': chrome.runtime.getURL("index.html")
+    });
+});
+// Reads all data out of storage.sync and exposes it via a promise.
+//
+// Note: Once the Storage API gains promise support, this function
+// can be greatly simplified.
+function getAllStorageSyncData() {
+    // Immediately return a promise and start asynchronous work
+    return new Promise((resolve, reject) => {
+        // Asynchronously fetch all data from storage.sync.
+        chrome.storage.local.get(null, (items) => {
+            // Pass any observed errors down the promise chain.
+            if (chrome.runtime.lastError) {
+                return reject(chrome.runtime.lastError);
+            }
+            // Pass the data retrieved from storage down the promise chain.
+            resolve(items);
+        });
+    });
+}
 
 // launch extension popup
 function launchPopup(message, sender, param = '') {
@@ -60,48 +129,38 @@ function launchPopup(message, sender, param = '') {
 
 // emulate localstorage-slim
 const APX = String.fromCharCode(0);
-function ls_slim_flush() {
-    Object.keys(localStorage).forEach((key) => {
-        const str = localStorage.getItem(key);
-        if (!str) return;
-        let item;
-        try {
-            item = JSON.parse(str);
-        } catch (e) {
-            return;
-        }
+async function ls_slim_flush() {
+    const items = await LS.getAllItems();
+    return await Promise.all(Object.keys(items).map(async (key) => {
+        const item = await LS.getItem(key);
         if (typeof item === 'object' && APX in item && (Date.now() > item.ttl)) {
-            localStorage.removeItem(key);
+            LS.removeItems([key]);
         }
-    });
+    }));
 }
-function ls_slim_get(key) {
-    const str = localStorage.getItem(key);
-    if (!str) {
-        return null;
-    }
-    let item = JSON.parse(str);
+async function ls_slim_get(key) {
+    const item = await LS.getItem(key);
     const hasTTL = typeof item === 'object' && APX in item;
     if (!hasTTL) {
         return item;
     }
     if (Date.now() > item.ttl) {
-        localStorage.removeItem(key);
+        LS.removeItems([key]);
         return null;
     }
     return item[APX];
 }
-function ls_slim_set(key, value, ttl) {
+async function ls_slim_set(key, value, ttl) {
     try {
         let val = ttl && ttl > 0 ? { [APX]: value, ttl: Date.now() + ttl * 1e3 } : value;
-        localStorage.setItem(key, JSON.stringify(val));
+        await LS.setItem(key, val);
     } catch (e) {
         return false;
     }
 }
 
 function getConnectedWalletName(url) {
-    const connectedSites = JSON.parse(localStorage.getItem('connectedSites')) ?? {};
+    const connectedSites = local_storage['connectedSites'] ?? {};
     for (const walletName of Object.keys(connectedSites)) {
         if (connectedSites[walletName].includes(url)) {
             return walletName;
@@ -112,7 +171,7 @@ function getConnectedWalletName(url) {
 function getConnectedWalletByURL(url) {
     const walletName = getConnectedWalletName(url);
     if (walletName !== null) {
-        const walletList = JSON.parse(localStorage.getItem('walletList')) ?? [];
+        const walletList = local_storage['walletList'] ?? [];
         for (const wallet of walletList) {
             if (wallet.name === walletName) {
                 return wallet;
@@ -151,7 +210,7 @@ async function post(url, body = {}, apiKey = '') {
                 } else {
                     return { result: true, data: body };
                 }
-                
+
             } else {
                 return { result: false, data: body.detail };
             }
@@ -162,7 +221,6 @@ async function post(url, body = {}, apiKey = '') {
         });
 }
 async function postRequest(url, body = {}, apiKey = '') {
-    const nodeApi = localStorage.getItem('nodeAddress') ?? "http://213.239.193.208:9053/";
     try {
         const res = await post(nodeApi + url, body)
         return { detail: res };
@@ -211,11 +269,11 @@ async function getUnspentBoxesForAddressList(addressList) {
     var [spentBoxes, newBoxes] = await getSpentAndUnspentBoxesFromMempool(addressList);
     const spentInputBoxIds = spentBoxes.map(box => box.boxId);
     const adjustedUtxos = newBoxes.concat(boxList).flat().filter(box => !spentInputBoxIds.includes(box.boxId));
-    //console.log("getUnspentBoxesForAddressList", spentBoxes, newBoxes, spentInputBoxIds, adjustedUtxos);
+    console.log("getUnspentBoxesForAddressList", spentBoxes, newBoxes, spentInputBoxIds, adjustedUtxos);
     if (spentBoxes && Array.isArray(spentBoxes) && spentBoxes.length > 0) {
         memPoolTransaction = true;
-        var cache_spentBoxes = ls_slim_get('cache_spentBoxes') ?? [];
-        ls_slim_set('cache_spentBoxes', boxList.filter(b => spentInputBoxIds.includes(b.boxId)).concat(cache_spentBoxes).flat(), 600);
+        var cache_spentBoxes = await ls_slim_get('cache_spentBoxes') ?? [];
+        await ls_slim_set('cache_spentBoxes', boxList.filter(b => spentInputBoxIds.includes(b.boxId)).concat(cache_spentBoxes).flat(), 600);
     }
 
     return adjustedUtxos.flat().sort(function (a, b) {
@@ -275,8 +333,8 @@ async function getSpentAndUnspentBoxesFromMempool(addressList) {
             newBoxes[i]["boxId"] = newBoxes[i].id;
             delete newBoxes[i].id;
         }
-        var cache_newBoxes = ls_slim_get('cache_newBoxes') ?? [];
-        ls_slim_set('cache_newBoxes', newBoxes.concat(cache_newBoxes), 600);
+        var cache_newBoxes = (await ls_slim_get('cache_newBoxes')) ?? [];
+        await ls_slim_set('cache_newBoxes', newBoxes.concat(cache_newBoxes), 600);
         //console.log('getUtxosForSelectedInputs cache_newBoxes', ls.get('cache_newBoxes'))
     }
     console.log("getSpentAndUnspentBoxesFromMempool", spentBoxes, newBoxes)
@@ -303,8 +361,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
 
         if (message.data && message.data.type === "ergopay_request") {
-            console.log("ergopay_request received:", message.data);
-
+            console.log("ergopay_request", message.data);
 
 
         }

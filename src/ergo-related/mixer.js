@@ -1,15 +1,18 @@
 import { DEFAULT_MIXER_ADDRESS } from '../utils/constants';
 import { get2, post } from './rest';
+import { LS } from '../utils/utils';
 
-const mixerURL = localStorage.getItem('mixerAddress') ?? DEFAULT_MIXER_ADDRESS;
+
 
 async function getRequest(url) {
+    const mixerURL = (await LS.getItem('mixerAddress')) ?? DEFAULT_MIXER_ADDRESS;
     return get2(mixerURL + url).then(res => {
         return { data: res };
     });
 }
 
 async function postRequest(url, body = {}) {
+    const mixerURL = (await LS.getItem('mixerAddress')) ?? DEFAULT_MIXER_ADDRESS;
     try {
         const res = await post(mixerURL + url, body)
         return { data: res };
@@ -39,7 +42,7 @@ export async function getActiveMixes() {
     }
 }
 
-export function getMixURL(mixId) {
+export function getMixURL(mixerURL, mixId) {
     return mixerURL + "dashboard/mix/active/" + mixId;
 }
 

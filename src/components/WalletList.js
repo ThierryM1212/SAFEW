@@ -4,18 +4,13 @@ import ImageButton from './ImageButton';
 import { getAddressListContent, getTokenValue, getUnconfirmedTransactionsForAddressList, getWalletListAddressList, updateUnusedAddresses } from '../utils/walletUtils';
 import { errorAlert, waitingAlert } from '../utils/Alerts';
 import { updateErgoPrice } from '../ergo-related/ergoprice';
+import { LS } from '../utils/utils';
 
 export default class WalletList extends React.Component {
     constructor(props) {
         super(props);
-        let walletList = localStorage.getItem('walletList');
-        if (walletList === null) { /// move to app
-            localStorage.setItem('walletList', JSON.stringify([]));
-            walletList = localStorage.getItem('walletList');
-        }
-        walletList = JSON.parse(walletList);
         this.state = {
-            walletList: walletList,
+            walletList: [],
             addressContentList: [],
             setPage: props.setPage,
             tokenRatesDict: {},
@@ -25,8 +20,9 @@ export default class WalletList extends React.Component {
     }
 
     async componentDidMount() {
+        const walletList = (await LS.getItem('walletList')) ?? [];
         var intervalId = setInterval(this.timer, 60000);
-        this.setState({ intervalId: intervalId });
+        this.setState({ intervalId: intervalId, walletList: walletList });
         updateUnusedAddresses();
         await this.updateWalletAddressListContent();
     }
@@ -40,7 +36,7 @@ export default class WalletList extends React.Component {
     }
 
     async updateWalletList() {
-        const walletList = JSON.parse(localStorage.getItem('walletList'));
+        const walletList = (await LS.getItem('walletList')) ?? [];
         console.log("updateWalletList", walletList);
         this.setState({
             walletList: walletList,

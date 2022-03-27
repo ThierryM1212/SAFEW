@@ -9,6 +9,7 @@ import { sampleTxErgodex, TX_FEE_ERGO_TREE } from '../utils/constants';
 import { decryptMnemonic, formatERGAmount, formatTokenAmount, getConnectedWalletByURL, getUnconfirmedTransactionsForAddressList, getWalletAddressList, getWalletById, getWalletUsedAddressList } from '../utils/walletUtils';
 import BigQRCode from './BigQRCode';
 import JSONBigInt from 'json-bigint';
+import { LS } from '../utils/utils';
 
 /* global chrome */
 
@@ -17,7 +18,6 @@ export default class SignPopup extends React.Component {
         super(props);
         const urlFixed = new URL(window.location.href.replace("#sign_tx", '').replace("chrome-extension", "http"));
         const urlOrgigin = urlFixed.searchParams.get("origin");
-        var connectedWallet = getConnectedWalletByURL(urlOrgigin);
         const requestId = parseInt(urlFixed.searchParams.get("requestId"));
         var tx = {}
         try { // allow debug of the UI out of chrome extension
@@ -26,7 +26,6 @@ export default class SignPopup extends React.Component {
         } catch (e) {
             console.log(e);
             tx = sampleTxErgodex;
-            connectedWallet = getWalletById(0);
         }
         var parsedUnsignedTx = {};
         try {
@@ -46,13 +45,13 @@ export default class SignPopup extends React.Component {
 
         this.state = {
             selectedOption: "",
-            wallet: connectedWallet,
+            wallet: undefined,
             url: urlOrgigin,
             requestId: requestId,
             accepted: false,
             unSignedTx: parsedUnsignedTx,
             password: '',
-            expertMode: (localStorage.getItem('expertMode') === 'true') ?? false,
+            expertMode: false,
             txBalance: { value: 0, tokens: [] },
             txReducedB64safe: "",
             txId: "",
@@ -107,13 +106,17 @@ export default class SignPopup extends React.Component {
     }
 
     async componentDidMount() {
-        const walletAddressList = getWalletAddressList(this.state.wallet);
+        var wallet = await getConnectedWalletByURL(this.state.url);
+        const expertMode = (await LS.getItem('expertMode')) ?? false;
+        const walletAddressList = getWalletAddressList(wallet);
         const txBalance = await getUtxoBalanceForAddressList(this.state.unSignedTx.inputs, this.state.unSignedTx.outputs, walletAddressList);
-        console.log("sendTransaction txBalance", txBalance);
+        console.log("sendTransaction txBalance", txBalance, wallet);
         this.setState({
             txBalance: txBalance,
+            wallet: wallet,
+            expertMode: expertMode,
         });
-        if (this.state.wallet.ergoPayOnly) {
+        if (wallet.ergoPayOnly) {
             await this.showTxReduced();
         }
     }
@@ -186,96 +189,100 @@ export default class SignPopup extends React.Component {
         return (
             <Fragment>
                 <br />
-                <div className='card w-75 m-1 p-1 d-flex flex-column'
-                    style={{
-                        borderColor: `rgba(${this.state.wallet.color.r},${this.state.wallet.color.g},${this.state.wallet.color.b}, 0.95)`,
-                    }}>
-                    <br />
-                    <h5>
-                        Sign transaction from {this.state.url}
-                    </h5>
-                    <h6>Balance for {this.state.wallet.name}</h6>
-                    <table>
-                        <tbody>
-                            <tr>
-                                <td>ERGS</td>
-                                <td>
-                                    {formatERGAmount(this.state.txBalance.value)}&nbsp;
-                                    <span className='textSmall'>(Fee -{formatERGAmount(feeAmount)})</span>
-                                </td>
-                            </tr>
-                            {
-                                this.state.txBalance.tokens.map(token =>
+                {
+                    this.state.wallet ?
+                        <div className='card w-75 m-1 p-1 d-flex flex-column'
+                            style={{
+                                borderColor: `rgba(${this.state.wallet.color.r},${this.state.wallet.color.g},${this.state.wallet.color.b}, 0.95)`,
+                            }}>
+                            <br />
+                            <h5>
+                                Sign transaction from {this.state.url}
+                            </h5>
+                            <h6>Balance for {this.state.wallet.name}</h6>
+                            <table>
+                                <tbody>
                                     <tr>
-                                        <td className='textSmall'> {token.name}</td>
-                                        <td className='textSmall'>{formatTokenAmount(token.amount, token.decimals)}</td>
+                                        <td>ERGS</td>
+                                        <td>
+                                            {formatERGAmount(this.state.txBalance.value)}&nbsp;
+                                            <span className='textSmall'>(Fee -{formatERGAmount(feeAmount)})</span>
+                                        </td>
                                     </tr>
-                                )
+                                    {
+                                        this.state.txBalance.tokens.map(token =>
+                                            <tr>
+                                                <td className='textSmall'> {token.name}</td>
+                                                <td className='textSmall'>{formatTokenAmount(token.amount, token.decimals)}</td>
+                                            </tr>
+                                        )
+                                    }
+                                </tbody>
+                            </table>
+                            <br />
+                            {
+                                this.state.expertMode ?
+                                    <div className='card m-1 p-1'>
+                                        <h6>Unsigned transaction json</h6>
+                                        <ReactJson
+                                            src={this.state.unSignedTx}
+                                            theme="monokai"
+                                            collapsed={true}
+                                            name="unsignedTransaction"
+                                            collapseStringsAfterLength={50}
+                                        />
+                                        <br />
+                                    </div>
+                                    : null
                             }
-                        </tbody>
-                    </table>
-                    <br />
-                    {
-                        this.state.expertMode ?
-                            <div className='card m-1 p-1'>
-                                <h6>Unsigned transaction json</h6>
-                                <ReactJson
-                                    src={this.state.unSignedTx}
-                                    theme="monokai"
-                                    collapsed={true}
-                                    name="unsignedTransaction"
-                                    collapseStringsAfterLength={50}
-                                />
-                                <br />
-                            </div>
-                            : null
-                    }
 
-                    <div className='card m-1 p-1 d-flex flex-column'>
-                        <h6>ErgoPay transaction</h6>
-                        {this.state.txId === "" ?
-                            <div className='d-flex flex-row justify-content-center'>
-                                <button className="btn btn-outline-info"
-                                    onClick={this.showTxReduced}>
-                                    Show ErgoPay transaction
-                                </button>
+                            <div className='card m-1 p-1 d-flex flex-column'>
+                                <h6>ErgoPay transaction</h6>
+                                {this.state.txId === "" ?
+                                    <div className='d-flex flex-row justify-content-center'>
+                                        <button className="btn btn-outline-info"
+                                            onClick={this.showTxReduced}>
+                                            Show ErgoPay transaction
+                                        </button>
+                                    </div>
+                                    :
+                                    <div className='d-flex flex-row justify-content-center'>
+                                        <BigQRCode QRCodeTx={this.state.txReducedB64safe} />
+                                    </div>
+                                }
                             </div>
-                            :
-                            <div className='d-flex flex-row justify-content-center'>
-                                <BigQRCode QRCodeTx={this.state.txReducedB64safe} />
-                            </div>
-                        }
-                    </div>
 
-                    {
-                        this.state.wallet.ergoPayOnly ? null :
-                            <Fragment>
-                                <div className='card m-1 p-1 d-flex flex-column'>
-                                    <label htmlFor="walletPassword" >Spending password for {this.state.wallet.name}</label>
-                                    <input type="password"
-                                        id="spendingPassword"
-                                        className="form-control "
-                                        onChange={e => this.setPassword(e.target.value)}
-                                        value={this.state.password}
-                                    />
-                                </div>
-                                <div className='d-flex flex-row justify-content-between'>
-                                    <div></div>
+                            {
+                                this.state.wallet.ergoPayOnly ? null :
+                                    <Fragment>
+                                        <div className='card m-1 p-1 d-flex flex-column'>
+                                            <label htmlFor="walletPassword" >Spending password for {this.state.wallet.name}</label>
+                                            <input type="password"
+                                                id="spendingPassword"
+                                                className="form-control "
+                                                onChange={e => this.setPassword(e.target.value)}
+                                                value={this.state.password}
+                                            />
+                                        </div>
+                                        <div className='d-flex flex-row justify-content-between'>
+                                            <div></div>
 
-                                    <button className="btn btn-outline-info"
-                                        onClick={this.signTx}>
-                                        Sign
-                                    </button>
-                                    <button className="btn btn-outline-info"
-                                        onClick={this.cancelSigning}>
-                                        Cancel
-                                    </button>
-                                    <div></div>
-                                </div>
-                            </Fragment>
-                    }
-                    <br />
-                </div>
+                                            <button className="btn btn-outline-info"
+                                                onClick={this.signTx}>
+                                                Sign
+                                            </button>
+                                            <button className="btn btn-outline-info"
+                                                onClick={this.cancelSigning}>
+                                                Cancel
+                                            </button>
+                                            <div></div>
+                                        </div>
+                                    </Fragment>
+                            }
+                            <br />
+                        </div>
+                        : null
+                }
             </Fragment>
         )
     }

@@ -74,3 +74,69 @@ function getHashAsync(file) {
         reader.readAsArrayBuffer(file);
     })
 }
+
+export const LS = {
+    getAllItems: () => {
+        // Immediately return a promise and start asynchronous work
+        return new Promise((resolve, reject) => {
+            // Asynchronously fetch all data from storage.sync.
+            chrome.storage.local.get(null, (items) => {
+                // Pass any observed errors down the promise chain.
+                if (chrome.runtime.lastError) {
+                    return reject(chrome.runtime.lastError);
+                }
+                // Pass the data retrieved from storage down the promise chain.
+                resolve(items);
+            });
+        });
+    },
+    getItem: (key) => {
+        return new Promise(function(resolve, reject) {
+            chrome.storage.local.get(key, function(items) {
+              if (chrome.runtime.lastError) {
+                console.error(chrome.runtime.lastError.message);
+                reject(chrome.runtime.lastError.message);
+              } else {
+                resolve(items[key]);
+              }
+            });
+          });
+    },
+    setItem: (key, val) => {
+        //console.log("setItem", key, val)
+        chrome.storage.local.set({ [key]: val })
+    },
+    removeItems: keys => chrome.storage.local.remove(keys),
+};
+
+// emulate localstorage-slim
+const APX = String.fromCharCode(0);
+export async function ls_slim_flush() {
+    const items = await LS.getAllItems();
+    return await Promise.all(Object.keys(items).map(async (key) => {
+        const item = await LS.getItem(key);
+        if (typeof item === 'object' && APX in item && (Date.now() > item.ttl)) {
+            LS.removeItems([key]);
+        }
+    }));
+}
+export async function ls_slim_get(key) {
+    const item = await LS.getItem(key);
+    const hasTTL = typeof item === 'object' && APX in item;
+    if (!hasTTL) {
+        return item;
+    }
+    if (Date.now() > item.ttl) {
+        LS.removeItems([key]);
+        return null;
+    }
+    return item[APX];
+}
+export async function ls_slim_set(key, value, ttl) {
+    try {
+        let val = ttl && ttl > 0 ? { [APX]: value, ttl: Date.now() + ttl * 1e3 } : value;
+        await LS.setItem(key, val);
+    } catch (e) {
+        return false;
+    }
+}

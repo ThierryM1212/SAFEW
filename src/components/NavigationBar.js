@@ -5,8 +5,8 @@ import ReactTooltip from "react-tooltip";
 import { Fragment } from "react";
 
 export default function NavigationBar(props) {
-    const debug = (localStorage.getItem('debug') === 'true') ?? false;
-    const expertMode = (localStorage.getItem('expertMode') === 'true') ?? false;
+    const debug = props.debug;
+    const expertMode = props.expertMode;
     return (
         <div className="container d-flex flex-row justify-content-between w-75 m-1 p-1 align-items-center" >
             <div className="d-flex flex-row align-items-center" >

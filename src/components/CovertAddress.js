@@ -6,6 +6,7 @@ import CovertAddressList from './CovertAddressList';
 import CovertAsset from './CovertAsset';
 import ImageButton from './ImageButton';
 
+
 export default class CovertAddress extends React.Component {
     constructor(props) {
         super(props);
@@ -16,6 +17,7 @@ export default class CovertAddress extends React.Component {
             walletId: props.walletId,
             setPage: props.setPage,
             updateCovert: props.updateCovert,
+            mixerAddress: mixerAddress,
         };
         this.setCovertName = this.setCovertName.bind(this);
         this.updateCovertName = this.updateCovertName.bind(this);
@@ -88,7 +90,7 @@ export default class CovertAddress extends React.Component {
                                     icon={"open_in_new"}
                                     tips={"Open in ErgoMixer"}
                                     onClick={() => {
-                                        const url = localStorage.getItem('mixerAddress') + 'dashboard/covert/' + this.state.covert.id;
+                                        const url = this.state.mixerAddress + 'dashboard/covert/' + this.state.covert.id;
                                         window.open(url, '_blank').focus();
                                     }}
                                 />

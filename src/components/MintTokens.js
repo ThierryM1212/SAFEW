@@ -12,6 +12,7 @@ import { downloadAndSetSHA256, isValidHttpUrl } from '../utils/utils';
 import { NTF_TYPES } from '../utils/constants';
 import { encodeStr } from '../ergo-related/serializer';
 import { waitingAlert } from '../utils/Alerts';
+import { LS } from '../utils/utils';
 
 const MAX_SIGNIFICANT_NUMBER_TOKEN = 19;
 const AMOUNT_SENT = "0.002";
@@ -32,7 +33,7 @@ export default class MintTokens extends React.Component {
             optionsDecimals.push({ value: i.toString(), label: i.toString() })
         }
         this.state = {
-            walletList: JSON.parse(localStorage.getItem('walletList')) ?? [],
+            walletList: [],
             setPage: props.setPage,
             tokenName: '',
             tokenAmount: '1',
@@ -43,6 +44,7 @@ export default class MintTokens extends React.Component {
             tokenMediaAddress: '',
             tokenMediaAddressUploaded: '',
             selectedWalletId: 0,
+            selectedWallet: undefined,
             optionsDecimals: optionsDecimals,
             isValidTokenUrl: false,
         };
@@ -60,7 +62,10 @@ export default class MintTokens extends React.Component {
         this.isValidTransaction = this.isValidTransaction.bind(this);
         this.getTransactionJson = this.getTransactionJson.bind(this);
     }
-    setWallet = (walletId) => { this.setState({ selectedWalletId: walletId }); };
+    async setWallet(walletId) { 
+        const wallet = (await getWalletById(walletId));
+        this.setState({ selectedWalletId: walletId, wallet: wallet }); 
+    };
     setTokenName = (name) => { this.setState({ tokenName: name }); };
     setTokenDescription = (desc) => { this.setState({ tokenDescription: desc }); };
     setIsValidTokenUrl = (isValid) => { this.setState({ isValidTokenUrl: isValid }); };
@@ -150,12 +155,18 @@ export default class MintTokens extends React.Component {
         return isValid;
     }
 
+    async componentDidMount() {
+        const walletList = (await LS.getItem('walletList')) ?? [];
+        const selectedWallet = (await getWalletById(this.state.selectedWalletId))
+        this.setState({ walletList: walletList, selectedWallet: selectedWallet })
+    }
+
     async getTransactionJson() {
         const alert = waitingAlert("Preparing the transaction...");
         const amountToSendFloat = parseFloat(AMOUNT_SENT);
         const feeFloat = parseFloat(TX_FEE);
         const totalAmountToSendFloat = amountToSendFloat + feeFloat;
-        const wallet = getWalletById(this.state.selectedWalletId);
+        const wallet = await getWalletById(this.state.selectedWalletId);
         const selectedAddresses = getWalletAddressList(wallet);
         const [selectedUtxos, memPoolTransaction] = await getUtxosForSelectedInputs(selectedAddresses,
             totalAmountToSendFloat, [], []);
@@ -199,14 +210,17 @@ export default class MintTokens extends React.Component {
                 }
             }
         }
-
+        alert.close();
         console.log("getTransactionJson unsignedTransaction", jsonUnsignedTx);
         return [jsonUnsignedTx, selectedUtxos, memPoolTransaction];
     }
 
     render() {
-        const selectedWallet = getWalletById(this.state.selectedWalletId) ?? {};
-        const walletAddressList = getWalletAddressList(selectedWallet);
+        const selectedWallet = this.state.selectedWallet;
+        var walletAddressList = [];
+        if (selectedWallet) {
+            walletAddressList = getWalletAddressList(selectedWallet);
+        }
         console.log("selectedWallet", selectedWallet)
         var appTips = "The application is intended mint tokens followin EIP-004 format.<br />";
         appTips += "Images, sounds and videos tokens needs to have 0 decimals.<br />";
@@ -214,7 +228,7 @@ export default class MintTokens extends React.Component {
         return (
             <Fragment >
                 {
-                    Object.keys(selectedWallet).includes("accounts") ?
+                    selectedWallet ?
                         <Fragment >
                             <div className="w-100 container">
                                 <div className="d-flex flex-row justify-content-center align-items-center m-1 p-1">
@@ -227,14 +241,10 @@ export default class MintTokens extends React.Component {
                                         <div className="d-flex flex-row align-items-center justify-content-center">
                                             <div className="d-flex flex-row align-items-center ">
                                                 <h5>Wallet</h5>&nbsp;
-                                                {
-                                                    selectedWallet ?
-                                                        <div className="d-flex flex-row align-items-center">
-                                                            <SelectWallet selectedWalletId={this.state.selectedWalletId}
-                                                                setWallet={this.setWallet} />
-                                                        </div>
-                                                        : null
-                                                }
+                                                <div className="d-flex flex-row align-items-center">
+                                                    <SelectWallet selectedWalletId={this.state.selectedWalletId}
+                                                        setWallet={this.setWallet} />
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

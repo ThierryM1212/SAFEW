@@ -1,5 +1,6 @@
 import React, { Fragment } from 'react';
 import ImageButton from './ImageButton';
+import { LS } from '../utils/utils';
 
 
 export default class ConfigURL extends React.Component {
@@ -9,7 +10,7 @@ export default class ConfigURL extends React.Component {
             localstorageName: props.localstorageName,
             label: props.label,
             defaultURL: props.defaultURL,
-            URL: localStorage.getItem(props.localstorageName),
+            URL: props.defaultURL,
         };
         this.setURL = this.setURL.bind(this);
     }
@@ -18,13 +19,12 @@ export default class ConfigURL extends React.Component {
         this.setState({
             URL: address
         });
-        localStorage.setItem(this.state.localstorageName, address);
+        LS.setItem(this.state.localstorageName, address);
     };
     
-    componentDidMount = () => {
-        if (this.state.URL === '') {
-            this.setURL(this.state.defaultURL);
-        }
+    async componentDidMount() {
+        const url = ( await LS.getItem(this.state.localstorageName) ) ?? this.state.defaultURL;
+        this.setURL(url);
     }
 
     render() {

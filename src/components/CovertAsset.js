@@ -22,15 +22,17 @@ export default class CovertAsset extends React.Component {
             setPage: props.setPage,
             ringAmount: ringAmount,
             updateCovert: props.updateCovert,
+            walletColor: { r: 141, g: 140, b: 143, a: 1 },
         };
         this.setRingAmount = this.setRingAmount.bind(this);
         this.getRingAmountNano = this.getRingAmountNano.bind(this);
         this.updateRingAmount = this.updateRingAmount.bind(this);
     }
 
-    componentDidUpdate(prevProps, prevState) {
+    async componentDidUpdate(prevProps, prevState) {
         if (prevProps.walletId !== this.props.walletId) {
-            this.setState({ walletId: this.props.walletId });
+            const wallet = await getWalletById(this.props.walletId);
+            this.setState({ walletId: this.props.walletId, walletColor: wallet.color });
         }
         var ringAmount = "0";
 
@@ -67,14 +69,18 @@ export default class CovertAsset extends React.Component {
     async updateRingAmount() {
         await updateCoverRingAmount(this.state.covert.id, this.state.asset.tokenId, this.getRingAmountNano());
         await this.state.updateCovert();
+    }
 
+    async componentDidMount() {
+        const wallet = await getWalletById(this.state.walletId);
+        this.setState({ walletColor: wallet.color });
     }
 
     render() {
         const covert = this.state.covert.id;
         const asset = this.state.asset;
         const mixedTokenInfo = this.state.mixedTokenInfo;
-        const selectedWallet = getWalletById(this.state.walletId);
+        const walletColor = this.state.walletColor;
         const ringAmountNano = this.getRingAmountNano();
         console.log("render", asset, ringAmountNano);
         return (
@@ -116,8 +122,8 @@ export default class CovertAsset extends React.Component {
                             selectedWallet ?
                                 <div className='card m-1 p-1 d-flex align-items_center'
                                     style={{
-                                        borderColor: `rgba(${selectedWallet.color.r},${selectedWallet.color.g},${selectedWallet.color.b}, 0.95)`,
-                                        backgroundColor: `rgba(${selectedWallet.color.r},${selectedWallet.color.g},${selectedWallet.color.b}, 0.10)`
+                                        borderColor: `rgba(${walletColor.r},${walletColor.g},${walletColor.b}, 0.95)`,
+                                        backgroundColor: `rgba(${walletColor.r},${walletColor.g},${walletColor.b}, 0.10)`
                                     }}>
                                     <ImageButton
                                         id={"mixTransaction"}

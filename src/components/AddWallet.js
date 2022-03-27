@@ -41,9 +41,9 @@ export default class AddWallet extends React.Component {
         this.walletIsValid = this.walletIsValid.bind(this);
     }
 
-    setWalletName = (name) => {
+    async setWalletName(name) {
         const minWalletNameChar = 2;
-        const walletNameAlreadyExists = getWalletNames().includes(name);
+        const walletNameAlreadyExists = (await getWalletNames()).includes(name);
         var invalidMessage = ' ';
         if (name.length <= minWalletNameChar) { invalidMessage += INVALID_NAME_LENGTH_MSG };
         if (walletNameAlreadyExists) invalidMessage += " Wallet name already exists !";

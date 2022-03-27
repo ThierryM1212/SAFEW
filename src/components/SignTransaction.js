@@ -5,7 +5,7 @@ import { getWalletForAddresses, signTransaction } from '../ergo-related/serializ
 import { getUtxoBalanceForAddressList } from '../ergo-related/utxos';
 import { errorAlert, promptPassword } from '../utils/Alerts';
 import { NANOERG_TO_ERG } from '../utils/constants';
-import { decryptMnemonic, formatERGAmount, formatLongString, formatTokenAmount, getWalletAddressList, getWalletById } from '../utils/walletUtils';
+import { decryptMnemonic, formatERGAmount, formatLongString, formatTokenAmount, getUnconfirmedTransactionsForAddressList, getWalletAddressList, getWalletById } from '../utils/walletUtils';
 import BigQRCode from './BigQRCode';
 import ImageButton from './ImageButton';
 import JSONBigInt from 'json-bigint';
@@ -25,6 +25,8 @@ export default class SignTransaction extends React.Component {
             getTransactionJson: props.getTransactionJson,
             ergoPayTxId: "",
             ergoPayUnsignedTx: "",
+            ergoPayOnly: false,
+            expertMode: false,
         };
         this.setWalletId = this.setWalletId.bind(this);
         this.setIsValidTx = this.setIsValidTx.bind(this);
@@ -35,15 +37,22 @@ export default class SignTransaction extends React.Component {
         this.sendTransaction = this.sendTransaction.bind(this);
         this.timer = this.timer.bind(this);
     }
-    setWalletId = (walletId) => { this.setState({ walletId: walletId }); };
+    async setWalletId(walletId) {
+        const wallet = await getWalletById(walletId);
+        this.setState({
+            walletId: walletId,
+            ergoPayOnly: wallet.ergoPayOnly,
+            expertMode: expertMode,
+        });
+    };
     setIsValidTx = (isValid) => { this.setState({ isValidTx: isValid }); };
     setSendToAddress = (addr) => { this.setState({ sendToAddress: addr }); };
     setSignAddressList = (addrList) => { this.setState({ signAddressList: addrList }); };
     setTxFee = (txFee) => { this.setState({ txFee: txFee }); };
 
-    componentDidUpdate(prevProps, prevState) {
+    async componentDidUpdate(prevProps, prevState) {
         //console.log("SignTransaction componentDidUpdate", prevProps, this.props)
-        if (prevProps.walletId !== this.props.walletId) { this.setWalletId(this.props.walletId); }
+        if (prevProps.walletId !== this.props.walletId) { await this.setWalletId(this.props.walletId); }
         if (prevProps.isValidTx !== this.props.isValidTx) { this.setIsValidTx(this.props.isValidTx); }
         if (prevProps.sendToAddress !== this.props.sendToAddress) { this.setSendToAddress(this.props.sendToAddress); }
         if (prevProps.signAddressList !== this.props.signAddressList) { this.setSignAddressList(this.props.signAddressList); }
@@ -55,7 +64,7 @@ export default class SignTransaction extends React.Component {
     }
 
     async timer() {
-        const wallet = getWalletById(this.state.walletId);
+        const wallet = await getWalletById(this.state.walletId);
         const walletAddressList = getWalletAddressList(wallet);
         const unconfirmedTransactions = await getUnconfirmedTransactionsForAddressList(walletAddressList, false);
         const unconfirmedTransactionsIdFiltered = unconfirmedTransactions.map(tx => tx.transactions).flat();
@@ -69,8 +78,17 @@ export default class SignTransaction extends React.Component {
         }
     }
 
+    async componentDidMount() {
+        const wallet = await getWalletById(this.state.walletId);
+        const expertMode = (await LS.getItem('expertMode')) ?? false;
+        this.setState({
+            ergoPayOnly: wallet.ergoPayOnly,
+            expertMode: expertMode,
+        })
+    }
+
     async sendTransaction() {
-        const wallet = getWalletById(this.state.walletId);
+        const wallet = await getWalletById(this.state.walletId);
         const feeFloat = parseFloat(this.state.txFee);
         const selectedAddresses = this.state.signAddressList;
         const [jsonUnsignedTx, selectedUtxos, memPoolTransaction] = await this.state.getTransactionJson();
@@ -141,7 +159,7 @@ export default class SignTransaction extends React.Component {
                 await sendTx(signedTx);
                 console.log("Transaction sent to node", signedTx);
             }
-            
+
             //await delay(3000);
             this.state.setPage('transactions', this.state.walletId);
         }
@@ -154,8 +172,6 @@ export default class SignTransaction extends React.Component {
     }
 
     render() {
-        const wallet = getWalletById(this.state.walletId);
-        const expertMode = (localStorage.getItem('expertMode') === 'true') ?? false;
         //console.log("render SignTransaction", this.state);
         return (
             <Fragment>
@@ -165,9 +181,9 @@ export default class SignTransaction extends React.Component {
                             <button className="btn btn-outline-info"
                                 onClick={this.sendTransaction}
                                 disabled={!(this.state.isValidTx)}
-                            >{wallet.ergoPayOnly ? "Ergopay" : "Send transaction"}</button>&nbsp;
+                            >{this.state.ergoPayOnly ? "Ergopay" : "Send transaction"}</button>&nbsp;
                             {
-                                expertMode ?
+                                this.state.expertMode ?
                                     <button className="btn btn-outline-info"
                                         onClick={this.openInTxBuilder}
                                         disabled={!(this.state.isValidTx)}
@@ -190,7 +206,7 @@ export default class SignTransaction extends React.Component {
                                 <BigQRCode QRCodeTx={this.state.ergoPayUnsignedTx} />
                             </div>
                             {
-                                expertMode ?
+                                this.state.expertMode ?
                                     <div className='d-flex flex-row justify-content-center'>
                                         <button className="btn btn-outline-info"
                                             onClick={this.openInTxBuilder}

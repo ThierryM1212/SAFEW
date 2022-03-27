@@ -3,6 +3,8 @@ import { isValidErgAddress } from '../ergo-related/ergolibUtils';
 import { getCovertWithdrawAddresses, setCovertWithdrawAddresses } from '../ergo-related/mixer';
 import ImageButton from './ImageButton';
 import ValidInput from './ValidInput';
+import { DEFAULT_EXPLORER_WEBUI_ADDRESS } from '../utils/constants';
+import { LS } from '../utils/utils';
 
 export default class CovertAddressList extends React.Component {
     constructor(props) {
@@ -13,6 +15,7 @@ export default class CovertAddressList extends React.Component {
             addressToAdd: '',
             isValidAddressToAdd: false,
             addressListModified: false,
+            explorerWebUIURL: DEFAULT_EXPLORER_WEBUI_ADDRESS,
         };
         this.setAddressToAdd = this.setAddressToAdd.bind(this);
         this.addAddress = this.addAddress.bind(this);
@@ -22,6 +25,8 @@ export default class CovertAddressList extends React.Component {
     }
 
     async componentDidMount() {
+        const explorerUIaddr = (await LS.getItem('explorerWebUIAddress')) ?? DEFAULT_EXPLORER_WEBUI_ADDRESS;
+        this.setState({explorerUIaddr: explorerUIaddr});
         await this.updateCovertAddressList();
     }
 
@@ -113,7 +118,7 @@ export default class CovertAddressList extends React.Component {
                                     icon={"open_in_new"}
                                     tips={"Open in Explorer"}
                                     onClick={() => {
-                                        const url = localStorage.getItem('explorerWebUIAddress') + 'en/addresses/' + address;
+                                        const url = this.state.explorerUIaddr + 'en/addresses/' + address;
                                         window.open(url, '_blank').focus();
                                     }}
                                 />
