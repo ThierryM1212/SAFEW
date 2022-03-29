@@ -17,6 +17,7 @@ export default class Mix extends React.Component {
             mixedTokenInfo: props.mixedTokenInfo,
             mixBoxes: [],
             mixerURL: props.mixerAddress,
+            selectedWallet: undefined,
         };
         this.updateBoxes = this.updateBoxes.bind(this);
         this.timer = this.timer.bind(this);
@@ -41,10 +42,11 @@ export default class Mix extends React.Component {
         await this.updateBoxes();
     }
 
-    componentDidUpdate(prevProps, prevState) {
+    async componentDidUpdate(prevProps, prevState) {
         //console.log("componentDidUpdate", prevProps, prevState, this.props, this.state);
         if (prevProps.walletId !== this.props.walletId) {
-            this.setState({ walletId: this.props.walletId })
+            const selectedWallet = await getWalletById(this.state.walletId);
+            this.setState({ walletId: this.props.walletId, selectedWallet: selectedWallet })
         }
         if (prevProps.mix.groupStat.doneMixRound !== this.props.mix.groupStat.doneMixRound
             || prevProps.mix.status !== this.props.mix.status
@@ -54,8 +56,13 @@ export default class Mix extends React.Component {
         }
     }
 
+    async componentDidMount() {
+        const selectedWallet = await getWalletById(this.state.walletId);
+        this.setState({ selectedWallet: selectedWallet })
+    }
+
     render() {
-        const selectedWallet = getWalletById(this.state.walletId);
+        const selectedWallet = this.state.selectedWallet;
         const mix = this.state.mix;
         const mixedTokenInfo = this.state.mixedTokenInfo;
         const mixBoxes = this.state.mixBoxes;

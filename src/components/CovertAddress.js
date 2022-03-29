@@ -17,7 +17,7 @@ export default class CovertAddress extends React.Component {
             walletId: props.walletId,
             setPage: props.setPage,
             updateCovert: props.updateCovert,
-            mixerAddress: mixerAddress,
+            mixerAddress: props.mixerAddress,
         };
         this.setCovertName = this.setCovertName.bind(this);
         this.updateCovertName = this.updateCovertName.bind(this);

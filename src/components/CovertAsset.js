@@ -118,8 +118,7 @@ export default class CovertAsset extends React.Component {
                             Deposit amount: {asset.tokenId === "" ? formatERGAmount(asset.need) : formatTokenAmount(asset.need, mixedTokenInfo[asset.tokenId].decimals)}
                             &nbsp;(done {asset.tokenId === "" ? formatERGAmount(asset.confirmedDeposit) : formatTokenAmount(asset.confirmedDeposit, mixedTokenInfo[asset.tokenId].decimals)})
                         </div>
-                        {
-                            selectedWallet ?
+                 
                                 <div className='card m-1 p-1 d-flex align-items_center'
                                     style={{
                                         borderColor: `rgba(${walletColor.r},${walletColor.g},${walletColor.b}, 0.95)`,
@@ -139,8 +138,7 @@ export default class CovertAsset extends React.Component {
                                         )}
                                     />
                                 </div>
-                                : null
-                        }
+               
                     </div>
                     <div className='d-flex flex-row justify-content-between align-items-center'>
                         <div className='d-flex flex-row'>

@@ -25,14 +25,19 @@ export default function Dropzone(props) {
 
                         .then(res => {
                             if (res.isConfirmed) {
-                                LS.setItem('walletList', json.walletList)
-                                    .then(() => {
-                                        if (isUpgradeWalletRequired(json.walletList)) {
-                                            upgradeWallets().then(props.setPage('home'));
-                                        } else {
-                                            props.setPage('home');
-                                        }
-                                    })
+                                var fixedJson = {};
+                                try {
+                                    fixedJson = JSON.parse(json.walletList);
+                                } catch (e) {
+                                    fixedJson = json.walletList;
+                                }
+                                LS.setItem('walletList', fixedJson)
+                                if (isUpgradeWalletRequired(fixedJson)) {
+                                    upgradeWallets().then(props.setPage('home'));
+                                } else {
+                                    props.setPage('home');
+                                }
+
                             }
                         })
                 } else {

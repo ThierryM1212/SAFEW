@@ -1,6 +1,6 @@
 import { displayTransaction, errorAlert } from "../utils/Alerts";
 import JSONBigInt from 'json-bigint';
-import { ls_slim_flush, ls_slim_get, ls_slim_set } from "../utils/utils";
+import ls from 'localstorage-slim';
 
 export async function postTx(url, body = {}, apiKey = '') {
     console.log("post", url)
@@ -58,8 +58,8 @@ export async function get(url, apiKey = '', ttl = 0) {
     var res_cache = {};
     try {
         if (ttl > 0) {
-            await ls_slim_flush();
-            res_cache = await ls_slim_get('web_cache_' + ttl.toString()) ?? {};
+            ls.flush();
+            res_cache = ls.get('web_cache_' + ttl.toString()) ?? {};
             if (Object.keys(res_cache).includes(url)) {
                 //console.log("res_cache", res_cache[url])
                 return res_cache[url];
@@ -74,9 +74,9 @@ export async function get(url, apiKey = '', ttl = 0) {
         })
         const resJson = await result.json();
         if (ttl > 0) {
-            res_cache = await ls_slim_get('web_cache_' + ttl.toString()) ?? {};
+            res_cache = ls.get('web_cache_' + ttl.toString()) ?? {};
             res_cache[url] = resJson;
-            ls_slim_set('web_cache_' + ttl.toString(), res_cache, { ttl: ttl })
+            ls.set('web_cache_' + ttl.toString(), res_cache, { ttl: ttl })
         }
         return resJson;
     } catch (e) {

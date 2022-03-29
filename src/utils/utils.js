@@ -104,7 +104,7 @@ export const LS = {
     },
     setItem: (key, val) => {
         //console.log("setItem", key, val)
-        chrome.storage.local.set({ [key]: val })
+        return chrome.storage.local.set({ [key]: val })
     },
     removeItems: keys => chrome.storage.local.remove(keys),
 };

@@ -13,6 +13,7 @@
     "ergo-lib-wasm-browser": "^0.15.0",
     "ipfs-http-client": "^56.0.1",
     "json-bigint": "^1.0.0",
+    "localstorage-slim": "^2.2.0",
     "qrcode": "^1.5.0",
     "qrcode.react": "^1.0.1",
     "react": "^17.0.2",

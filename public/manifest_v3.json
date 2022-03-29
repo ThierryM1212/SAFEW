@@ -8,7 +8,7 @@
     "background": {
         "service_worker": "./background.js"
     },
-    "permissions": ["storage", "activeTab"],
+    "permissions": ["unlimitedStorage", "activeTab"],
     "host_permissions": [
         "<all_urls>"
       ],
@@ -25,7 +25,7 @@
     
     
      "content_security_policy": {
-          "extension_pages": "script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval'; object-src 'self'"
+          "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
           },
      "content_scripts": [
       {
