@@ -25,6 +25,7 @@ export const TOKENID_LUNADOG = '5a34d53ca483924b9a6aa0c771f11888881b516a8d1a9cdc
 export const TOKENID_NETA = '472c3d4ecaa08fb7392ff041ee2e6af75f4a558810a74b28600549d5392810e8';
 export const TOKENID_MI_GORENG = '0779ec04f2fae64e87418a1ad917639d4668f78484f45df962b0dec14a2591d2';
 export const TOKENID_COMET = '0cd8c9f416e5b1ca9f986a7f10a84191dfb85941619e49e53c0dc30ebf83324b';
+export const TOKENID_ERGOLD = 'e91cbc48016eb390f8f872aa2962772863e2e840708517d1ab85e57451f91bed';
 
 // [token_name, token_icon, token_decimals]
 export const VERIFIED_TOKENS = {
@@ -38,6 +39,7 @@ export const VERIFIED_TOKENS = {
     [TOKENID_NETA]: ['NETA', "token-neta.svg", 6],
     [TOKENID_MI_GORENG]: ['Mi Goreng', "token-mi-goreng.svg", 0],
     [TOKENID_COMET]: ['COMET', "token-comet.png", 0],
+    [TOKENID_ERGOLD]: ['ERGOLD', "token-ergold.png", 0],
   }
 
 export const NTF_TYPES = {
