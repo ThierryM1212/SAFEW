@@ -13,7 +13,9 @@ export default class ConnectWalletPopup extends React.Component {
             walletList: [],
             connectedSites: {},
             url: url.searchParams.get("origin"),
+            tabId: url.searchParams.get("tabId"),
             accepted: false,
+            debug: false,
         };
         this.handleFormSubmit = this.handleFormSubmit.bind(this);
         this.handleOptionChange = this.handleOptionChange.bind(this);
@@ -22,7 +24,8 @@ export default class ConnectWalletPopup extends React.Component {
     async componentDidMount() {
         const walletList = (await LS.getItem('walletList')) ?? [];
         const connectedSites = (await LS.getItem('connectedSites')) ?? {};
-        this.setState({ walletList: walletList, connectedSites: connectedSites });
+        const debug = (await LS.getItem('debug')) ?? false;
+        this.setState({ walletList: walletList, connectedSites: connectedSites, debug: debug });
     }
 
     handleOptionChange = changeEvent => {
@@ -39,6 +42,7 @@ export default class ConnectWalletPopup extends React.Component {
                 result: true,
                 type: "connect_response",
                 url: this.state.url,
+                tabId: this.state.tabId,
             }
         });
         this.setState({ accepted: true });
@@ -51,7 +55,9 @@ export default class ConnectWalletPopup extends React.Component {
             connectedSites[this.state.selectedOption] = [this.state.url]
         }
         LS.setItem('connectedSites', connectedSites);
-        window.close();
+        if(!this.state.debug) {
+            window.close();
+        }
     };
 
     handleCancel = formSubmitEvent => {
@@ -62,6 +68,7 @@ export default class ConnectWalletPopup extends React.Component {
                 result: false,
                 url: this.state.url,
                 type: "connect_response",
+                tabId: this.state.tabId,
             }
         });
         window.close();
@@ -75,6 +82,7 @@ export default class ConnectWalletPopup extends React.Component {
                     result: false,
                     url: this.state.url,
                     type: "connect_response",
+                    tabId: this.state.tabId,
                 }
             });
         }

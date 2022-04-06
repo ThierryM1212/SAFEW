@@ -15,16 +15,16 @@ const LS = {
         });
     },
     getItem: (key) => {
-        return new Promise(function(resolve, reject) {
-            chrome.storage.local.get(key, function(items) {
-              if (chrome.runtime.lastError) {
-                console.error(chrome.runtime.lastError.message);
-                reject(chrome.runtime.lastError.message);
-              } else {
-                resolve(items[key]);
-              }
+        return new Promise(function (resolve, reject) {
+            chrome.storage.local.get(key, function (items) {
+                if (chrome.runtime.lastError) {
+                    console.error(chrome.runtime.lastError.message);
+                    reject(chrome.runtime.lastError.message);
+                } else {
+                    resolve(items[key]);
+                }
             });
-          });
+        });
     },
     setItem: (key, val) => {
         //console.log("setItem", key, val)
@@ -44,8 +44,6 @@ chrome.runtime.onInstalled.addListener(() => {
 var connectResponseHandlers = new Map();
 var signResponseHandlers = new Map();
 
-// transfer to popup
-var transactionsToSign = new Map();
 var explorerApi = "https://api.ergoplatform.com/";
 var nodeApi = "http://213.239.193.208:9053/";
 
@@ -57,8 +55,15 @@ const initStorageCache = getAllStorageSyncData().then(items => {
     // Copy the data retrieved from storage into storageCache.
     Object.assign(local_storage, items);
 });
-// Get local storage consts
-chrome.browserAction.onClicked.addListener(async (tab) => {
+
+var isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
+if (isFirefox) {
+    chrome.browserAction.onClicked.addListener(handleBrowserActionClicked)
+} else {
+    chrome.action.onClicked.addListener(handleBrowserActionClicked)
+}
+
+async function handleBrowserActionClicked() {
     try {
         await initStorageCache;
     } catch (e) {
@@ -67,11 +72,10 @@ chrome.browserAction.onClicked.addListener(async (tab) => {
     explorerApi = local_storage["explorerAPIAddress"] ?? "https://api.ergoplatform.com/";
     nodeApi = local_storage['nodeAddress'] ?? "http://213.239.193.208:9053/";
 
-    // launch extension
     chrome.tabs.create({
         'url': chrome.runtime.getURL("index.html")
     });
-});
+}
 // Reads all data out of storage.sync and exposes it via a promise.
 //
 // Note: Once the Storage API gains promise support, this function
@@ -102,6 +106,7 @@ function launchPopup(message, sender, param = '') {
         console.log("launchPopup origin", origin, sender.url)
         searchParams.set('origin', origin);
     }
+    searchParams.set('tabId', sender.tab.id);
 
     //searchParams.set('request', JSON.stringify(message.data));
     var type = message.data.type;
@@ -150,10 +155,10 @@ async function ls_slim_get(key) {
     }
     return item[APX];
 }
-async function ls_slim_set(key, value, ttl) {
+function ls_slim_set(key, value, ttl) {
     try {
         let val = ttl && ttl > 0 ? { [APX]: value, ttl: Date.now() + ttl * 1e3 } : value;
-        await LS.setItem(key, val);
+        LS.setItem(key, val);
     } catch (e) {
         return false;
     }
@@ -161,8 +166,11 @@ async function ls_slim_set(key, value, ttl) {
 
 function getConnectedWalletName(url) {
     const connectedSites = local_storage['connectedSites'] ?? {};
+    console.log("getConnectedWalletName connectedSites", connectedSites, url);
     for (const walletName of Object.keys(connectedSites)) {
+        console.log("getConnectedWalletName test", connectedSites[walletName], connectedSites[walletName].includes(url));
         if (connectedSites[walletName].includes(url)) {
+
             return walletName;
         }
     }
@@ -170,8 +178,11 @@ function getConnectedWalletName(url) {
 }
 function getConnectedWalletByURL(url) {
     const walletName = getConnectedWalletName(url);
+    console.log("getConnectedWalletByURL walletName", walletName);
     if (walletName !== null) {
         const walletList = local_storage['walletList'] ?? [];
+        console.log("getConnectedWalletByURL walletList", walletList);
+
         for (const wallet of walletList) {
             if (wallet.name === walletName) {
                 return wallet;
@@ -191,7 +202,7 @@ async function get(url, apiKey = '') {
     return result;
 }
 async function post(url, body = {}, apiKey = '') {
-    return fetch(url, {
+    const response = await fetch(url, {
         method: 'POST',
         headers: {
             'accept': 'application/json',
@@ -201,24 +212,25 @@ async function post(url, body = {}, apiKey = '') {
             'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
         },
         body: JSON.stringify(body)
-    }).then(response => Promise.all([response.ok, response.json()]))
-        .then(([responseOk, body]) => {
-            if (responseOk) {
-                console.log("post1", body, responseOk)
-                if (typeof body === 'object') {
-                    return { result: true, data: body.id };
-                } else {
-                    return { result: true, data: body };
-                }
+    });
 
-            } else {
-                return { result: false, data: body.detail };
-            }
-        })
-        .catch(error => {
-            console.log("post4", error);
-            // catches error case and if fetch itself rejects
-        });
+    const [responseOk, body2] = await Promise.all([response.ok, response.json()]);
+    console.log("post1", body2, responseOk)
+    if (responseOk) {
+        if (typeof body2 === 'object') {
+            console.log("post2", body2.id)
+            return { result: true, data: body2.id };
+        } else {
+            return { result: true, data: body2 };
+        }
+    } else {
+        if (Object.keys(body2).includes("detail")) {
+            return { result: false, data: body2.detail };
+        } else {
+            return { result: false, data: body2.reason };
+        }
+    }
+
 }
 async function postRequest(url, body = {}, apiKey = '') {
     try {
@@ -273,7 +285,7 @@ async function getUnspentBoxesForAddressList(addressList) {
     if (spentBoxes && Array.isArray(spentBoxes) && spentBoxes.length > 0) {
         memPoolTransaction = true;
         var cache_spentBoxes = await ls_slim_get('cache_spentBoxes') ?? [];
-        await ls_slim_set('cache_spentBoxes', boxList.filter(b => spentInputBoxIds.includes(b.boxId)).concat(cache_spentBoxes).flat(), 600);
+        ls_slim_set('cache_spentBoxes', boxList.filter(b => spentInputBoxIds.includes(b.boxId)).concat(cache_spentBoxes).flat(), 600);
     }
 
     return adjustedUtxos.flat().sort(function (a, b) {
@@ -334,7 +346,7 @@ async function getSpentAndUnspentBoxesFromMempool(addressList) {
             delete newBoxes[i].id;
         }
         var cache_newBoxes = (await ls_slim_get('cache_newBoxes')) ?? [];
-        await ls_slim_set('cache_newBoxes', newBoxes.concat(cache_newBoxes), 600);
+        ls_slim_set('cache_newBoxes', newBoxes.concat(cache_newBoxes), 600);
         //console.log('getUtxosForSelectedInputs cache_newBoxes', ls.get('cache_newBoxes'))
     }
     console.log("getSpentAndUnspentBoxesFromMempool", spentBoxes, newBoxes)
@@ -347,13 +359,28 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.channel === 'safew_contentscript_background_channel') {
         if (message.data && message.data.type === "connect") {
             const walletFound = (getConnectedWalletName(message.data.url) !== null);
+            console.log("background walletFound", walletFound);
             if (walletFound) {
-                sendResponse({
-                    type: "connect_response",
-                    result: true,
-                    url: message.data.url
-                });
-                return;
+                console.log("background walletFound");
+                getTabId().then(tabId => {
+                    console.log("background walletFound", tabId);
+
+                    chrome.scripting.executeScript({
+                        target: { tabId: parseInt(tabId), allFrames: true },
+                        files: ['inject2.js'],
+                        world: "MAIN",
+                        injectImmediately: true,
+                    },
+                        () => {
+                            sendResponse({
+                                type: "connect_response",
+                                result: true,
+                                url: message.data.url
+                            });
+                        })
+
+                })
+                return true;
             }
             launchPopup(message, sender, sendResponse);
             connectResponseHandlers.set(message.data.url, sendResponse);
@@ -368,6 +395,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
         if (message.data && message.data.type === "ergo_api") {
             const wallet = getConnectedWalletByURL(message.data.url);
+            console.log("wallet", wallet);
             const addressList = wallet.accounts.map(account => account.addresses).flat();
             console.log("background ergo_api", wallet, addressList);
             if (message.data.func === "ping") {
@@ -465,7 +493,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 return true;
             }
             if (message.data.func === "sign_tx") {
-                //console.log("sign_tx", message.data)
+                console.log("sign_tx", message.data)
                 const walletFound = (getConnectedWalletName(message.data.url) !== null);
                 if (!walletFound) { // No wallet
                     sendResponse({
@@ -479,9 +507,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 }
                 if (message.data.data && Array.isArray(message.data.data) && message.data.data.length === 1) {
                     if (message.data.data[0].inputs && message.data.data[0].dataInputs && message.data.data[0].outputs) {
-                        transactionsToSign.set(message.data.requestId, message.data.data[0]);
                         signResponseHandlers.set(message.data.requestId, sendResponse);
-                        launchPopup(message, sender, message.data.requestId);
+                        ls_slim_get("transactionsToSign").then(transactionsToSign => {
+                            var tx = {};
+                            if (transactionsToSign) {
+                                tx = transactionsToSign;
+                            }
+                            tx[message.data.requestId.toString()] = message.data.data[0];
+                            ls_slim_set("transactionsToSign", tx, 60);
+                            console.log("transactionsToSign set ", tx);
+                            launchPopup(message, sender, message.data.requestId);
+                        })
                     } else {
                         sendResponse({ // Not a transaction
                             type: "ergo_api_response",
@@ -504,7 +540,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             }
             if (message.data.func === "submit_tx") {
                 // TO DO minimal check inputs
-                //console.log("submit_tx", message.data.data);
+                console.log("submit_tx", message.data.data);
                 sendTx(message.data.data[0]).then(res => {
                     console.log("submit_tx response", res);
                     sendResponse({
@@ -532,13 +568,49 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         if (message.data && message.data.type && message.data.type === "connect_response") {
             const responseHandler = connectResponseHandlers.get(message.data.url);
             connectResponseHandlers.delete(message.data.url);
-            responseHandler(message.data);
+            console.log("connected")
+
+            chrome.scripting.executeScript({
+                target: { tabId: parseInt(message.data.tabId), allFrames: true },
+                files: ['inject2.js'],
+                world: "MAIN",
+                injectImmediately: true,
+            },
+                () => { responseHandler(message.data) })
+
+
+            //insertScript(message.data.tabId).then(responseHandler(message.data));
+            return true;
         }
         if (message.data && message.data.type && message.data.type === "ergo_api_response") {
             const responseHandler = signResponseHandlers.get(message.data.requestId);
             signResponseHandlers.delete(message.data.requestId);
             responseHandler(message.data);
+            return true;
         }
     }
 
 });
+
+async function insertScript(tab) {
+    //tabId = await getTabId();
+    console.log('insertScript', tab)
+    chrome.scripting.executeScript({
+        target: { tabId: parseInt(tab), allFrames: true },
+        files: ['inject2.js'],
+        world: "MAIN",
+        injectImmediately: true,
+
+    })
+}
+
+async function getTabId() {
+    var tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    console.log("getTabId", tabs);
+    if (tabs.length > 0) {
+        return tabs[0].id;
+    } else {
+        return null;
+    }
+
+}

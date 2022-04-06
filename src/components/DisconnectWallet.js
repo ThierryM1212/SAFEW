@@ -24,10 +24,11 @@ export default class DisconnectWallet extends React.Component {
             }
         }
         LS.setItem('connectedSites', newConnectedSites)
-        this.state = {
+        this.setState({
             connectedSites: connectedSites,
             walletList: walletList,
-        };
+        });
+        //console.log("componentDidMount", walletList,connectedSites);
     }
 
     disconnectWallet(walletName, site) {
@@ -57,6 +58,7 @@ export default class DisconnectWallet extends React.Component {
         for (const wallet of this.state.walletList) {
             walletColors[wallet.name] = wallet.color;
         }
+        //console.log("render", this.state.walletList,this.state.connectedSites);
 
         return (
             <Fragment >

@@ -246,10 +246,12 @@ export async function getOtherWalletNames(walletId) {
 
 export function getWalletAddressList(wallet) {
     let addressList = [];
-    if (Object.keys(wallet).includes('accounts')) {
-        for (var account of wallet.accounts) {
-            for (var address of account.addresses) {
-                addressList.push(address.address);
+    if (wallet) {
+        if (Object.keys(wallet).includes('accounts')) {
+            for (var account of wallet.accounts) {
+                for (var address of account.addresses) {
+                    addressList.push(address.address);
+                }
             }
         }
     }
@@ -288,7 +290,7 @@ async function getConnectedWalletName(url) {
 }
 export async function getConnectedWalletByURL(url) {
     const walletName = await getConnectedWalletName(url);
-    if (walletName !== null) {
+    if (walletName) {
         const walletList = (await LS.getItem('walletList')) ?? [];
         for (const wallet of walletList) {
             if (wallet.name === walletName) {

@@ -2,22 +2,28 @@
 {
     "short_name": "SAFEW",
     "name": "Simple And Fast Ergo Wallet",
-    "version": "0.4",
+    "version": "0.4.6",
     "action": {},
-
+    "icons": {
+        "16": "/images/safew_icon_16.png",
+        "32": "/images/safew_icon_32.png",
+        "48": "/images/safew_icon_48.png",
+       "128": "/images/safew_icon_128.png"
+      },
     "background": {
         "service_worker": "./background.js"
     },
-    "permissions": ["unlimitedStorage", "activeTab"],
+    "permissions": ["storage", "activeTab", "scripting", "tabs"],
     "host_permissions": [
         "<all_urls>"
       ],
     "manifest_version": 3,
     "web_accessible_resources": [{
       "resources": [
-          "b06b9eebf7a559982588.module.wasm",
           "index.html",
-          "contentScript.js"
+          "contentScript.js",
+          "inject1.js",
+          "inject2.js"
          ],
       "matches": ["*://*/*"],
       "extension_ids": []
@@ -30,7 +36,9 @@
      "content_scripts": [
       {
         "matches": ["*://*/*"],
-        "js": ["contentScript.js"]
+        "js": ["contentScript.js"],
+        "run_at": "document_start",
+        "all_frames": true
       }
     ]
   }

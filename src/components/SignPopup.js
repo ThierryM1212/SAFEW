@@ -9,7 +9,7 @@ import { sampleTxErgodex, TX_FEE_ERGO_TREE } from '../utils/constants';
 import { decryptMnemonic, formatERGAmount, formatTokenAmount, getConnectedWalletByURL, getUnconfirmedTransactionsForAddressList, getWalletAddressList, getWalletById, getWalletUsedAddressList } from '../utils/walletUtils';
 import BigQRCode from './BigQRCode';
 import JSONBigInt from 'json-bigint';
-import { LS } from '../utils/utils';
+import { LS, ls_slim_get } from '../utils/utils';
 
 /* global chrome */
 
@@ -19,29 +19,6 @@ export default class SignPopup extends React.Component {
         const urlFixed = new URL(window.location.href.replace("#sign_tx", '').replace("chrome-extension", "http"));
         const urlOrgigin = urlFixed.searchParams.get("origin");
         const requestId = parseInt(urlFixed.searchParams.get("requestId"));
-        var tx = {}
-        try { // allow debug of the UI out of chrome extension
-            const background = chrome.extension.getBackgroundPage();
-            tx = background.transactionsToSign.get(requestId);
-        } catch (e) {
-            console.log(e);
-            tx = sampleTxErgodex;
-        }
-        var parsedUnsignedTx = {};
-        try {
-            parsedUnsignedTx = parseUnsignedTx(tx);
-        } catch (e) {
-            chrome.runtime.sendMessage({
-                channel: "safew_extension_background_channel",
-                data: {
-                    type: "ergo_api_response",
-                    result: false,
-                    data: ['Failed to parse transaction, incorrect format'],
-                    requestId: requestId,
-                }
-            });
-            window.close();
-        }
 
         this.state = {
             selectedOption: "",
@@ -49,7 +26,7 @@ export default class SignPopup extends React.Component {
             url: urlOrgigin,
             requestId: requestId,
             accepted: false,
-            unSignedTx: parsedUnsignedTx,
+            unSignedTx: sampleTxErgodex,
             password: '',
             expertMode: false,
             txBalance: { value: 0, tokens: [] },
@@ -74,6 +51,7 @@ export default class SignPopup extends React.Component {
             txReducedB64safe: txReducedB64safe,
             txId: txId,
             intervalId: intervalId,
+            debug: false,
         })
     }
 
@@ -106,15 +84,44 @@ export default class SignPopup extends React.Component {
     }
 
     async componentDidMount() {
+        var tx = {};
+        try { // allow debug of the UI out of chrome extension
+
+            const txs = await ls_slim_get('transactionsToSign');
+            console.log("componentDidMount SignPopup" , txs)
+            tx = txs[this.state.requestId.toString()];
+        } catch (e) {
+            console.log(e);
+            tx = sampleTxErgodex;
+        }
+        var parsedUnsignedTx = {};
+        try {
+            parsedUnsignedTx = parseUnsignedTx(tx);
+        } catch (e) {
+            chrome.runtime.sendMessage({
+                channel: "safew_extension_background_channel",
+                data: {
+                    type: "ergo_api_response",
+                    result: false,
+                    data: ['Failed to parse transaction, incorrect format'],
+                    requestId: requestId,
+                }
+            });
+            window.close();
+        }
+
         var wallet = await getConnectedWalletByURL(this.state.url);
         const expertMode = (await LS.getItem('expertMode')) ?? false;
+        const debug = (await LS.getItem('debug')) ?? false;
         const walletAddressList = getWalletAddressList(wallet);
-        const txBalance = await getUtxoBalanceForAddressList(this.state.unSignedTx.inputs, this.state.unSignedTx.outputs, walletAddressList);
+        const txBalance = await getUtxoBalanceForAddressList(parsedUnsignedTx.inputs, parsedUnsignedTx.outputs, walletAddressList);
         console.log("sendTransaction txBalance", txBalance, wallet);
         this.setState({
             txBalance: txBalance,
             wallet: wallet,
             expertMode: expertMode,
+            debug: debug,
+            unSignedTx: parsedUnsignedTx,
         });
         if (wallet.ergoPayOnly) {
             await this.showTxReduced();
@@ -163,7 +170,9 @@ export default class SignPopup extends React.Component {
                 requestId: this.state.requestId,
             }
         });
-        window.close();
+        if (!this.state.debug) {
+            window.close();
+        }
     }
 
     cancelSigning = () => {
