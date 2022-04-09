@@ -49,12 +49,21 @@ var nodeApi = "http://213.239.193.208:9053/";
 
 
 // Where we will expose all the data we retrieve from storage.sync.
-const local_storage = {};
+var local_storage = {};
 // Asynchronously retrieve data from storage.sync, then cache it.
 const initStorageCache = getAllStorageSyncData().then(items => {
     // Copy the data retrieved from storage into storageCache.
     Object.assign(local_storage, items);
 });
+chrome.storage.onChanged.addListener(function (changes, namespace) {
+    for (let [key, { oldValue, newValue }] of Object.entries(changes)) {
+      console.log(
+        `Storage key "${key}" in namespace "${namespace}" changed.`,
+        `Old value was "${oldValue}", new value is "${newValue}".`
+      );
+      local_storage[key] = newValue;
+    }
+  });
 
 var isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
 if (isFirefox) {

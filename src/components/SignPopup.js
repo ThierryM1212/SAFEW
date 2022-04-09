@@ -88,7 +88,7 @@ export default class SignPopup extends React.Component {
         try { // allow debug of the UI out of chrome extension
 
             const txs = await ls_slim_get('transactionsToSign');
-            console.log("componentDidMount SignPopup" , txs)
+            console.log("componentDidMount SignPopup", txs)
             tx = txs[this.state.requestId.toString()];
         } catch (e) {
             console.log(e);
@@ -171,8 +171,13 @@ export default class SignPopup extends React.Component {
             }
         });
         if (!this.state.debug) {
+            await this.delay(100);
             window.close();
         }
+    }
+
+    delay(time) {
+        return new Promise(resolve => setTimeout(resolve, time));
     }
 
     cancelSigning = () => {
