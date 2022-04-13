@@ -2,7 +2,7 @@
 {
     "short_name": "SAFEW",
     "name": "Simple And Fast Ergo Wallet",
-    "version": "0.4.6",
+    "version": "0.5.0",
     "action": {},
     "icons": {
         "16": "/images/safew_icon_16.png",
@@ -28,10 +28,8 @@
       "matches": ["*://*/*"],
       "extension_ids": []
     }],
-    
-    
      "content_security_policy": {
-          "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+          "extension_pages": "script-src 'self'; object-src 'self'"
           },
      "content_scripts": [
       {

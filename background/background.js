@@ -390,7 +390,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                             target: { tabId: parseInt(tabId), allFrames: true },
                             files: ['inject2.js'],
                             world: "MAIN",
-                            injectImmediately: true,
+                          //  injectImmediately: true,
                         },
                             () => {
                                 sendResponse({
@@ -602,7 +602,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                     target: { tabId: parseInt(message.data.tabId), allFrames: true },
                     files: ['inject2.js'],
                     world: "MAIN",
-                    injectImmediately: true,
+                   // injectImmediately: true,
                 },
                     () => { responseHandler(message.data) })
             }

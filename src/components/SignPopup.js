@@ -1,10 +1,9 @@
 import React, { Fragment } from 'react';
 import ReactJson from 'react-json-view';
 import { getTxReducedB64Safe } from '../ergo-related/ergolibUtils';
-import { boxByBoxId } from '../ergo-related/explorer';
 import { getWalletForAddresses, signTransaction } from '../ergo-related/serializer';
 import { enrichUtxos, getUtxoBalanceForAddressList, parseSignedTx, parseUnsignedTx, parseUtxos } from '../ergo-related/utxos';
-import { errorAlert } from '../utils/Alerts';
+import { errorAlert, waitingAlert } from '../utils/Alerts';
 import { sampleTxErgodex, TX_FEE_ERGO_TREE } from '../utils/constants';
 import { decryptMnemonic, formatERGAmount, formatTokenAmount, getConnectedWalletByURL, getUnconfirmedTransactionsForAddressList, getWalletAddressList, getWalletById, getWalletUsedAddressList } from '../utils/walletUtils';
 import BigQRCode from './BigQRCode';
@@ -129,6 +128,7 @@ export default class SignPopup extends React.Component {
     }
 
     async signTx() {
+       // var alert = waitingAlert("Preparing the wallet transaction signing...");
         console.log("signTx", this.state)
         const walletAddressList = getWalletUsedAddressList(this.state.wallet);
         const mnemonic = decryptMnemonic(this.state.wallet.mnemonic, this.state.password);
@@ -160,6 +160,7 @@ export default class SignPopup extends React.Component {
             window.close();
             return;
         }
+     //   alert.close();
         //const res = await sendTx(signedTx);
         chrome.runtime.sendMessage({
             channel: "safew_extension_background_channel",
@@ -174,6 +175,7 @@ export default class SignPopup extends React.Component {
             await this.delay(100);
             window.close();
         }
+        
     }
 
     delay(time) {

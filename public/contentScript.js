@@ -12,12 +12,6 @@ var ergoApiInjected = false;
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
-  function getChromeVersion () {     
-    var raw = navigator.userAgent.match(/Chrom(e|ium)\/([0-9]+)\./);
-
-    return raw ? parseInt(raw[2], 10) : false;
 }
 
 // injected script listerner
@@ -37,7 +31,7 @@ window.addEventListener('safew_injected_script_message', (event) => {
             var isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
             if (response.type && response.type === "connect_response" && response.result) {
                 if (!ergoApiInjected) {
-                    if (isFirefox || getChromeVersion() < 102) {
+                    if (isFirefox) {
                         injectScript('inject2.js');
                         await sleep(100);
                     }
@@ -46,7 +40,7 @@ window.addEventListener('safew_injected_script_message', (event) => {
             }
             var newresp = {};
             if (isFirefox) {
-                
+
                 newresp = cloneInto(response, window.document.defaultView);
                 console.log("firefox response", response, newresp);
             } else {
