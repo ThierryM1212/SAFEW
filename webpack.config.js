@@ -3,7 +3,7 @@ const CopyPlugin = require('copy-webpack-plugin');
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
-const config = {
+const config = [{
     entry: [
         'react-hot-loader/patch',
         'regenerator-runtime/runtime.js',
@@ -17,7 +17,15 @@ const config = {
         rules: [
             {
                 test: /\.(js|jsx)$/,
-                use: 'babel-loader',
+                use: {
+                    loader: 'babel-loader',
+                    options: {
+                        "presets": [
+                            "@babel/preset-env",
+                           ["@babel/preset-react", {"runtime": "automatic"}]
+                        ]
+                    }
+                },
                 exclude: /node_modules/
             },
             {
@@ -83,7 +91,40 @@ const config = {
         // syncWebAssembly: true
     },
     mode: 'development'
-};
+},
+{
+    entry: [
+        path.resolve(__dirname, 'background', 'background.js')
+    ],
+    output: {
+        path: path.resolve(__dirname, 'build'),
+        filename: path.join('background.js')
+    },
+    experiments: {
+        outputModule: true,
+    },
+    module: {
+
+        rules: [
+            {
+                test: /background.js$/,
+                exclude: /node_modules/,
+                use: {
+                    loader: 'babel-loader',
+                    options: {
+                        presets: ["@babel/preset-env"],
+                        plugins: [
+                            '@babel/plugin-transform-runtime',
+                            '@babel/plugin-transform-regenerator',
+                            '@babel/plugin-transform-modules-commonjs'
+                        ]
+                    }
+                }
+            }
+        ]
+    }
+},
+];
 
 module.exports = config;
 

@@ -1,3 +1,4 @@
+import JSONBigInt from 'json-bigint';
 
 const LS = {
     getAllItems: () => {
@@ -57,13 +58,13 @@ const initStorageCache = getAllStorageSyncData().then(items => {
 });
 chrome.storage.onChanged.addListener(function (changes, namespace) {
     for (let [key, { oldValue, newValue }] of Object.entries(changes)) {
-      console.log(
-        `Storage key "${key}" in namespace "${namespace}" changed.`,
-        `Old value was "${oldValue}", new value is "${newValue}".`
-      );
-      local_storage[key] = newValue;
+        console.log(
+            `Storage key "${key}" in namespace "${namespace}" changed.`,
+            `Old value was "${oldValue}", new value is "${newValue}".`
+        );
+        local_storage[key] = newValue;
     }
-  });
+});
 
 var isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
 if (isFirefox) {
@@ -211,6 +212,7 @@ async function get(url, apiKey = '') {
     return result;
 }
 async function post(url, body = {}, apiKey = '') {
+    console.log("post0", JSONBigInt.stringify(body));
     const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -220,7 +222,7 @@ async function post(url, body = {}, apiKey = '') {
             'Access-Control-Allow-Origin': '*',
             'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
         },
-        body: JSON.stringify(body)
+        body: JSONBigInt.stringify(body)
     });
 
     const [responseOk, body2] = await Promise.all([response.ok, response.json()]);
@@ -371,25 +373,37 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             console.log("background walletFound", walletFound);
             if (walletFound) {
                 console.log("background walletFound");
-                getTabId().then(tabId => {
-                    console.log("background walletFound", tabId);
+                if (isFirefox) {
+                    console.log("background firefox response");
+                    sendResponse({
+                        type: "connect_response",
+                        result: true,
+                        url: message.data.url
+                    });
+                    return true;
+                } else {
+                    getTabId().then(tabId => {
+                        console.log("background walletFound", tabId);
 
-                    chrome.scripting.executeScript({
-                        target: { tabId: parseInt(tabId), allFrames: true },
-                        files: ['inject2.js'],
-                        world: "MAIN",
-                        injectImmediately: true,
-                    },
-                        () => {
-                            sendResponse({
-                                type: "connect_response",
-                                result: true,
-                                url: message.data.url
-                            });
-                        })
 
-                })
-                return true;
+                        chrome.scripting.executeScript({
+                            target: { tabId: parseInt(tabId), allFrames: true },
+                            files: ['inject2.js'],
+                            world: "MAIN",
+                            injectImmediately: true,
+                        },
+                            () => {
+                                sendResponse({
+                                    type: "connect_response",
+                                    result: true,
+                                    url: message.data.url
+                                });
+                            })
+
+
+                    })
+                    return true;
+                }
             }
             launchPopup(message, sender, sendResponse);
             connectResponseHandlers.set(message.data.url, sendResponse);
@@ -579,14 +593,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             connectResponseHandlers.delete(message.data.url);
             console.log("connected")
 
-            chrome.scripting.executeScript({
-                target: { tabId: parseInt(message.data.tabId), allFrames: true },
-                files: ['inject2.js'],
-                world: "MAIN",
-                injectImmediately: true,
-            },
-                () => { responseHandler(message.data) })
-
+            if (isFirefox) {
+                console.log("firefox connected")
+                responseHandler(message.data)
+                return;
+            } else {
+                chrome.scripting.executeScript({
+                    target: { tabId: parseInt(message.data.tabId), allFrames: true },
+                    files: ['inject2.js'],
+                    world: "MAIN",
+                    injectImmediately: true,
+                },
+                    () => { responseHandler(message.data) })
+            }
 
             //insertScript(message.data.tabId).then(responseHandler(message.data));
             return true;
@@ -595,23 +614,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             const responseHandler = signResponseHandlers.get(message.data.requestId);
             signResponseHandlers.delete(message.data.requestId);
             responseHandler(message.data);
-            return true;
+            //if(!isFirefox) {
+                return true;
+            //}
         }
     }
 
 });
-
-async function insertScript(tab) {
-    //tabId = await getTabId();
-    console.log('insertScript', tab)
-    chrome.scripting.executeScript({
-        target: { tabId: parseInt(tab), allFrames: true },
-        files: ['inject2.js'],
-        world: "MAIN",
-        injectImmediately: true,
-
-    })
-}
 
 async function getTabId() {
     var tabs = await chrome.tabs.query({ active: true, currentWindow: true });

@@ -10,6 +10,7 @@ import BigQRCode from './BigQRCode';
 import ImageButton from './ImageButton';
 import JSONBigInt from 'json-bigint';
 import { postTxMempool } from '../ergo-related/explorer';
+import { LS } from '../utils/utils';
 
 
 export default class SignTransaction extends React.Component {

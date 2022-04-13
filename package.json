@@ -3,6 +3,7 @@
   "version": "0.4.6",
   "private": true,
   "dependencies": {
+    "@babel/polyfill": "^7.12.1",
     "@coinbarn/ergo-ts": "^0.3.0",
     "@sweetalert2/theme-dark": "^5.0.8",
     "@testing-library/jest-dom": "^5.11.4",
@@ -58,13 +59,16 @@
     ]
   },
   "devDependencies": {
-    "@babel/core": "^7.17.0",
+    "@babel/core": "^7.0.0",
+    "@babel/plugin-proposal-class-properties": "^7.16.7",
+    "@babel/plugin-transform-modules-commonjs": "^7.17.9",
+    "@babel/plugin-transform-runtime": "^7.17.0",
     "@babel/preset-env": "^7.16.11",
     "@babel/preset-react": "^7.16.7",
     "@hot-loader/react-dom": "^17.0.2",
     "@types/qrcode.react": "^1.0.2",
     "@types/react-color": "^3.0.6",
-    "babel-loader": "^8.2.3",
+    "babel-loader": "^8.0.0",
     "copy-webpack-plugin": "^10.2.4",
     "cross-env": "^7.0.3",
     "css-loader": "^6.6.0",
