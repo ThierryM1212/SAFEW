@@ -43,7 +43,7 @@ export default class SignTransaction extends React.Component {
         this.setState({
             walletId: walletId,
             ergoPayOnly: wallet.ergoPayOnly,
-            expertMode: expertMode,
+            expertMode: wallet.expertMode,
         });
     };
     setIsValidTx = (isValid) => { this.setState({ isValidTx: isValid }); };

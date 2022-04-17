@@ -64,7 +64,7 @@ export default class MintTokens extends React.Component {
     }
     async setWallet(walletId) { 
         const wallet = (await getWalletById(walletId));
-        this.setState({ selectedWalletId: walletId, wallet: wallet }); 
+        this.setState({ selectedWalletId: walletId, selectedWallet: wallet }); 
     };
     setTokenName = (name) => { this.setState({ tokenName: name }); };
     setTokenDescription = (desc) => { this.setState({ tokenDescription: desc }); };
@@ -166,7 +166,7 @@ export default class MintTokens extends React.Component {
         const amountToSendFloat = parseFloat(AMOUNT_SENT);
         const feeFloat = parseFloat(TX_FEE);
         const totalAmountToSendFloat = amountToSendFloat + feeFloat;
-        const wallet = await getWalletById(this.state.selectedWalletId);
+        const wallet = this.state.selectedWallet;
         const selectedAddresses = getWalletAddressList(wallet);
         const [selectedUtxos, memPoolTransaction] = await getUtxosForSelectedInputs(selectedAddresses,
             totalAmountToSendFloat, [], []);

@@ -75,4 +75,4 @@ class NautilusErgoApi {
 }
 
 const ergo = Object.freeze(new NautilusErgoApi());
-console.log("end inject2", ergo)
+//console.log("end inject2", ergo)
