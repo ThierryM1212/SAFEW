@@ -132,3 +132,10 @@ v0.4.6
 - Improve csv export with UTC date and full ERG amount
 - Added COMET and Mi Goreng verified tokens
 - Bug fix
+
+v0.4.7
+- Ergold logo
+- Bug fix in transaction csv export
+
+v0.5.0
+- Manifest v3 support: Use chrome.storage instead of localstorage, dApp connector refactoring
