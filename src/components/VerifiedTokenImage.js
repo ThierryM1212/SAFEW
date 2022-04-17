@@ -1,5 +1,5 @@
 import React from 'react';
-import { TOKENID_COMET, TOKENID_ERDOGE, TOKENID_ERGOPAD, TOKENID_KUSHTI, TOKENID_LUNADOG, TOKENID_MI_GOREN, TOKENID_MI_GORENG, TOKENID_NETA, TOKENID_SIGRSV, TOKENID_SIGUSD, TOKEN_ERGOLD } from '../utils/constants';
+import { TOKENID_COMET, TOKENID_ERDOGE, TOKENID_ERGOPAD, TOKENID_KUSHTI, TOKENID_LUNADOG, TOKENID_ERGOLD, TOKENID_MI_GORENG, TOKENID_NETA, TOKENID_SIGRSV, TOKENID_SIGUSD } from '../utils/constants';
 
 import sigusdLogo from '../resources/tokens/token-sigusd.svg';
 import sigrsvLogo from '../resources/tokens/token-sigrsv.svg';
