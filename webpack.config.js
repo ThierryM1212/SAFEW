@@ -66,13 +66,13 @@ const config = [{
             inject: true,
             filename: 'index.html',
         }),
-        // new webpack.ContextReplacementPlugin(
-        //     /ergo-lib-wasm-browser/,
-        //     (data) => {
-        //         delete data.dependencies[0].critical;
-        //         return data;
-        //     },
-        // ),
+        new webpack.ContextReplacementPlugin(
+            /ergo-lib-wasm-browser/,
+            (data) => {
+                delete data.dependencies[0].critical;
+                return data;
+            },
+        ),
         // Work around for Buffer is undefined:
         // https://github.com/webpack/changelog-v5/issues/10
         // Necessary for some buffer calls done throughout
