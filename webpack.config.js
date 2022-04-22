@@ -112,10 +112,9 @@ const config = [{
                 use: {
                     loader: 'babel-loader',
                     options: {
-                        presets: ["@babel/preset-env"],
+                        presets: ['@babel/env', '@babel/react'],
                         plugins: [
                             '@babel/plugin-transform-runtime',
-                            '@babel/plugin-transform-regenerator',
                             '@babel/plugin-transform-modules-commonjs'
                         ]
                     }
