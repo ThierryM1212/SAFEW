@@ -31,12 +31,13 @@ export function copySuccess() {
     })
 }
 
-export function waitingAlert(title) {
-    return Swal.fire({
-        title: title,
-        imageUrl: Spinner,
-        showConfirmButton: false,
-    });
+export function waitingAlert(title, html = null) {
+  return Swal.fire({
+    title: title,
+    html: html,
+    imageUrl: Spinner,
+    showConfirmButton: false,
+  });
 }
 
 export function confirmAlert(msg, txt, confirmMsg = 'Yes', denyMsg = 'No') {
