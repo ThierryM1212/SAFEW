@@ -90,9 +90,6 @@ const config = [{
         asyncWebAssembly: true
         // syncWebAssembly: true
     },
-    externals: {
-      'ergo-lib-browser.asm': 'ergolibbrowser'
-    },
     mode: 'development'
 },
 {
