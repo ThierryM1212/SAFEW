@@ -7,14 +7,17 @@
     "@coinbarn/ergo-ts": "^0.3.0",
     "@sweetalert2/theme-dark": "^5.0.10",
     "@testing-library/jest-dom": "^5.16.4",
+    "@ledgerhq/hw-transport-webhid": "^6.24.1",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",
+    "bip32": "^3.0.1",
     "bip39": "^3.0.4",
     "crypto-js": "^4.1.1",
     "ergo-lib-wasm-browser": "^0.15.0",
     "ipfs-http-client": "^56.0.2",
     "json-bigint": "^1.0.0",
     "localstorage-slim": "^2.2.0",
+    "ledgerjs-hw-app-ergo": "^0.0.13",
     "qrcode": "^1.5.0",
     "qrcode.react": "^1.0.1",
     "react": "^17.0.2",
@@ -31,7 +34,8 @@
     "react-switch": "^6.0.0",
     "react-tooltip": "^4.2.21",
     "sweetalert2": "^11.4.9",
-    "typescript": "^4.6.3"
+    "typescript": "^4.6.3",
+    "tiny-secp256k1": "^2.2.1"
   },
   "scripts": {
     "start": "cross-env NODE_ENV=development webpack serve --mode development",

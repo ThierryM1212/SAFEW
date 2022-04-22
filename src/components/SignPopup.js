@@ -1,6 +1,9 @@
+import { DeviceError } from 'ledgerjs-hw-app-ergo';
 import React, { Fragment } from 'react';
 import ReactJson from 'react-json-view';
-import { getTxReducedB64Safe } from '../ergo-related/ergolibUtils';
+import { getTxReducedB64Safe, getUnsignedTransaction } from '../ergo-related/ergolibUtils';
+import { boxByBoxId } from '../ergo-related/explorer';
+import { signTxLedger } from '../ergo-related/ledger';
 import { getWalletForAddresses, signTransaction } from '../ergo-related/serializer';
 import { enrichUtxos, getUtxoBalanceForAddressList, parseSignedTx, parseUnsignedTx, parseUtxos } from '../ergo-related/utxos';
 import { errorAlert, waitingAlert } from '../utils/Alerts';
@@ -122,30 +125,49 @@ export default class SignPopup extends React.Component {
             debug: debug,
             unSignedTx: parsedUnsignedTx,
         });
-        if (wallet.ergoPayOnly) {
+        if (this.state.wallet.type === "ergopay") {
             await this.showTxReduced();
         }
     }
 
     async signTx() {
-       // var alert = waitingAlert("Preparing the wallet transaction signing...");
+        // var alert = waitingAlert("Preparing the wallet transaction signing...");
         console.log("signTx", this.state)
-        const walletAddressList = getWalletUsedAddressList(this.state.wallet);
-        const mnemonic = decryptMnemonic(this.state.wallet.mnemonic, this.state.password);
-        if (mnemonic === null) {
-            return;
-        }
-        if (mnemonic === '' || mnemonic === undefined) {
-            errorAlert("Failed to decrypt Mnemonic", "Wrong password ?");
-            return;
-        }
+        var signedTx = {};
         try {
-            const signingWallet = await getWalletForAddresses(mnemonic, walletAddressList);
             const inputsDetails = await enrichUtxos(this.state.unSignedTx.inputs);
             const dataInputsDetails = await enrichUtxos(this.state.unSignedTx.dataInputs);
             console.log("inputsDetails", inputsDetails);
             var signedTx = {};
-            signedTx = await signTransaction(this.state.unSignedTx, inputsDetails, dataInputsDetails, signingWallet);
+            if (this.state.wallet.type === "mnemonic") {
+                const walletAddressList = getWalletUsedAddressList(this.state.wallet);
+                const mnemonic = decryptMnemonic(this.state.wallet.mnemonic, this.state.password);
+                if (mnemonic === null) {
+                    return;
+                }
+                if (mnemonic === '' || mnemonic === undefined) {
+                    errorAlert("Failed to decrypt Mnemonic", "Wrong password ?");
+                    return;
+                }
+                const signingWallet = await getWalletForAddresses(mnemonic, walletAddressList);
+                signedTx = await signTransaction(this.state.unSignedTx, inputsDetails, dataInputsDetails, signingWallet);
+            }
+            if (this.state.wallet.type === "ledger") {
+                console.log("signTx ledger", this.state)
+                try {
+                    signedTx = await signTxLedger(this.state.wallet, this.state.unSignedTx, inputsDetails, '');
+                    console.log("signTx signedTx", signedTx);
+                } catch (e) {
+                    console.log("signTxLedger catch", e);
+                    if (e instanceof DeviceError) {
+                        if (e.toString().includes("denied by user")) {
+                            errorAlert(e.toString())
+                        } else {
+                            errorAlert("Cannot connect Ledger ergo application, unlock the ledger and start the Ergo applicaiton on the ledger.")
+                        }
+                    }
+                }
+            }
             console.log("signedTx", signedTx);
         } catch (e) {
             chrome.runtime.sendMessage({
@@ -160,7 +182,7 @@ export default class SignPopup extends React.Component {
             window.close();
             return;
         }
-     //   alert.close();
+        //   alert.close();
         //const res = await sendTx(signedTx);
         chrome.runtime.sendMessage({
             channel: "safew_extension_background_channel",
@@ -175,7 +197,7 @@ export default class SignPopup extends React.Component {
             await this.delay(100);
             window.close();
         }
-        
+
     }
 
     delay(time) {
@@ -251,35 +273,37 @@ export default class SignPopup extends React.Component {
                                     </div>
                                     : null
                             }
-
-                            <div className='card m-1 p-1 d-flex flex-column'>
-                                <h6>ErgoPay transaction</h6>
-                                {this.state.txId === "" ?
-                                    <div className='d-flex flex-row justify-content-center'>
-                                        <button className="btn btn-outline-info"
-                                            onClick={this.showTxReduced}>
-                                            Show ErgoPay transaction
-                                        </button>
+                            {
+                                this.state.wallet.type === 'ergopay' ?
+                                    <div className='card m-1 p-1 d-flex flex-column'>
+                                        <h6>ErgoPay transaction</h6>
+                                        {this.state.txId === "" ?
+                                            <div className='d-flex flex-row justify-content-center'>
+                                                <button className="btn btn-outline-info"
+                                                    onClick={this.showTxReduced}>
+                                                    Show ErgoPay transaction
+                                                </button>
+                                            </div>
+                                            :
+                                            <div className='d-flex flex-row justify-content-center'>
+                                                <BigQRCode QRCodeTx={this.state.txReducedB64safe} />
+                                            </div>
+                                        }
                                     </div>
                                     :
-                                    <div className='d-flex flex-row justify-content-center'>
-                                        <BigQRCode QRCodeTx={this.state.txReducedB64safe} />
-                                    </div>
-                                }
-                            </div>
-
-                            {
-                                this.state.wallet.ergoPayOnly ? null :
                                     <Fragment>
-                                        <div className='card m-1 p-1 d-flex flex-column'>
-                                            <label htmlFor="walletPassword" >Spending password for {this.state.wallet.name}</label>
-                                            <input type="password"
-                                                id="spendingPassword"
-                                                className="form-control "
-                                                onChange={e => this.setPassword(e.target.value)}
-                                                value={this.state.password}
-                                            />
-                                        </div>
+                                        {this.state.wallet.type === 'mnemonic' ?
+                                            <div className='card m-1 p-1 d-flex flex-column'>
+                                                <label htmlFor="walletPassword" >Spending password for {this.state.wallet.name}</label>
+                                                <input type="password"
+                                                    id="spendingPassword"
+                                                    className="form-control "
+                                                    onChange={e => this.setPassword(e.target.value)}
+                                                    value={this.state.password}
+                                                />
+                                            </div>
+                                            : null
+                                        }
                                         <div className='d-flex flex-row justify-content-between'>
                                             <div></div>
 
