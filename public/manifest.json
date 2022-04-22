@@ -1,54 +1,39 @@
+
 {
     "short_name": "SAFEW",
     "name": "Simple And Fast Ergo Wallet",
     "version": "0.5.0",
-    "action": {},
     "icons": {
-        "16": "/images/safew_icon_16.png",
-        "32": "/images/safew_icon_32.png",
-        "48": "/images/safew_icon_48.png",
-        "128": "/images/safew_icon_128.png"
+      "16": "/images/safew_icon_16.png",
+      "32": "/images/safew_icon_32.png",
+      "48": "/images/safew_icon_48.png",
+     "128": "/images/safew_icon_128.png"
     },
     "background": {
-        "service_worker": "./background.js"
+      "scripts": ["background.js"],
+      "persistent": false
     },
-    "permissions": [
-        "storage",
-        "activeTab",
-        "scripting",
-        "tabs"
-    ],
-    "host_permissions": [
-        "<all_urls>"
-    ],
-    "manifest_version": 3,
+    "permissions": ["storage", "unlimitedStorage", "*://*/*", "activeTab", "tabs"],
+    "manifest_version": 2,
+    "browser_action": {
+      "default_title": "SAFEW"
+    },
     "web_accessible_resources": [
-        {
-            "resources": [
-                "index.html",
-                "contentScript.js",
-                "inject1.js",
-                "inject2.js"
-            ],
-            "matches": [
-                "*://*/*"
-            ],
-            "extension_ids": []
-        }
-    ],
-    "content_security_policy": {
-        "extension_pages": "script-src 'self'; object-src 'self'"
-    },
-    "content_scripts": [
-        {
-            "matches": [
-                "*://*/*"
-            ],
-            "js": [
-                "contentScript.js"
-            ],
-            "run_at": "document_start",
-            "all_frames": true
-        }
+      "901541a564cf6f25b538.module.wasm",
+      "index.html",
+      "contentScript.js",
+      "inject2.js",
+      "inject1.js"
+     ],
+     "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
+     "content_scripts": [
+      {
+        "matches": ["*://*/*"],
+        "js": ["contentScript.js"],
+        "run_at": "document_start",
+        "all_frames": true
+      }
     ]
-}
+  }
+  
+    
