@@ -126,7 +126,7 @@ export async function ergoTreeToAddress(ergoTree) {
 
 export async function getWasmCollection(jsItems, fnToCreateSingleFromJson, ctorToCreateCollectionFromSingle) {
   return jsItems.reduce((acc, cur) => {
-    const jsonOfItem = JSONBigInt.stringify(cur);
+    const jsonOfItem = JSON.stringify(cur);
     const singleItem = fnToCreateSingleFromJson(jsonOfItem);
     if(acc === undefined) acc = ctorToCreateCollectionFromSingle(singleItem);
     else acc.add(singleItem);
