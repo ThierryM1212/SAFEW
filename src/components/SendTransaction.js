@@ -262,13 +262,13 @@ export default class SendTransaction extends React.Component {
             amountToSendFloat, feeFloat, this.state.tokens, tokenAmountToSendInt, {}, this.state.burnMode);
         const unsignedTransaction = await createUnsignedTransaction(selectedUtxos, outputCandidates);
         var jsonUnsignedTx = JSONBigInt.parse(unsignedTransaction.to_json());
-        //for (const i in jsonUnsignedTx.inputs) {
-        //    for (const j in selectedUtxos) {
-        //        if (selectedUtxos[j].boxId === jsonUnsignedTx.inputs[i].boxId) {
-        //            jsonUnsignedTx.inputs[i] = selectedUtxos[j];
-        //        }
-        //    }
-        //}
+        for (const i in jsonUnsignedTx.inputs) {
+            for (const j in selectedUtxos) {
+                if (selectedUtxos[j].boxId === jsonUnsignedTx.inputs[i].boxId) {
+                    jsonUnsignedTx.inputs[i] = selectedUtxos[j];
+                }
+            }
+        }
         console.log("sendTransaction unsignedTransaction", jsonUnsignedTx);
         return [jsonUnsignedTx, selectedUtxos, memPoolTransaction];
     }
