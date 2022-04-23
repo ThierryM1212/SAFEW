@@ -5,13 +5,13 @@ Simple And Fast Ergo Wallet
 Ergo wallet integrating a dApp connector compatible EIP-12.
 
 SAFEW is compatible with 
-- Chrome based browser (Opera, Brave, Edge...) but not released on Chrome store yet.
+- Chrome based browser (Opera, Brave, Edge, Kiwi...).
 - Firefox 
 
 SAFEW was awarded as project participating in ErgoHack 3: https://ergoplatform.org/en/blog/2022-03-01-ergohack-iii-results/
 
 ## Releases
-- For Chrome, Edge, Brave, ... download at: https://github.com/ThierryM1212/SAFEW/releases. How to install: https://www.youtube.com/watch?v=4ZEIcr0udkI
+- For Chrome, Edge, Brave,... https://chrome.google.com/webstore/detail/simple-and-fast-ergo-wall/fmpbldieijjehhalgjblbpgjmijencll/
 - For Firefox: https://addons.mozilla.org/en-US/firefox/addon/safew/
 
 ## Features
@@ -74,8 +74,6 @@ sign_tx_input, sign_data and add_external_box are not implemented yet
 Same ergo_request_read_access and ergo_check_read_access than Yoroi method are declared to ensure the compatibility of existing dApp using Yoroi.
 
 ## Next steps ?
-Publish on Chrome Web Store (currently blocked by https://bugs.chromium.org/p/chromium/issues/detail?id=1173354 and the requirement to publish the new extensions with manifest v3)<br/>
-Publish on Opera Addons (available on Opera beta store waiting for validation)<br/>
 Ledger signing (Waiting on ledger-ergo-app fix)<br/>
 <br/>
 
