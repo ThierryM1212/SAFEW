@@ -31,7 +31,7 @@ export default class TransactionList extends React.Component {
 
     async updateTransactionList(showAlert = true) {
         var alert = "";
-        if (showAlert) { alert = waitingAlert("Loading transations..."); };
+        if (showAlert) { alert = waitingAlert("Loading transactions..."); };
         const wallet = await getWalletById(this.state.walletId);
         this.setState({ color: wallet.color });
         const walletAddressList = getWalletAddressList(wallet);
