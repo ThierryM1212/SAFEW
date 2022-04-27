@@ -1,4 +1,5 @@
 import HidTransport from "@ledgerhq/hw-transport-webhid";
+import TransportU2F from "@ledgerhq/hw-transport-u2f";
 import { ErgoLedgerApp } from 'ledgerjs-hw-app-ergo';
 import { waitingAlert } from "../utils/Alerts";
 import { DEFAULT_NUMBER_OF_UNUSED_ADDRESS_PER_ACCOUNT } from "../utils/constants";
@@ -23,13 +24,25 @@ function getLedgerAddresses(pubKey, chain_code, index) {
     return bip32Address;
 }
 
-export async function getNewAccount(wallet) {
+async function getTransport() {
+    try {
+        console.log("getTransport HID");
+        return await HidTransport.create();
+    }
+    catch {
+        console.log("getTransport U2F");
+        return await TransportU2F.create();
+    }
+}
+
+export async function ledgerPubKey(wallet) {
     var alert = waitingAlert("Connecting to the Ledger...");
-    const ledgerApp = new ErgoLedgerApp(await HidTransport.create());
+    const ledgerApp = new ErgoLedgerApp(await getTransport());
     const newAccountId = wallet.accounts.length;
     try {
         alert = waitingAlert("Waiting approval to get the public key from the Ledger...");
         const ledgerPubKey = await ledgerApp.getExtendedPublicKey("m/44'/429'/" + newAccountId + "'", true);
+        console.log("ledgerPubKey ledgerPubKey", ledgerPubKey);
         const newAddressStr = getLedgerAddresses(ledgerPubKey.publicKey, ledgerPubKey.chainCode, 0);
         const accountAddress = {
             id: 0,
@@ -52,11 +65,12 @@ export async function getNewAccount(wallet) {
 
 export async function getNewAddress(wallet, accountId) {
     var alert = waitingAlert("Connecting to the Ledger...");
-    const ledgerApp = new ErgoLedgerApp(await HidTransport.create());
+    const ledgerApp = new ErgoLedgerApp(await getTransport());
     const addressId = wallet.accounts[accountId].addresses.length;
     try {
         alert = waitingAlert("Waiting approval to get the public key from the Ledger...");
         const ledgerPubKey = await ledgerApp.getExtendedPublicKey("m/44'/429'/" + accountId + "'", true);
+        console.log("ledgerPubKey ledgerPubKey", ledgerPubKey);
         const newAddressStr = getLedgerAddresses(ledgerPubKey.publicKey, ledgerPubKey.chainCode, addressId);
         return {
             id: addressId,
@@ -76,7 +90,7 @@ export async function signTxLedger(wallet, unsignedTx, selectedUtxos, txSummaryH
     console.log("signTxLedger", wallet, unsignedTx, selectedUtxos, txSummaryHtml);
     const unsignedTxWASM = await getUnsignedTransaction(unsignedTx);
 
-    const ledgerApp = new ErgoLedgerApp(await HidTransport.create());
+    const ledgerApp = new ErgoLedgerApp(await getTransport());
     console.log("ledgerApp", ledgerApp);
     try {
         const inputs = [];
@@ -158,7 +172,7 @@ function mapTokens(wasmTokens) {
 
 export async function discoverLedgerAddresses() {
     var alert = waitingAlert("Connecting to the Ledger...");
-    const ledgerApp = new ErgoLedgerApp(await HidTransport.create());
+    const ledgerApp = new ErgoLedgerApp(await getTransport());
     try {
         alert = waitingAlert("Waiting approval to get the public key from the Ledger...");
         let accountId = 0, txForAccountFound = true, accounts = [], unusedAddresses = [], gotApproval = false;
@@ -167,11 +181,13 @@ export async function discoverLedgerAddresses() {
             let index = 0, indexMax = 20, accountAddrressList = [];
             txForAccountFound = false;
             unusedAddresses = [];
-            const ledgerPubKey = await ledgerApp.getExtendedPublicKey("m/44'/429'/" + accountId.toString() + "'", true);
+            console.log("discoverLedgerAddresses ledgerApp")
+            const ledgerPubKey = await ledgerApp.getExtendedPublicKey("m/44'/429'/" + accountId.toString() + "'", false);
             console.log("discoverLedgerAddresses ledgerPubKey", ledgerPubKey);
             while (index < indexMax) {
                 if (!gotApproval) alert = waitingAlert("Searching wallet used addresses...");
                 gotApproval = true;
+
                 const newAddressStr = getLedgerAddresses(ledgerPubKey.publicKey, ledgerPubKey.chainCode, index);
                 console.log("discoverLedgerAddresses", newAddressStr, accountId, index)
                 if (await addressHasTransactions(newAddressStr)) {
