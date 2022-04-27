@@ -22,8 +22,8 @@ export default class AddLedgerWallet extends React.Component {
         this.saveWallet = this.saveWallet.bind(this);
     }
 
-    setWalletName = (name) => {
-        const [validWalletName, invalidMessage] = this.isValidName(name);
+    async setWalletName(name) {
+        const [validWalletName, invalidMessage] = await this.isValidName(name);
         this.setState({
             walletName: name,
             isValidWalletName: validWalletName,
@@ -31,9 +31,9 @@ export default class AddLedgerWallet extends React.Component {
         });
     };
 
-    isValidName = (name) => {
+    async isValidName(name) {
         const minWalletNameChar = 2;
-        const walletNameAlreadyExists = getWalletNames().includes(name);
+        const walletNameAlreadyExists = (await getWalletNames()).includes(name);
         var invalidMessage = ' ';
         if (name.length <= minWalletNameChar) { invalidMessage += INVALID_NAME_LENGTH_MSG };
         if (walletNameAlreadyExists) invalidMessage += " Wallet name already exists !";
