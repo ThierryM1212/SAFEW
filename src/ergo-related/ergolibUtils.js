@@ -17,7 +17,7 @@ const deriveSecretKey = (rootSecret, path) =>
 //    rootSecret.derive(lastPath).path().next();
 
 export async function getMainAddress(mnemonic) {
-    return getAddress(mnemonic, 0, 0);
+    return (await getAddress(mnemonic, 0, 0));
 }
 
 export async function getAddress(mnemonic, accountId, index) {
