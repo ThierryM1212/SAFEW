@@ -35,7 +35,7 @@
   "scripts": {
     "start": "cross-env NODE_ENV=development webpack serve --mode development",
     "build-dev": "cross-env NODE_ENV=development webpack build --mode development",
-    "build-prod": "cross-env NODE_ENV=prodution webpack build --mode production",
+    "build-prod": "cross-env NODE_ENV=production webpack build --mode production",
     "watch": "cross-env NODE_ENV=development webpack watch --mode development",
     "test": "echo no tests yet"
   },
