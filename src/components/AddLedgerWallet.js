@@ -1,4 +1,4 @@
-import { DeviceError } from 'ledgerjs-hw-app-ergo';
+import { DeviceError } from 'ledger-ergo-js';
 import React, { Fragment } from 'react';
 import { SketchPicker } from 'react-color';
 import { discoverLedgerAddresses } from '../ergo-related/ledger';

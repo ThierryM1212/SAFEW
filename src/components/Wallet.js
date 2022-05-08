@@ -8,7 +8,7 @@ import Address from './Address';
 import { errorAlert, promptPassword } from '../utils/Alerts';
 import { LS } from '../utils/utils';
 import { getNewAccount } from '../ergo-related/ledger';
-import { DeviceError } from 'ledgerjs-hw-app-ergo';
+import { DeviceError } from 'ledger-ergo-js';
 
 export default class Wallet extends React.Component {
     constructor(props) {

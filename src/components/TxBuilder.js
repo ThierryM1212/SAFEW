@@ -21,7 +21,7 @@ import { decryptMnemonic, formatERGAmount, formatTokenAmount, getUnconfirmedTran
 import { VERIFIED_TOKENS } from '../utils/constants';
 import { LS } from '../utils/utils';
 import { signTxLedger } from '../ergo-related/ledger';
-import { DeviceError } from 'ledgerjs-hw-app-ergo';
+import { DeviceError } from 'ledger-ergo-js';
 /* global BigInt */
 
 var initCreateBox = {

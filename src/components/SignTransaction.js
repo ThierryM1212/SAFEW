@@ -12,7 +12,7 @@ import JSONBigInt from 'json-bigint';
 import { postTxMempool } from '../ergo-related/explorer';
 import { LS } from '../utils/utils';
 import { signTxLedger } from '../ergo-related/ledger';
-import { DeviceError } from 'ledgerjs-hw-app-ergo';
+import { DeviceError } from 'ledger-ergo-js';
 
 
 export default class SignTransaction extends React.Component {
@@ -169,7 +169,7 @@ export default class SignTransaction extends React.Component {
                 try {
                     signedTx = JSONBigInt.parse(await signTxLedger(wallet, jsonUnsignedTx, selectedUtxos, txSummaryHtml));
                     console.log("signedTx", signedTx)
-                    if (true) {
+                    if (false) {
                         await postTxMempool(signedTx);
                         console.log("Transaction sent to mempool", signedTx);
                     } else {

@@ -1,6 +1,6 @@
-import HidTransport from "@ledgerhq/hw-transport-webhid";
 import TransportU2F from "@ledgerhq/hw-transport-u2f";
-import { ErgoLedgerApp } from 'ledgerjs-hw-app-ergo';
+import WebUSBTransport from "@ledgerhq/hw-transport-webusb";
+import { ErgoLedgerApp, Network } from 'ledger-ergo-js';
 import { waitingAlert } from "../utils/Alerts";
 import { DEFAULT_NUMBER_OF_UNUSED_ADDRESS_PER_ACCOUNT } from "../utils/constants";
 import { convertToHex, hexToBytes } from "../utils/utils";
@@ -19,15 +19,16 @@ function getLedgerAddresses(pubKey, chain_code, index) {
         Buffer.from(pubKey, "hex"),
         Buffer.from(chain_code, "hex")
     );
-    const derivedPk = bip.derivePath(index.toString()).derive(index).publicKey;
+    const derivedPk = bip.derivePath("0").derive(index).publicKey;
     const bip32Address = Address.fromPk(derivedPk.toString("hex")).address;
+    //console.log("getLedgerAddresses", index, bip32Address);
     return bip32Address;
 }
 
 async function getTransport() {
     try {
-        console.log("getTransport HID");
-        return await HidTransport.create();
+        console.log("getTransport WebUSB");
+        return await WebUSBTransport.create();
     }
     catch {
         console.log("getTransport U2F");
@@ -66,14 +67,14 @@ export async function ledgerPubKey(wallet) {
 export async function getNewAddress(wallet, accountId) {
     var alert = waitingAlert("Connecting to the Ledger...");
     const ledgerApp = new ErgoLedgerApp(await getTransport());
-    const addressId = wallet.accounts[accountId].addresses.length;
+    const index = wallet.accounts[accountId].addresses.length;
     try {
         alert = waitingAlert("Waiting approval to get the public key from the Ledger...");
         const ledgerPubKey = await ledgerApp.getExtendedPublicKey("m/44'/429'/" + accountId + "'", true);
         console.log("ledgerPubKey ledgerPubKey", ledgerPubKey);
-        const newAddressStr = getLedgerAddresses(ledgerPubKey.publicKey, ledgerPubKey.chainCode, addressId);
+        const newAddressStr = getLedgerAddresses(ledgerPubKey.publicKey, ledgerPubKey.chainCode, index);
         return {
-            id: addressId,
+            id: index,
             address: newAddressStr,
             used: false,
         };
@@ -89,8 +90,8 @@ export async function signTxLedger(wallet, unsignedTx, selectedUtxos, txSummaryH
     const alert = waitingAlert("Waiting transaction signing with ledger", txSummaryHtml);
     console.log("signTxLedger", wallet, unsignedTx, selectedUtxos, txSummaryHtml);
     const unsignedTxWASM = await getUnsignedTransaction(unsignedTx);
-
-    const ledgerApp = new ErgoLedgerApp(await getTransport());
+    const addressPathMap = getWalletAddressesPathMap(wallet);
+    const ledgerApp = new ErgoLedgerApp(await getTransport()).useAuthToken().enableDebugMode();
     console.log("ledgerApp", ledgerApp);
     try {
         const inputs = [];
@@ -103,6 +104,8 @@ export async function signTxLedger(wallet, unsignedTx, selectedUtxos, txSummaryH
             if (!wasmBox || !box) {
                 throw Error(`Input ${input.box_id().to_str()} not found in unspent boxes.`);
             }
+            const boxAddress = Address.fromErgoTree(box.ergoTree);
+            console.log("signTxLedger address input", box.index, boxAddress.address, addressPathMap[boxAddress.address])
             inputs.push({
                 txId: box.transactionId,
                 index: box.index,
@@ -111,7 +114,8 @@ export async function signTxLedger(wallet, unsignedTx, selectedUtxos, txSummaryH
                 creationHeight: wasmBox.creation_height(),
                 tokens: mapTokens(wasmBox.tokens()),
                 additionalRegisters: Buffer.from(wasmBox.serialized_additional_registers()),
-                extension: Buffer.from(input.extension().sigma_serialize_bytes())
+                extension: Buffer.from(input.extension().sigma_serialize_bytes()),
+                signPath: addressPathMap[boxAddress.address]
             });
         }
         for (let i = 0; i < unsignedTxWASM.output_candidates().len(); i++) {
@@ -121,28 +125,30 @@ export async function signTxLedger(wallet, unsignedTx, selectedUtxos, txSummaryH
                 ergoTree: Buffer.from(wasmOutput.ergo_tree().sigma_serialize_bytes()),
                 creationHeight: wasmOutput.creation_height(),
                 tokens: mapTokens(wasmOutput.tokens()),
-                registers: Buffer.from([]) // todo: try to find out the right way to do that
+                registers: (await serializeRegisters(wasmOutput))
             });
         }
-        const addressPathMap = getWalletAddressesPathMap(wallet);
-        const changeAddress = wallet.changeAddress;
+        console.log("outputs",outputs);
 
+        const changeAddress = wallet.changeAddress;
+        const distinctTokens = unsignedTxWASM.distinct_token_ids();
+        console.log("distinctTokens",distinctTokens);
         const signatures = await ledgerApp.signTx(
             {
                 inputs,
                 dataInputs: [],
                 outputs,
+                distinctTokenIds: distinctTokens,
                 changeMap: {
                     address: convertToHex(wallet.changeAddress),
                     path: addressPathMap[changeAddress]
-                },
-                signPaths: Object.values(addressPathMap),
+                }
             },
-            true
+            Network.Mainnet
         );
         return (await ergolib).Transaction.from_unsigned_tx(
             unsignedTxWASM,
-            signatures.map((s) => Buffer.from(s.signature, "hex"))
+            signatures
         ).to_json();
     } catch (e) {
         throw e;
@@ -181,15 +187,13 @@ export async function discoverLedgerAddresses() {
             let index = 0, indexMax = 20, accountAddrressList = [];
             txForAccountFound = false;
             unusedAddresses = [];
-            console.log("discoverLedgerAddresses ledgerApp")
-            const ledgerPubKey = await ledgerApp.getExtendedPublicKey("m/44'/429'/" + accountId.toString() + "'", false);
-            console.log("discoverLedgerAddresses ledgerPubKey", ledgerPubKey);
+            const ledgerPubKey = await ledgerApp.getExtendedPublicKey("m/44'/429'/" + accountId.toString() + "'");
+            console.log("discoverLedgerAddresses ledgerPubKey", accountId, ledgerPubKey);
             while (index < indexMax) {
                 if (!gotApproval) alert = waitingAlert("Searching wallet used addresses...");
                 gotApproval = true;
 
                 const newAddressStr = getLedgerAddresses(ledgerPubKey.publicKey, ledgerPubKey.chainCode, index);
-                console.log("discoverLedgerAddresses", newAddressStr, accountId, index)
                 if (await addressHasTransactions(newAddressStr)) {
                     indexMax = index + 20;
                     txForAccountFound = true
@@ -250,4 +254,22 @@ export async function discoverLedgerAddresses() {
         ledgerApp.transport.close();
     }
 
+}
+
+async function serializeRegisters(box) {
+    const registerEnum = (await ergolib).NonMandatoryRegisterId;
+    if (!box.register_value(registerEnum.R4)) {
+        return Buffer.from([]);
+    }
+
+    const registers = [
+        Buffer.from(box.register_value(registerEnum.R4)?.sigma_serialize_bytes() ?? []),
+        Buffer.from(box.register_value(registerEnum.R5)?.sigma_serialize_bytes() ?? []),
+        Buffer.from(box.register_value(registerEnum.R6)?.sigma_serialize_bytes() ?? []),
+        Buffer.from(box.register_value(registerEnum.R7)?.sigma_serialize_bytes() ?? []),
+        Buffer.from(box.register_value(registerEnum.R8)?.sigma_serialize_bytes() ?? []),
+        Buffer.from(box.register_value(registerEnum.R9)?.sigma_serialize_bytes() ?? [])
+    ];
+
+    return Buffer.concat(registers.filter((b) => b.length > 0));
 }

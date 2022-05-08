@@ -10,7 +10,7 @@ import { errorAlert, promptPassword, successAlert } from '../utils/Alerts';
 import { getAddress } from '../ergo-related/ergolibUtils';
 import { LS } from '../utils/utils';
 import { getNewAddress } from '../ergo-related/ledger';
-import { DeviceError } from 'ledgerjs-hw-app-ergo';
+import { DeviceError } from 'ledger-ergo-js';
 
 export default class Account extends React.Component {
     constructor(props) {

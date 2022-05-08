@@ -18,6 +18,7 @@ export default class EditWallet extends React.Component {
             walletId: props.walletId,
             setPage: props.setPage,
             walletName: '',
+            walletType: '',
             walletAddressList: [],
             isValidWalletName: false,
             invalidWalletMessage: 'Not changed',
@@ -168,7 +169,6 @@ export default class EditWallet extends React.Component {
     };
 
     isValidColor = () => {
-        console.log("isValidColor", this.state.color, this.state.walletColor)
         return (this.state.color !== this.state.walletColor);
     }
 
@@ -409,7 +409,7 @@ export default class EditWallet extends React.Component {
                                     <br />
                                 </Fragment >
                                 :
-                                wallet.type === "mnemonic" ?
+                                this.state.walletType === "mnemonic" ?
                                     <Fragment >
                                         <h5 >Spending password</h5>
                                         <div className='d-flex flex-column'>

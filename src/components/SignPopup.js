@@ -1,4 +1,4 @@
-import { DeviceError } from 'ledgerjs-hw-app-ergo';
+import { DeviceError } from 'ledger-ergo-js';
 import React, { Fragment } from 'react';
 import ReactJson from 'react-json-view';
 import { getTxReducedB64Safe, getUnsignedTransaction } from '../ergo-related/ergolibUtils';
