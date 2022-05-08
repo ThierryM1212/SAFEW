@@ -61,7 +61,7 @@ export default class BigQRCode extends React.Component {
                         Click to zoom
                     </ReactTooltip>
                     <div className="m-1 d-flex justify-content-center">
-                        <a className=' btn btn-outline-info' href={this.props.QRCodeTx} target='_blank' rel='noreferrer' >Open wallet app</a>
+                      <a className=' btn btn-outline-info' href={this.props.QRCodeTx.join('')} target='_blank' rel='noreferrer' >Open wallet app</a>
                     </div>
                 </div>
             </Fragment >
