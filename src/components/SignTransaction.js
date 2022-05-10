@@ -169,7 +169,7 @@ export default class SignTransaction extends React.Component {
                 try {
                     signedTx = JSONBigInt.parse(await signTxLedger(wallet, jsonUnsignedTx, selectedUtxos, txSummaryHtml));
                     console.log("signedTx", signedTx)
-                    if (false) {
+                    if (true) {
                         await postTxMempool(signedTx);
                         console.log("Transaction sent to mempool", signedTx);
                     } else {
