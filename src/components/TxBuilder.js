@@ -20,6 +20,8 @@ import SelectWallet from './SelectWallet';
 import { decryptMnemonic, formatERGAmount, formatTokenAmount, getUnconfirmedTransactionsForAddressList, getWalletAddressList, getWalletById } from '../utils/walletUtils';
 import { VERIFIED_TOKENS } from '../utils/constants';
 import { LS } from '../utils/utils';
+import { signTxLedger } from '../ergo-related/ledger';
+import { DeviceError } from 'ledger-ergo-js';
 /* global BigInt */
 
 var initCreateBox = {
@@ -335,28 +337,48 @@ export default class TxBuilder extends React.Component {
             txSummaryHtml += "</tbody></table></div>";
         }
 
-        const password = await promptPassword("Sign transaction for<br/>" + wallet.name, txSummaryHtml, "Sign");
-        //console.log("sendTransaction password", password);
-        const mnemonic = decryptMnemonic(wallet.mnemonic, password);
-        //console.log("mnemonic",mnemonic)
-        if (mnemonic === null) {
-            return;
-        }
-        if (mnemonic === '' || mnemonic === undefined) {
-            errorAlert("Failed to decrypt Mnemonic", "Wrong password ?");
-            return;
-        }
-        const signingWallet = await getWalletForAddresses(mnemonic, walletAddressList);
-        //console.log("signingWallet", signingWallet);
         var signedTx = {};
-        try {
-            signedTx = JSONBigInt.parse(await signTransaction(jsonUnsignedTx, this.state.selectedBoxList, this.state.selectedDataBoxList, signingWallet));
-            console.log("signedTx", signedTx);
-            this.setState({ signedTransaction: signedTx })
-        } catch (e) {
-            errorAlert("Failed to sign transaction", e);
-            return;
+        if (wallet.type === "mnemonic") {
+            const password = await promptPassword("Sign transaction for<br/>" + wallet.name, txSummaryHtml, "Sign");
+            //console.log("sendTransaction password", password);
+            const mnemonic = decryptMnemonic(wallet.mnemonic, password);
+            //console.log("mnemonic",mnemonic)
+            if (mnemonic === null) {
+                return;
+            }
+            if (mnemonic === '' || mnemonic === undefined) {
+                errorAlert("Failed to decrypt Mnemonic", "Wrong password ?");
+                return;
+            }
+            const signingWallet = await getWalletForAddresses(mnemonic, walletAddressList);
+            //console.log("signingWallet", signingWallet);
+            try {
+                signedTx = JSON.parse(await signTransaction(jsonUnsignedTx, this.state.selectedBoxList, this.state.selectedDataBoxList, signingWallet));
+            } catch (e) {
+                errorAlert("Failed to sign transaction", e);
+                return;
+            }
         }
+
+        if (wallet.type === "ledger") {
+            try {
+                signedTx = JSON.parse(await signTxLedger(wallet, jsonUnsignedTx, this.state.selectedBoxList, txSummaryHtml));
+            } catch (e) {
+                console.log("getLedgerAddresses catch", e.toString());
+                if (e instanceof DeviceError) {
+                    if (e.toString().includes("denied by user")) {
+                        errorAlert(e.toString());
+                        return;
+                    } else {
+                        errorAlert("Cannot connect Ledger ergo application, unlock the ledger and start the Ergo applicaiton on the ledger.")
+                        return;
+                    }
+                }
+            }
+        }
+
+        console.log("signedTx", signedTx);
+        this.setState({ signedTransaction: signedTx })
         return signedTx;
     }
 

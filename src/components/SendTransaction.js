@@ -14,6 +14,7 @@ import Switch from "react-switch";
 
 /* global BigInt */
 
+
 export default class SendTransaction extends React.Component {
     constructor(props) {
         super(props);

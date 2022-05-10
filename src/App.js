@@ -14,9 +14,11 @@ import DisconnectWallet from './components/DisconnectWallet';
 import Mixer from './components/Mixer';
 import { confirmAlert } from './utils/Alerts';
 import { isUpgradeWalletRequired, upgradeWallets } from './utils/walletUtils';
+import AddLedgerWallet from './components/AddLedgerWallet';
 import TxBuilder from './components/TxBuilder';
 import MintTokens from './components/MintTokens';
 import { LS } from './utils/utils';
+
 
 export default class App extends React.Component {
     constructor(props) {
@@ -104,6 +106,9 @@ export default class App extends React.Component {
                 break;
             case 'addErgoPay':
                 page = <AddWallet ergoPayOnly={true} setPage={this.setPage} />
+                break;
+            case 'addLedgerWallet':
+                page = <AddLedgerWallet setPage={this.setPage} />
                 break;
             case 'edit':
                 page = <EditWallet setPage={this.setPage} walletId={this.state.walletId} />

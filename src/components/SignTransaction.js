@@ -11,6 +11,8 @@ import ImageButton from './ImageButton';
 import JSONBigInt from 'json-bigint';
 import { postTxMempool } from '../ergo-related/explorer';
 import { LS } from '../utils/utils';
+import { signTxLedger } from '../ergo-related/ledger';
+import { DeviceError } from 'ledger-ergo-js';
 
 
 export default class SignTransaction extends React.Component {
@@ -42,8 +44,7 @@ export default class SignTransaction extends React.Component {
         const wallet = await getWalletById(walletId);
         this.setState({
             walletId: walletId,
-            ergoPayOnly: wallet.ergoPayOnly,
-            expertMode: wallet.expertMode,
+            walletType: wallet.type,
         });
     };
     setIsValidTx = (isValid) => { this.setState({ isValidTx: isValid }); };
@@ -83,7 +84,7 @@ export default class SignTransaction extends React.Component {
         const wallet = await getWalletById(this.state.walletId);
         const expertMode = (await LS.getItem('expertMode')) ?? false;
         this.setState({
-            ergoPayOnly: wallet.ergoPayOnly,
+            walletType: wallet.type,
             expertMode: expertMode,
         })
     }
@@ -95,7 +96,7 @@ export default class SignTransaction extends React.Component {
         const [jsonUnsignedTx, selectedUtxos, memPoolTransaction] = await this.state.getTransactionJson();
         const walletAddressList = getWalletAddressList(wallet);
 
-        if (wallet.ergoPayOnly) {
+        if (wallet.type === 'ergopay') {
             const [txId, txReducedB64safe] = await getTxReducedB64Safe(jsonUnsignedTx, selectedUtxos);
             var intervalId = setInterval(this.timer, 3000);
             this.setState({
@@ -132,37 +133,61 @@ export default class SignTransaction extends React.Component {
                 txSummaryHtml += "</tbody></table></div>";
             }
 
-            const password = await promptPassword("Sign transaction for<br/>" + wallet.name, txSummaryHtml, "Sign");
-            //console.log("sendTransaction password", password);
-            const mnemonic = decryptMnemonic(wallet.mnemonic, password);
-            if (mnemonic === null) {
-                return;
-            }
-            if (mnemonic === '' || mnemonic === undefined) {
-                errorAlert("Failed to decrypt Mnemonic", "Wrong password ?");
-                return;
-            }
-            const signingWallet = await getWalletForAddresses(mnemonic, selectedAddresses);
-            //console.log("signingWallet", signingWallet);
             var signedTx = {};
+            if (wallet.type === "mnemonic") {
+                const password = await promptPassword("Sign transaction for<br/>" + wallet.name, txSummaryHtml, "Sign");
+                //console.log("sendTransaction password", password);
+                const mnemonic = decryptMnemonic(wallet.mnemonic, password);
+                if (mnemonic === null) {
+                    return;
+                }
+                if (mnemonic === '' || mnemonic === undefined) {
+                    errorAlert("Failed to decrypt Mnemonic", "Wrong password ?");
+                    return;
+                }
+                const signingWallet = await getWalletForAddresses(mnemonic, selectedAddresses);
+                //console.log("signingWallet", signingWallet);
+                try {
+                    signedTx = JSONBigInt.parse(await signTransaction(jsonUnsignedTx, selectedUtxos, [], signingWallet));
+                    console.log("signedTx", signedTx);
+                } catch (e) {
+                    errorAlert("Failed to sign transaction", e);
+                    return;
+                }
+                if (true) {
+                    await postTxMempool(signedTx);
+                    console.log("Transaction sent to mempool", signedTx);
+                } else {
+                    await sendTx(signedTx);
+                    console.log("Transaction sent to node", signedTx);
+                }
 
-            try {
-                signedTx = JSONBigInt.parse(await signTransaction(jsonUnsignedTx, selectedUtxos, [], signingWallet));
-                console.log("signedTx", signedTx);
-            } catch (e) {
-                errorAlert("Failed to sign transaction", e);
-                return;
+                //await delay(3000);
+                this.state.setPage('transactions', this.state.walletId);
             }
-            if (true) {
-                await postTxMempool(signedTx);
-                console.log("Transaction sent to mempool", signedTx);
-            } else {
-                await sendTx(signedTx);
-                console.log("Transaction sent to node", signedTx);
+            if (wallet.type === "ledger") {
+                try {
+                    signedTx = JSONBigInt.parse(await signTxLedger(wallet, jsonUnsignedTx, selectedUtxos, txSummaryHtml));
+                    console.log("signedTx", signedTx)
+                    if (false) {
+                        await postTxMempool(signedTx);
+                        console.log("Transaction sent to mempool", signedTx);
+                    } else {
+                        await sendTx(signedTx);
+                        console.log("Transaction sent to node", signedTx);
+                    }
+                    this.state.setPage('transactions', this.state.walletId);
+                } catch (e) {
+                    console.log("getLedgerAddresses catch", e.toString());
+                    if (e instanceof DeviceError) {
+                        if (e.toString().includes("denied by user")) {
+                            errorAlert(e.toString())
+                        } else {
+                            errorAlert("Cannot connect Ledger ergo application, unlock the ledger and start the Ergo applicaiton on the ledger.")
+                        }
+                    }
+                }
             }
-
-            //await delay(3000);
-            this.state.setPage('transactions', this.state.walletId);
         }
     }
 
