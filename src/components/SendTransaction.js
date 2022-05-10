@@ -243,7 +243,7 @@ export default class SendTransaction extends React.Component {
     }
 
     async getTransactionJson() {
-        waitingAlert("Preparing the transactions...");
+        const alert = waitingAlert("Preparing the transactions...");
         const amountToSendFloat = parseFloat(this.state.ergsToSend);
         const feeFloat = parseFloat(this.state.txFee);
         const totalAmountToSendFloat = amountToSendFloat + feeFloat;
@@ -269,6 +269,7 @@ export default class SendTransaction extends React.Component {
         //    }
         //}
         console.log("sendTransaction unsignedTransaction", jsonUnsignedTx);
+        alert.close();
         return [jsonUnsignedTx, selectedUtxos, memPoolTransaction];
     }
 

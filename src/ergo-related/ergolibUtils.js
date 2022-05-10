@@ -304,7 +304,7 @@ export async function getTxReducedB64Safe(json, inputs, dataInputs = []) {
     const ergoPayTx = "ergopay:" + txReducedBase64.replace(/\//g, '_').replace(/\+/g, '-');
     //console.log("getTxReducedB64Safe3", json, inputs, dataInputs);
     // split by chunk of 1000 char to generates the QR codes
-    return [txId, ergoPayTx.match(/.{1,1000}/g)];
+    return [txId, ergoPayTx];
 }
 
 async function getTxReduced(json, inputs, dataInputs) {

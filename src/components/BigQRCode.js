@@ -1,6 +1,7 @@
 import React, { Fragment } from 'react';
 import QRCode from 'qrcode';
 import ReactTooltip from 'react-tooltip';
+import { errorAlert } from '../utils/Alerts';
 
 export default class BigQRCode extends React.Component {
     constructor(props) {
@@ -12,19 +13,17 @@ export default class BigQRCode extends React.Component {
         this.zoomInOut = this.zoomInOut.bind(this);
     }
 
-    async generateQR(text) {
-        try {
-            return await QRCode.toDataURL(text);
-        } catch (err) {
-            console.error("generateQR", err)
-        }
-    }
-
     async componentDidMount() {
-        const QRCodeTx = await this.generateQR(this.state.QRCodeTx)
-        this.setState({
-            QRCodeTx: QRCodeTx,
-        })
+        try{
+            const QRCodeTx = await QRCode.toDataURL(this.state.QRCodeTx)
+            this.setState({
+                QRCodeTx: QRCodeTx,
+            })
+        } catch(e) {
+            console.error(e);
+            errorAlert("Failed to generate QR code", e);
+        }
+        
     }
 
     zoomInOut = () => {
@@ -61,7 +60,7 @@ export default class BigQRCode extends React.Component {
                         Click to zoom
                     </ReactTooltip>
                     <div className="m-1 d-flex justify-content-center">
-                      <a className=' btn btn-outline-info' href={this.props.QRCodeTx.join('')} target='_blank' rel='noreferrer' >Open wallet app</a>
+                        <a className=' btn btn-outline-info' href={this.props.QRCodeTx} target='_blank' rel='noreferrer' >Open wallet app</a>
                     </div>
                 </div>
             </Fragment >
