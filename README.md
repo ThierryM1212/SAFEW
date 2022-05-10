@@ -16,13 +16,15 @@ SAFEW was awarded as project participating in ErgoHack 3: https://ergoplatform.o
 
 ## Features
 Wallet features:
- - Add, restore, edit wallets (BIP-32/39)
+ - Wallets:
+    - Wallet with mnemonic for siging from SAFEW extension
+    - Ergopay/Read only wallet for signing with Android/iOS wallet
+    - Ledger 
  - View accounts (expert mode), addresses, their balance in ERG and tokens
  - Discovers wallet used addresses and generates unused addresses (BIP-44)
  - View wallet transactions confirmed and unconfirmed
  - Display unconfirmed balances per wallet, account and address
  - Configure Explorer, Node and Explorer UI addresses used by the wallet
- - ErgoPay/ReadOnly wallet and signing (only the public address are provided, signing is delegated to ErgoPay EIP-19 with iOS or Android wallet v1.6+)
  - ErgoMixer access: interact with ErgoMixer directly from the wallet
  - Transaction builder to manipulate json of ergo transaction in Expert mode
    - How to mint tokens: https://youtu.be/YR0jkbMLaAY
@@ -137,3 +139,9 @@ v0.4.7
 
 v0.5.0
 - Manifest v3 support: Use chrome.storage instead of localstorage, dApp connector refactoring
+
+v0.6.0
+- Ledger support
+- Embed google fonts
+- Display error message when Ergopay QR code fails to be generated
+- Bug fixes
