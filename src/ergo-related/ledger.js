@@ -64,6 +64,33 @@ export async function ledgerPubKey(wallet) {
     }
 }
 
+export async function getNewAccount(wallet) {
+    var alert = waitingAlert("Connecting to the Ledger...");
+    const ledgerApp = new ErgoLedgerApp(await getTransport());
+    const newAccountId = wallet.accounts.length;
+    try {
+        alert = waitingAlert("Waiting approval to get the public key from the Ledger...");
+        const ledgerPubKey = await ledgerApp.getExtendedPublicKey("m/44'/429'/" + newAccountId + "'", true);
+        const newAddressStr = getLedgerAddresses(ledgerPubKey.publicKey, ledgerPubKey.chainCode, 0);
+        const accountAddress = {
+            id: 0,
+            address: newAddressStr,
+            used: false,
+        };
+        return {
+            id: newAccountId,
+            addresses: [accountAddress],
+            name: "Account_" + newAccountId.toString(),
+        }
+    } catch (e) {
+
+        throw (e);
+    } finally {
+        alert.close();
+        ledgerApp.transport.close();
+    }
+}
+
 export async function getNewAddress(wallet, accountId) {
     var alert = waitingAlert("Connecting to the Ledger...");
     const ledgerApp = new ErgoLedgerApp(await getTransport());
@@ -269,7 +296,7 @@ async function serializeRegisters(box) {
         Buffer.from(box.register_value(registerEnum.R7)?.sigma_serialize_bytes() ?? []),
         Buffer.from(box.register_value(registerEnum.R8)?.sigma_serialize_bytes() ?? []),
         Buffer.from(box.register_value(registerEnum.R9)?.sigma_serialize_bytes() ?? [])
-    ];
+    ].filter((b) => b.length > 0);
 
-    return Buffer.concat(registers.filter((b) => b.length > 0));
+    return Buffer.concat([...[Buffer.from([registers.length])], ...registers]);
 }
