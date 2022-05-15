@@ -43,7 +43,7 @@ export async function ledgerPubKey(wallet) {
     try {
         alert = waitingAlert("Waiting approval to get the public key from the Ledger...");
         const ledgerPubKey = await ledgerApp.getExtendedPublicKey("m/44'/429'/" + newAccountId + "'", true);
-        console.log("ledgerPubKey ledgerPubKey", ledgerPubKey);
+        //console.log("ledgerPubKey ledgerPubKey", ledgerPubKey);
         const newAddressStr = getLedgerAddresses(ledgerPubKey.publicKey, ledgerPubKey.chainCode, 0);
         const accountAddress = {
             id: 0,
@@ -98,7 +98,7 @@ export async function getNewAddress(wallet, accountId) {
     try {
         alert = waitingAlert("Waiting approval to get the public key from the Ledger...");
         const ledgerPubKey = await ledgerApp.getExtendedPublicKey("m/44'/429'/" + accountId + "'", true);
-        console.log("ledgerPubKey ledgerPubKey", ledgerPubKey);
+        //console.log("ledgerPubKey ledgerPubKey", ledgerPubKey);
         const newAddressStr = getLedgerAddresses(ledgerPubKey.publicKey, ledgerPubKey.chainCode, index);
         return {
             id: index,
@@ -115,11 +115,11 @@ export async function getNewAddress(wallet, accountId) {
 
 export async function signTxLedger(wallet, unsignedTx, selectedUtxos, txSummaryHtml) {
     const alert = waitingAlert("Waiting transaction signing with ledger", txSummaryHtml);
-    console.log("signTxLedger", wallet, unsignedTx, selectedUtxos, txSummaryHtml);
+    //console.log("signTxLedger", wallet, unsignedTx, selectedUtxos, txSummaryHtml);
     const unsignedTxWASM = await getUnsignedTransaction(unsignedTx);
     const addressPathMap = getWalletAddressesPathMap(wallet);
     const ledgerApp = new ErgoLedgerApp(await getTransport()).useAuthToken().enableDebugMode();
-    console.log("ledgerApp", ledgerApp);
+    //console.log("ledgerApp", ledgerApp);
     try {
         const inputs = [];
         const outputs = [];
@@ -132,7 +132,7 @@ export async function signTxLedger(wallet, unsignedTx, selectedUtxos, txSummaryH
                 throw Error(`Input ${input.box_id().to_str()} not found in unspent boxes.`);
             }
             const boxAddress = Address.fromErgoTree(box.ergoTree);
-            console.log("signTxLedger address input", box.index, boxAddress.address, addressPathMap[boxAddress.address])
+            //console.log("signTxLedger address input", box.index, boxAddress.address, addressPathMap[boxAddress.address])
             inputs.push({
                 txId: box.transactionId,
                 index: box.index,
@@ -155,11 +155,11 @@ export async function signTxLedger(wallet, unsignedTx, selectedUtxos, txSummaryH
                 registers: (await serializeRegisters(wasmOutput))
             });
         }
-        console.log("outputs",outputs);
+        //console.log("outputs",outputs);
 
         const changeAddress = wallet.changeAddress;
         const distinctTokens = unsignedTxWASM.distinct_token_ids();
-        console.log("distinctTokens",distinctTokens);
+        //console.log("distinctTokens",distinctTokens);
         const signatures = await ledgerApp.signTx(
             {
                 inputs,
@@ -215,7 +215,7 @@ export async function discoverLedgerAddresses() {
             txForAccountFound = false;
             unusedAddresses = [];
             const ledgerPubKey = await ledgerApp.getExtendedPublicKey("m/44'/429'/" + accountId.toString() + "'");
-            console.log("discoverLedgerAddresses ledgerPubKey", accountId, ledgerPubKey);
+            //console.log("discoverLedgerAddresses ledgerPubKey", accountId, ledgerPubKey);
             while (index < indexMax) {
                 if (!gotApproval) alert = waitingAlert("Searching wallet used addresses...");
                 gotApproval = true;
@@ -272,7 +272,7 @@ export async function discoverLedgerAddresses() {
             });
         }
         alert.close();
-        console.log(accounts);
+        //console.log(accounts);
         return accounts;
 
     } catch (e) {

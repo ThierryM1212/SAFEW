@@ -459,7 +459,7 @@ export async function getTokenValue() {
         acc[cur.token.tokenId] = cur;
         return acc;
     }, {});
-    console.log('getTokenValue tokenRatesDict', tokenRatesDict);
+    //console.log('getTokenValue tokenRatesDict', tokenRatesDict);
     return tokenRatesDict;
 }
 

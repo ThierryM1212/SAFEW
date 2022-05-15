@@ -22,7 +22,7 @@ export default function SelectWallet(props) {
             }),
         }
     };
-    console.log("SelectWallet walletList",walletList)
+    //console.log("SelectWallet walletList",walletList)
     const optionWalletList = walletList.map((wallet, id) => ({ value: id, label: wallet.name }));
     var selectedWallet = undefined;
     if (walletList.length>0) {

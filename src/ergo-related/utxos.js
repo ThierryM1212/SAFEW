@@ -430,7 +430,7 @@ export async function getSpentAndUnspentBoxesFromMempool(addressList) {
     var unconfirmedTxs = (await getUnconfirmedTransactionsForAddressList(addressList, false))
         .map(tx => tx.transactions)
         .flat();
-    console.log("getSpentAndUnspentBoxesFromMempool", unconfirmedTxs)
+    //console.log("getSpentAndUnspentBoxesFromMempool", unconfirmedTxs)
     var spentBoxes = [];
     var newBoxes = [];
     if (unconfirmedTxs.length > 0) {
@@ -449,6 +449,6 @@ export async function getSpentAndUnspentBoxesFromMempool(addressList) {
         var cache_newBoxes = await ls_slim_get('cache_newBoxes') ?? [];
         ls_slim_set('cache_newBoxes', newBoxes.concat(cache_newBoxes), { ttl: 600 });
     }
-    console.log("getSpentAndUnspentBoxesFromMempool", spentBoxes, newBoxes)
+    //console.log("getSpentAndUnspentBoxesFromMempool", spentBoxes, newBoxes)
     return [spentBoxes, newBoxes];
 }

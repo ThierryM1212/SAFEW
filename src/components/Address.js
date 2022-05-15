@@ -28,7 +28,7 @@ export default function Address(props) {
         setAddressUsed(address);
     }
 
-    console.log("Address props", props, hideUsedEmptyAddress, explorerWebUIAddress);
+    //console.log("Address props", props, hideUsedEmptyAddress, explorerWebUIAddress);
     return (
         <Fragment>
             {

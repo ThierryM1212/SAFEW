@@ -145,3 +145,7 @@ v0.6.0
 - Embed google fonts
 - Display error message when Ergopay QR code fails to be generated
 - Bug fixes
+
+v0.6.1
+- Fix signing with ledger when registers are set in output
+- Fix explorer links
