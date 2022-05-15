@@ -12,13 +12,13 @@ export default function Address(props) {
     const [hideUsedEmptyAddress, setHideUsedEmptyAddress] = useState(true);
     useEffect(() => {
         chrome.storage.local.get("hideUsedEmptyAddress", (result) => {
-            setHideUsedEmptyAddress(result);
+            setHideUsedEmptyAddress(result.hideUsedEmptyAddress);
         });
     }, []);
     const [explorerWebUIAddress, setExplorerWebUIAddress] = useState(DEFAULT_EXPLORER_WEBUI_ADDRESS);
     useEffect(() => {
         chrome.storage.local.get("explorerWebUIAddress", (result) => {
-            setExplorerWebUIAddress(result);
+            setExplorerWebUIAddress(result.explorerWebUIAddress);
         });
     }, []);
 
@@ -28,7 +28,7 @@ export default function Address(props) {
         setAddressUsed(address);
     }
 
-    console.log("Address props", props);
+    console.log("Address props", props, hideUsedEmptyAddress, explorerWebUIAddress);
     return (
         <Fragment>
             {

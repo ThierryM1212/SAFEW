@@ -11,11 +11,11 @@ export default function TokenLabel(props) {
     const [explorerWebUIAddress, setExplorerWebUIAddress] = useState(DEFAULT_EXPLORER_WEBUI_ADDRESS);
     useEffect(() => {
         chrome.storage.local.get("explorerWebUIAddress", (result) => {
-            setExplorerWebUIAddress(result);
+            setExplorerWebUIAddress(result.explorerWebUIAddress);
         });
     }, []);
 
-    //console.log("TokenLabel",props.name, props)
+    console.log("TokenLabel",props,explorerWebUIAddress)
     return (
         <div className='d-flex flex-row justify-content-between align-items-center'>
             <div className='d-flex flex-row align-items-center'>
