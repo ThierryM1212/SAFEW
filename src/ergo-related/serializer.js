@@ -2,8 +2,8 @@ import {Serializer} from "@coinbarn/ergo-ts";
 import JSONBigInt from 'json-bigint';
 import { getLastHeaders } from "./node";
 
-import ergolib from 'ergo-lib-browser.asm';
-// let ergolib = import('ergo-lib-wasm-browser')
+
+let ergolib = import('ergo-lib-wasm-browser')
 
 /* global BigInt */
 
@@ -124,21 +124,10 @@ export async function ergoTreeToAddress(ergoTree) {
     return address.to_base58();
 }
 
-export async function getWasmCollection(jsItems, fnToCreateSingleFromJson, ctorToCreateCollectionFromSingle) {
-  return jsItems.reduce((acc, cur) => {
-    const jsonOfItem = JSONBigInt.stringify(cur);
-    const singleItem = fnToCreateSingleFromJson(jsonOfItem);
-    if(acc === undefined) acc = ctorToCreateCollectionFromSingle(singleItem);
-    else acc.add(singleItem);
-    return acc;
-  }, undefined);
-}
 
 export async function getErgoStateContext() {
-    const eLib = await ergolib;
-    const lastHeaders = await getLastHeaders();
-    const block_headers = await getWasmCollection(lastHeaders, eLib.BlockHeader.from_json, header => new eLib.BlockHeaders(header));
-    const pre_header = eLib.PreHeader.from_block_header(block_headers.get(0));
+    const block_headers = (await ergolib).BlockHeaders.from_json(await getLastHeaders());
+    const pre_header = (await ergolib).PreHeader.from_block_header(block_headers.get(0));
     return new (await ergolib).ErgoStateContext(pre_header, block_headers);
 }
 
@@ -183,10 +172,9 @@ export async function signTxWithMnemonic(json, inputs, dataInputs, mnemonic, add
 
 export async function signTransaction(unsignedTx, inputs, dataInputs, wallet) {
     //console.log("signTransaction1", unsignedTx, inputs, dataInputs);
-    const eLib = await ergolib;
-    const unsignedTransaction = eLib.UnsignedTransaction.from_json(JSONBigInt.stringify(unsignedTx));
-    const inputBoxes = (await getWasmCollection(inputs, eLib.ErgoBox.from_json, (ergoBox) => new eLib.ErgoBoxes(ergoBox))) || eLib.ErgoBoxes.empty();
-    const dataInputsBoxes = (await getWasmCollection(dataInputs, eLib.ErgoBox.from_json, (ergoBox) => new eLib.ErgoBoxes(ergoBox))) || eLib.ErgoBoxes.empty();
+    const unsignedTransaction = (await ergolib).UnsignedTransaction.from_json(JSONBigInt.stringify(unsignedTx));
+    const inputBoxes = (await ergolib).ErgoBoxes.from_boxes_json(inputs);
+    const dataInputsBoxes = (await ergolib).ErgoBoxes.from_boxes_json(dataInputs);
     const ctx = await getErgoStateContext();
     //console.log("signTransaction2", unsignedTx, inputs, dataInputs);
     const signedTx = wallet.sign_transaction(ctx, unsignedTransaction, inputBoxes, dataInputsBoxes);

@@ -1,54 +1,46 @@
+
 {
-    "short_name": "SAFEW",
-    "name": "Simple And Fast Ergo Wallet",
-    "version": "0.6.1",
-    "action": {},
-    "icons": {
-        "16": "/images/safew_icon_16.png",
-        "32": "/images/safew_icon_32.png",
-        "48": "/images/safew_icon_48.png",
-        "128": "/images/safew_icon_128.png"
+  "short_name": "SAFEW",
+  "name": "Simple And Fast Ergo Wallet",
+  "version": "0.6.1",
+  "action": {},
+  "icons": {
+      "16": "/images/safew_icon_16.png",
+      "32": "/images/safew_icon_32.png",
+      "48": "/images/safew_icon_48.png",
+     "128": "/images/safew_icon_128.png"
     },
-    "background": {
-        "service_worker": "./background.js"
-    },
-    "permissions": [
-        "storage",
-        "activeTab",
-        "scripting",
-        "tabs"
+  "background": {
+      "service_worker": "./background.js"
+  },
+  "permissions": ["storage", "activeTab", "scripting", "tabs"],
+  "host_permissions": [
+      "<all_urls>"
     ],
-    "host_permissions": [
-        "<all_urls>"
-    ],
-    "manifest_version": 3,
-    "web_accessible_resources": [
-        {
-            "resources": [
-                "index.html",
-                "contentScript.js",
-                "inject1.js",
-                "inject2.js"
-            ],
-            "matches": [
-                "*://*/*"
-            ],
-            "extension_ids": []
-        }
-    ],
-    "content_security_policy": {
-        "extension_pages": "script-src 'self'; object-src 'self'"
-    },
-    "content_scripts": [
-        {
-            "matches": [
-                "*://*/*"
-            ],
-            "js": [
-                "contentScript.js"
-            ],
-            "run_at": "document_start",
-            "all_frames": true
-        }
-    ]
+  "manifest_version": 3,
+  "web_accessible_resources": [{
+    "resources": [
+        "index.html",
+        "contentScript.js",
+        "inject1.js",
+        "inject2.js"
+       ],
+    "matches": ["*://*/*"],
+    "extension_ids": []
+  }],
+  
+  
+   "content_security_policy": {
+        "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+        },
+   "content_scripts": [
+    {
+      "matches": ["*://*/*"],
+      "js": ["contentScript.js"],
+      "run_at": "document_start",
+      "all_frames": true
+    }
+  ]
 }
+
+  

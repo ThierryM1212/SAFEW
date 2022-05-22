@@ -6,7 +6,7 @@ import { boxByBoxId } from '../ergo-related/explorer';
 import { signTxLedger } from '../ergo-related/ledger';
 import { getWalletForAddresses, signTransaction } from '../ergo-related/serializer';
 import { enrichUtxos, getUtxoBalanceForAddressList, parseSignedTx, parseUnsignedTx, parseUtxos } from '../ergo-related/utxos';
-import { errorAlert, waitingAlert } from '../utils/Alerts';
+import { errorAlert } from '../utils/Alerts';
 import { sampleTxErgodex, TX_FEE_ERGO_TREE } from '../utils/constants';
 import { decryptMnemonic, formatERGAmount, formatTokenAmount, getConnectedWalletByURL, getUnconfirmedTransactionsForAddressList, getWalletAddressList, getWalletById, getWalletUsedAddressList } from '../utils/walletUtils';
 import BigQRCode from './BigQRCode';
@@ -131,7 +131,6 @@ export default class SignPopup extends React.Component {
     }
 
     async signTx() {
-        // var alert = waitingAlert("Preparing the wallet transaction signing...");
         console.log("signTx", this.state)
         var signedTx = {};
         try {
@@ -182,7 +181,6 @@ export default class SignPopup extends React.Component {
             window.close();
             return;
         }
-        //   alert.close();
         //const res = await sendTx(signedTx);
         chrome.runtime.sendMessage({
             channel: "safew_extension_background_channel",
@@ -197,7 +195,6 @@ export default class SignPopup extends React.Component {
             await this.delay(100);
             window.close();
         }
-
     }
 
     delay(time) {

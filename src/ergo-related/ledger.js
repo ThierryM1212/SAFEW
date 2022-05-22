@@ -10,8 +10,7 @@ import { addressHasTransactions } from "./explorer";
 import BIP32Factory from 'bip32';
 import * as ecc from 'tiny-secp256k1';
 import { Address } from "@coinbarn/ergo-ts";
-import ergolib from 'ergo-lib-browser.asm';
-// let ergolib = import('ergo-lib-wasm-browser')
+let ergolib = import('ergo-lib-wasm-browser')
 const bip32 = BIP32Factory(ecc);
 
 function getLedgerAddresses(pubKey, chain_code, index) {
