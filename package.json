@@ -14,7 +14,7 @@
     "bip32": "^3.0.1",
     "bip39": "^3.0.4",
     "crypto-js": "^4.1.1",
-    "ergo-lib-wasm-browser": "^0.15.0",
+    "ergo-lib-wasm-browser": "^0.16.1",
     "ipfs-http-client": "^56.0.1",
     "json-bigint": "^1.0.0",
     "ledger-ergo-js": "^0.1.1",

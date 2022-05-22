@@ -19,7 +19,7 @@
       "default_title": "SAFEW"
     },
     "web_accessible_resources": [
-      "901541a564cf6f25b538.module.wasm",
+      "ec74f9161d4c92c29d9c.module.wasm",
       "index.html",
       "contentScript.js",
       "inject2.js",
