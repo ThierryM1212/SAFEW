@@ -124,6 +124,16 @@ export async function ergoTreeToAddress(ergoTree) {
     return address.to_base58();
 }
 
+export async function ergoTreeToTemplate(ergoTree) {
+    console.log("ergoTreeToTemplate",ergoTree);
+    const ergoT = (await ergolib).ErgoTree.from_base16_bytes(ergoTree);
+    console.log("ergoTreeToTemplate constants", ergoT.constants_len())
+    console.log("ergoTreeToTemplate constants2", ergoT.get_constant(0).encode_to_base16())
+    const template = (await ergolib).ErgoTree.from_bytes(ergoT.template_bytes());
+    console.log("ergoTreeToTemplate template", template.to_base16_bytes())
+    return template.to_base16_bytes();
+}
+
 
 export async function getErgoStateContext() {
     const block_headers = (await ergolib).BlockHeaders.from_json(await getLastHeaders());

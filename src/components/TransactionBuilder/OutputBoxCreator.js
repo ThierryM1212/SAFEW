@@ -1,7 +1,7 @@
 import React from 'react';
 import OutputEditable from './OutputEditable';
 import ImageButton from '../ImageButton';
-import { encodeStr, encodeAddress, encodeInt, encodeLong, encodeLongArray, encodeContract, ergoTreeToAddress } from '../../ergo-related/serializer';
+import { encodeStr, encodeAddress, encodeInt, encodeLong, encodeLongArray, encodeContract, ergoTreeToAddress, ergoTreeToTemplate } from '../../ergo-related/serializer';
 
 export default class OutputBoxCreator extends React.Component {
     constructor(props) {
@@ -27,6 +27,8 @@ export default class OutputBoxCreator extends React.Component {
             addressContractEncoded: '',
             ergoTree: '',
             addressFromErgoTree: '',
+            ergoTree2: '',
+            templateFromErgoTree: '',
             showConverter: false,
         };
 
@@ -147,6 +149,23 @@ export default class OutputBoxCreator extends React.Component {
             console.log(e);
             this.setState({
                 addressFromErgoTree: "Invalid ErgoTree",
+            })
+        })
+    }
+
+    setTemplateFromErgoTree = (item) => {
+        this.setState({
+            ergoTree2: item.target.value,
+        })
+        ergoTreeToTemplate(item.target.value).then(encoded => {
+            console.log(encoded, item);
+            this.setState({
+                templateFromErgoTree: encoded,
+            })
+        }).catch(e => {
+            console.log(e);
+            this.setState({
+                templateFromErgoTree: "Invalid ErgoTree",
             })
         })
     }
@@ -280,6 +299,16 @@ export default class OutputBoxCreator extends React.Component {
                                         </td>
                                         <td>
                                             <input className="w-100 grey-input" defaultValue={this.state.addressFromErgoTree} readOnly />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>ErgoTree to template</td>
+                                        <td>
+                                            <input className="grey-input" value={this.state.ergoTree2}
+                                                onChange={this.setTemplateFromErgoTree} />
+                                        </td>
+                                        <td>
+                                            <input className="w-100 grey-input" defaultValue={this.state.templateFromErgoTree} readOnly />
                                         </td>
                                     </tr>
                                 </tbody>
