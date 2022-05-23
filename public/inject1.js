@@ -40,8 +40,7 @@ class ErgoAPIini {
 if (ergoConnector !== undefined) {
     ergoConnector = {
         ...ergoConnector,
-        safew: Object.freeze(new ErgoAPIini()),
-        nautilus: Object.freeze(new ErgoAPIini())
+        safew: Object.freeze(new ErgoAPIini())
     };
 } else {
     var ergoConnector = {
