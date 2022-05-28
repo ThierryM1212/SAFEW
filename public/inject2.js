@@ -56,7 +56,7 @@ class NautilusErgoApi {
     }
 
     _ergo_rpc_call(func, params) {
-        console.log("_ergo_rpc_call", func, params);
+        //console.log("_ergo_rpc_call", func, params);
         return new Promise(function (resolve, reject) {
             window.dispatchEvent(
                 new CustomEvent('safew_injected_script_message', {
@@ -75,4 +75,5 @@ class NautilusErgoApi {
 }
 
 const ergo = Object.freeze(new NautilusErgoApi());
-//console.log("end inject2", ergo)
+console.log("[SAFEW] NautilusErgoApi injected");
+

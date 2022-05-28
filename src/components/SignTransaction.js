@@ -154,7 +154,7 @@ export default class SignTransaction extends React.Component {
                     errorAlert("Failed to sign transaction", e);
                     return;
                 }
-                if (true) {
+                if (memPoolTransaction) {
                     await postTxMempool(signedTx);
                     console.log("Transaction sent to mempool", signedTx);
                 } else {

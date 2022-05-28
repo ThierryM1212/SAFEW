@@ -149,3 +149,9 @@ v0.6.0
 v0.6.1
 - Fix signing with ledger when registers are set in output
 - Fix explorer links
+
+v0.6.2
+- Switch back to wasm library
+- Update ergo-lib-wasm-browser from 0.15.0 to 0.16.1
+- Allow Nautilus and SAFEW to be activated at the same time
+- Fixes for Chrome 102

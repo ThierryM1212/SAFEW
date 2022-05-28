@@ -1,6 +1,6 @@
 {
   "name": "safew-wallet",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "private": true,
   "dependencies": {
     "@babel/polyfill": "^7.12.1",
@@ -35,7 +35,7 @@
     "react-switch": "^6.0.0",
     "react-tooltip": "^4.2.21",
     "sweetalert2": "^11.4.9",
-    "tiny-secp256k1": "^1.1.6",
+    "tiny-secp256k1": "^2.2.1",
     "typescript": "^4.6.3"
   },
   "scripts": {

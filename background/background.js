@@ -36,7 +36,7 @@ const LS = {
 
 /* global chrome BigInt */
 chrome.runtime.onInstalled.addListener(() => {
-    console.log('SAFEW extension successfully installed!');
+    console.log('[SAFEW] Extension successfully installed!');
     LS.setItem('disclaimerAccepted', false)
     return;
 });
@@ -108,24 +108,24 @@ function getAllStorageSyncData() {
 // launch extension popup
 function launchPopup(message, sender, param = '') {
     const searchParams = new URLSearchParams();
-    console.log("launchPopup sender", sender, location.origin);
+    //console.log("launchPopup sender", sender, location.origin);
     if (Object.keys(sender).includes('origin')) {
         searchParams.set('origin', sender.origin);
     } else {
         const origin = (new URL(sender.url)).origin;
-        console.log("launchPopup origin", origin, sender.url)
+        //console.log("launchPopup origin", origin, sender.url)
         searchParams.set('origin', origin);
     }
     searchParams.set('tabId', sender.tab.id);
 
     //searchParams.set('request', JSON.stringify(message.data));
     var type = message.data.type;
-    console.log("launchPopup", message, type, param);
+    //console.log("launchPopup", message, type, param);
     if (type === 'ergo_api') {
         type = message.data.func;
         searchParams.set('requestId', param);
     }
-    console.log("launchPopup", type);
+    //console.log("launchPopup", type);
     const URLpopup = 'index.html#' + type + '?' + searchParams.toString()
 
     // TODO consolidate popup dimensions
@@ -133,10 +133,10 @@ function launchPopup(message, sender, param = '') {
         chrome.windows.create({
             url: URLpopup,
             type: 'popup',
-            width: 800,
-            height: 700,
+            width: Math.ceil(focusedWindow.width/2),
+            height: focusedWindow.height - Math.floor(focusedWindow.height/3),
             top: focusedWindow.top,
-            left: focusedWindow.left + (focusedWindow.width - 375),
+            left: focusedWindow.left + (focusedWindow.width - Math.floor(focusedWindow.width/2)),
             focused: true,
         });
     });
@@ -176,9 +176,9 @@ function ls_slim_set(key, value, ttl) {
 
 function getConnectedWalletName(url) {
     const connectedSites = local_storage['connectedSites'] ?? {};
-    console.log("getConnectedWalletName connectedSites", connectedSites, url);
+    //console.log("getConnectedWalletName connectedSites", connectedSites, url);
     for (const walletName of Object.keys(connectedSites)) {
-        console.log("getConnectedWalletName test", connectedSites[walletName], connectedSites[walletName].includes(url));
+        //console.log("getConnectedWalletName test", connectedSites[walletName], connectedSites[walletName].includes(url));
         if (connectedSites[walletName].includes(url)) {
 
             return walletName;
@@ -188,10 +188,10 @@ function getConnectedWalletName(url) {
 }
 function getConnectedWalletByURL(url) {
     const walletName = getConnectedWalletName(url);
-    console.log("getConnectedWalletByURL walletName", walletName);
+    //console.log("getConnectedWalletByURL walletName", walletName);
     if (walletName !== null) {
         const walletList = local_storage['walletList'] ?? [];
-        console.log("getConnectedWalletByURL walletList", walletList);
+        //console.log("getConnectedWalletByURL walletList", walletList);
 
         for (const wallet of walletList) {
             if (wallet.name === walletName) {
@@ -212,7 +212,7 @@ async function get(url, apiKey = '') {
     return result;
 }
 async function post(url, body = {}, apiKey = '') {
-    console.log("post0", JSONBigInt.stringify(body));
+    //console.log("post0", JSONBigInt.stringify(body));
     const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -226,10 +226,10 @@ async function post(url, body = {}, apiKey = '') {
     });
 
     const [responseOk, body2] = await Promise.all([response.ok, response.json()]);
-    console.log("post1", body2, responseOk)
+    //console.log("post1", body2, responseOk)
     if (responseOk) {
         if (typeof body2 === 'object') {
-            console.log("post2", body2.id)
+            //console.log("post2", body2.id)
             return { result: true, data: body2.id };
         } else {
             return { result: true, data: body2 };
@@ -243,15 +243,6 @@ async function post(url, body = {}, apiKey = '') {
     }
 
 }
-async function postRequest(url, body = {}, apiKey = '') {
-    try {
-        const res = await post(nodeApi + url, body)
-        return { detail: res };
-    } catch (err) {
-        console.log("postRequest", err);
-        return { detail: { result: false, data: err.toString() } }
-    }
-}
 async function postTxMempool(tx) {
     try {
         const res = await post(explorerApi + 'api/v1/mempool/transactions/submit', tx);
@@ -262,7 +253,6 @@ async function postTxMempool(tx) {
         return { detail: { result: false, data: err.toString() } }
     }
 }
-
 async function sendTx(tx) {
     //return await postRequest("transactions", tx);
     return await postTxMempool(tx);
@@ -292,7 +282,7 @@ async function getUnspentBoxesForAddressList(addressList) {
     var [spentBoxes, newBoxes] = await getSpentAndUnspentBoxesFromMempool(addressList);
     const spentInputBoxIds = spentBoxes.map(box => box.boxId);
     const adjustedUtxos = newBoxes.concat(boxList).flat().filter(box => !spentInputBoxIds.includes(box.boxId));
-    console.log("getUnspentBoxesForAddressList", spentBoxes, newBoxes, spentInputBoxIds, adjustedUtxos);
+    //console.log("getUnspentBoxesForAddressList", spentBoxes, newBoxes, spentInputBoxIds, adjustedUtxos);
     if (spentBoxes && Array.isArray(spentBoxes) && spentBoxes.length > 0) {
         memPoolTransaction = true;
         var cache_spentBoxes = await ls_slim_get('cache_spentBoxes') ?? [];
@@ -310,22 +300,6 @@ async function getAddressListContent(addressList) {
         return { address: address, content: addressContent };
     }));
     return addressContentList;
-}
-function getUtxosListValue(utxos) {
-    return utxos.reduce((acc, utxo) => acc += BigInt(utxo.nanoErgs), BigInt(0));
-}
-function getTokenListFromUtxos(utxos) {
-    var tokenList = {};
-    for (const i in utxos) {
-        for (const j in utxos[i].assets) {
-            if (utxos[i].assets[j].tokenId in tokenList) {
-                tokenList[utxos[i].assets[j].tokenId] = parseInt(tokenList[utxos[i].assets[j].tokenId]) + parseInt(utxos[i].assets[j].amount);
-            } else {
-                tokenList[utxos[i].assets[j].tokenId] = parseInt(utxos[i].assets[j].amount);
-            }
-        }
-    }
-    return tokenList;
 }
 async function getUnconfirmedTxsFor(addr) {
     return getRequest(`/transactions/unconfirmed/byAddress/${addr}`)
@@ -366,15 +340,15 @@ async function getSpentAndUnspentBoxesFromMempool(addressList) {
 
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    console.log("background addListener", message, sender, sendResponse);
+    //console.log("background addListener", message, sender, sendResponse);
     if (message.channel === 'safew_contentscript_background_channel') {
         if (message.data && message.data.type === "connect") {
             const walletFound = (getConnectedWalletName(message.data.url) !== null);
-            console.log("background walletFound", walletFound);
+            //console.log("background walletFound", walletFound);
             if (walletFound) {
-                console.log("background walletFound");
+                //console.log("background walletFound");
                 if (isFirefox) {
-                    console.log("background firefox response");
+                    //console.log("background firefox response");
                     sendResponse({
                         type: "connect_response",
                         result: true,
@@ -418,9 +392,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
         if (message.data && message.data.type === "ergo_api") {
             const wallet = getConnectedWalletByURL(message.data.url);
-            console.log("wallet", wallet);
+            //console.log("wallet", wallet);
             const addressList = wallet.accounts.map(account => account.addresses).flat();
-            console.log("background ergo_api", wallet, addressList);
+            //console.log("background ergo_api", wallet, addressList);
             if (message.data.func === "ping") {
                 sendResponse({
                     type: "ergo_api_response",

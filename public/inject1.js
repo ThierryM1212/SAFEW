@@ -75,7 +75,7 @@ window.ergopay_get_request = function (url) {
 }
 
 window.addEventListener("safew_contentscript_message", function (event) {
-    console.log("injected script listener ", event);
+    //console.log("injected script listener ", event);
     if (event.type && event.type == "safew_contentscript_message") {
         if (event.detail && event.detail.type && event.detail.type === "connect_response") {
             //console.log("response connect listener", event, connectRequests);
@@ -87,7 +87,7 @@ window.addEventListener("safew_contentscript_message", function (event) {
             }
         }
         if (event.detail && event.detail.type && event.detail.type === "ergo_api_response") {
-            console.log("ergo_api", event.detail, responseHandlers)
+            //console.log("ergo_api", event.detail, responseHandlers)
             const responseHandler = responseHandlers.get(event.detail.requestId);
             responseHandlers.delete(event.detail.requestId);
             if (event.detail.result) {
@@ -99,3 +99,5 @@ window.addEventListener("safew_contentscript_message", function (event) {
         return true;
     }
 });
+
+console.log("[SAFEW] ErgoAPIini injected");
