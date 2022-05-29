@@ -1,5 +1,5 @@
 import React, { Fragment } from 'react';
-import { LS } from '../utils/utils';
+import { LS, sleep } from '../utils/utils';
 
 /* global chrome */
 
@@ -71,6 +71,7 @@ export default class ConnectWalletPopup extends React.Component {
                 tabId: this.state.tabId,
             }
         });
+        sleep(100); // wait for the message to reach the page
         window.close();
     }
 

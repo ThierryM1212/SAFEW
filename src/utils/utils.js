@@ -5,6 +5,15 @@ var CryptoJS = require("crypto-js");
 
 export const delay = ms => new Promise(res => setTimeout(res, ms));
 
+export function sleep(ms) {
+    const start = new Date().getTime();
+    for (let i = 0; i < 1e7; i++) {
+        if (new Date().getTime() - start > ms) {
+            break;
+        }
+    }
+}
+
 export function rgbToHex(r, g, b) {
     return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
 }
@@ -91,16 +100,16 @@ export const LS = {
         });
     },
     getItem: (key) => {
-        return new Promise(function(resolve, reject) {
-            chrome.storage.local.get(key, function(items) {
-              if (chrome.runtime.lastError) {
-                console.error(chrome.runtime.lastError.message);
-                reject(chrome.runtime.lastError.message);
-              } else {
-                resolve(items[key]);
-              }
+        return new Promise(function (resolve, reject) {
+            chrome.storage.local.get(key, function (items) {
+                if (chrome.runtime.lastError) {
+                    console.error(chrome.runtime.lastError.message);
+                    reject(chrome.runtime.lastError.message);
+                } else {
+                    resolve(items[key]);
+                }
             });
-          });
+        });
     },
     setItem: (key, val) => {
         //console.log("setItem", key, val)
