@@ -11,7 +11,7 @@ import { sampleTxErgodex, TX_FEE_ERGO_TREE } from '../utils/constants';
 import { decryptMnemonic, formatERGAmount, formatTokenAmount, getConnectedWalletByURL, getUnconfirmedTransactionsForAddressList, getWalletAddressList, getWalletById, getWalletUsedAddressList } from '../utils/walletUtils';
 import BigQRCode from './BigQRCode';
 import JSONBigInt from 'json-bigint';
-import { LS, ls_slim_get } from '../utils/utils';
+import { LS, ls_slim_get, sleep } from '../utils/utils';
 
 /* global chrome */
 
@@ -178,6 +178,7 @@ export default class SignPopup extends React.Component {
                     requestId: this.state.requestId,
                 }
             });
+            sleep(100);
             window.close();
             return;
         }
@@ -211,6 +212,7 @@ export default class SignPopup extends React.Component {
                 requestId: this.state.requestId,
             }
         });
+        sleep(100);
         window.close();
     }
 
