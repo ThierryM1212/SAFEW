@@ -1,4 +1,4 @@
-class NautilusErgoApi {
+class SafewErgoApi {
     connect() {
         return new Promise(function (resolve, reject) {
             window.dispatchEvent(
@@ -74,6 +74,6 @@ class NautilusErgoApi {
     }
 }
 
-const ergo = Object.freeze(new NautilusErgoApi());
-console.log("[SAFEW] NautilusErgoApi injected");
+const ergo = Object.freeze(new SafewErgoApi());
+console.log("[SAFEW] SafewErgoApi injected");
 
