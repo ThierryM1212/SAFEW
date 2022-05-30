@@ -53,7 +53,7 @@ export default class Account extends React.Component {
                     const mnemonic = decryptMnemonic(wallet.mnemonic, password);
                     if (mnemonic !== '') {
                         const newAddr = await getAddress(mnemonic, accountId, maxAddrIndex + 1);
-                        console.log("newAddr", newAddr);
+                        //console.log("newAddr", newAddr);
                         wallet.accounts[accountId].addresses = [...wallet.accounts[accountId].addresses, { id: maxAddrIndex + 1, address: newAddr, used: false }];
                         updateWallet(wallet, this.state.walletId);
                         successAlert("Address " + newAddr + " added")
@@ -68,7 +68,7 @@ export default class Account extends React.Component {
                 if (wallet.type === 'ledger') {
                     try {
                         const newAddress = await getNewAddress(wallet, accountId);
-                        console.log('ledger',wallet.accounts[accountId]);
+                        //console.log('ledger',wallet.accounts[accountId]);
                         wallet.accounts[accountId].addresses = [...wallet.accounts[accountId].addresses, newAddress];
                         updateWallet(wallet, this.state.walletId);
                         successAlert("Address " + newAddress.address + " added")
