@@ -75,10 +75,6 @@ sign_tx_input, sign_data and add_external_box are not implemented yet
 
 Same ergo_request_read_access and ergo_check_read_access than Yoroi method are declared to ensure the compatibility of existing dApp using Yoroi.
 
-## Next steps ?
-Ledger signing (Waiting on ledger-ergo-app fix)<br/>
-<br/>
-
 ## Sample screens
 ![Wallet list image](./screens/main_page.png)
 ![Send multi-asset](./screens/send_multiasset.png)
