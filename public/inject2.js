@@ -12,7 +12,14 @@ class SafewErgoApi {
         });
     }
 
-    isConnected() {   
+    disconnect() {
+        if (ergo) {
+            return this._ergo_rpc_call("disconnect");
+        }
+        return Promise.reject();
+    }
+
+    isConnected() {
         return Promise.resolve(true);
     }
 

@@ -180,11 +180,28 @@ function getConnectedWalletName(url) {
     for (const walletName of Object.keys(connectedSites)) {
         //console.log("getConnectedWalletName test", connectedSites[walletName], connectedSites[walletName].includes(url));
         if (connectedSites[walletName].includes(url)) {
-
             return walletName;
         }
     }
     return null;
+}
+function disconnectSite(url) {
+    const connectedSites = local_storage['connectedSites'] ?? {};
+    var newConnectedSites = {};
+    var connectionFound = false;
+    for (const walletName of Object.keys(connectedSites)) {
+        if (connectedSites[walletName].includes(url)) {
+            connectionFound = true;
+        }
+        const newList = connectedSites[walletName].filter(site => site !== url)
+        if (newList.length > 0) {
+            newConnectedSites[walletName] = newList;
+        }
+    }
+    LS.setItem('connectedSites', newConnectedSites);
+    local_storage['connectedSites'] = newConnectedSites;
+    //console.log("disconnectSite", connectedSites, newConnectedSites, connectionFound)
+    return connectionFound;
 }
 function getConnectedWalletByURL(url) {
     const walletName = getConnectedWalletName(url);
@@ -393,6 +410,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         if (message.data && message.data.type === "ergo_api") {
             const wallet = getConnectedWalletByURL(message.data.url);
             //console.log("wallet", wallet);
+            if (message.data.func === "disconnect") {
+                console.log("Disconnecting", message.data.url);
+                const disconnectSuccess = disconnectSite(message.data.url);
+                sendResponse({
+                    type: "ergo_api_response",
+                    result: disconnectSuccess,
+                    data: message.data.url,
+                    requestId: message.data.requestId,
+                });
+                return;
+            }
             const addressList = wallet.accounts.map(account => account.addresses).flat();
             //console.log("background ergo_api", wallet, addressList);
             if (message.data.func === "ping") {
