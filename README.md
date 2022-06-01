@@ -151,3 +151,8 @@ v0.6.2
 - Update ergo-lib-wasm-browser from 0.15.0 to 0.16.1
 - Allow Nautilus and SAFEW to be activated at the same time
 - Fixes for Chrome 102
+
+v0.6.3
+- dApp connector disconnect feature
+- fix cancel connection response
+- update icons
