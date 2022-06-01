@@ -43,6 +43,9 @@ window.addEventListener('safew_injected_script_message', (event) => {
                     ergoApiInjected = true;
                 }
             }
+            if (response.type && response.type === "disconnect_response" && response.result) {
+                ergoApiInjected = false;
+            }
             var newresp = {};
             if (isFirefox) {
                 newresp = cloneInto(response, window.document.defaultView);

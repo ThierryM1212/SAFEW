@@ -375,8 +375,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 } else {
                     getTabId().then(tabId => {
                         console.log("background walletFound", tabId);
-
-
                         chrome.scripting.executeScript({
                             target: { tabId: parseInt(tabId), allFrames: true },
                             files: ['inject2.js'],
@@ -407,20 +405,21 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
         }
 
+        if (message.data && message.data.type ===  "disconnect") {
+            console.log("Disconnecting", message.data.url);
+            const disconnectSuccess = disconnectSite(message.data.url);
+            sendResponse({
+                type: "disconnect_response",
+                result: disconnectSuccess,
+                url: message.data.url,
+            });
+            return;
+        }
+
         if (message.data && message.data.type === "ergo_api") {
             const wallet = getConnectedWalletByURL(message.data.url);
             //console.log("wallet", wallet);
-            if (message.data.func === "disconnect") {
-                console.log("Disconnecting", message.data.url);
-                const disconnectSuccess = disconnectSite(message.data.url);
-                sendResponse({
-                    type: "ergo_api_response",
-                    result: disconnectSuccess,
-                    data: message.data.url,
-                    requestId: message.data.requestId,
-                });
-                return;
-            }
+            
             const addressList = wallet.accounts.map(account => account.addresses).flat();
             //console.log("background ergo_api", wallet, addressList);
             if (message.data.func === "ping") {

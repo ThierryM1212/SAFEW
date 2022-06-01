@@ -18,6 +18,23 @@ class ErgoAPIini {
         });
     }
 
+    disconnect() {
+        if (ergo) {
+            return new Promise(function (resolve, reject) {
+                window.dispatchEvent(
+                    new CustomEvent('safew_injected_script_message', {
+                        detail: {
+                            type: "disconnect",
+                            url: window.location.origin,
+                        }
+                    }));
+                connectRequests.push({ resolve: resolve, reject: reject });
+            });
+        } else {
+            return Promise.reject();
+        }
+    }
+
     isConnected() {
         if (typeof ergo !== "undefined") {
             try {
@@ -77,13 +94,16 @@ window.ergopay_get_request = function (url) {
 window.addEventListener("safew_contentscript_message", function (event) {
     //console.log("injected script listener ", event);
     if (event.type && event.type == "safew_contentscript_message") {
-        if (event.detail && event.detail.type && event.detail.type === "connect_response") {
-            //console.log("response connect listener", event, connectRequests);
+        if (event.detail && event.detail.type
+            && (event.detail.type === "connect_response" || event.detail.type === "disconnect_response")) {
             if (event.detail.err !== undefined) {
                 connectRequests.forEach(promise => promise.reject(event.detail.err));
             } else {
                 connectRequests.forEach(promise => promise.resolve(event.detail.result));
                 connectRequests = [];
+                if(event.detail.type === "disconnect_response" && ergo) {
+                    ergo = undefined;
+                }
             }
         }
         if (event.detail && event.detail.type && event.detail.type === "ergo_api_response") {
