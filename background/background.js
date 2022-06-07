@@ -592,32 +592,31 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         if (message.data && message.data.type && message.data.type === "connect_response") {
             const responseHandler = connectResponseHandlers.get(message.data.url);
             connectResponseHandlers.delete(message.data.url);
-            console.log("connected")
-
-            if (isFirefox) {
-                console.log("firefox connected")
-                responseHandler(message.data)
-                return;
+            if (message.data.result) {
+                if (isFirefox) {
+                    //console.log("firefox connected")
+                    responseHandler(message.data)
+                    return;
+                } else {
+                    //console.log("chrome connected")
+                    chrome.scripting.executeScript({
+                        target: { tabId: parseInt(message.data.tabId), allFrames: true },
+                        files: ['inject2.js'],
+                        world: "MAIN",
+                        injectImmediately: true,
+                    },
+                        () => { responseHandler(message.data) })
+                }
             } else {
-                chrome.scripting.executeScript({
-                    target: { tabId: parseInt(message.data.tabId), allFrames: true },
-                    files: ['inject2.js'],
-                    world: "MAIN",
-                    injectImmediately: true,
-                },
-                    () => { responseHandler(message.data) })
+                console.log("[SAFEW] Connection failed")
             }
-
-            //insertScript(message.data.tabId).then(responseHandler(message.data));
             return true;
         }
         if (message.data && message.data.type && message.data.type === "ergo_api_response") {
             const responseHandler = signResponseHandlers.get(message.data.requestId);
             signResponseHandlers.delete(message.data.requestId);
             responseHandler(message.data);
-            //if(!isFirefox) {
-                return true;
-            //}
+            return true;
         }
     }
 
