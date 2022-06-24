@@ -156,3 +156,11 @@ v0.6.3
 - dApp connector disconnect feature
 - fix cancel connection response
 - update icons
+
+v0.6.4
+- fix "Cancel connect" handling
+- add "SAFEW" keyword in the title to be found on the store
+
+v0.6.5
+- improve CSV export: review the format, remove 500 transaction limit, allow export by address
+- fix isConnected ergoConnector function to really check if safew is connected
