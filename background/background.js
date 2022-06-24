@@ -185,6 +185,15 @@ function getConnectedWalletName(url) {
     }
     return null;
 }
+function isConnected(url) {
+    const connectedSites = local_storage['connectedSites'] ?? {};
+    for (const walletName of Object.keys(connectedSites)) {
+        if (connectedSites[walletName].includes(url)) {
+            return true;
+        }
+    }
+    return false;
+}
 function disconnectSite(url) {
     const connectedSites = local_storage['connectedSites'] ?? {};
     var newConnectedSites = {};
@@ -411,6 +420,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             sendResponse({
                 type: "disconnect_response",
                 result: disconnectSuccess,
+                url: message.data.url,
+            });
+            return;
+        }
+
+        if (message.data && message.data.type ===  "is_connected") {
+            console.log("is_connected", message.data.url);
+            sendResponse({
+                type: "is_connected_response",
+                result: isConnected(message.data.url),
                 url: message.data.url,
             });
             return;

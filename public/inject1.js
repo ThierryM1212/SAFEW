@@ -37,11 +37,16 @@ class ErgoAPIini {
 
     isConnected() {
         if (typeof ergo !== "undefined") {
-            try {
-                return (typeof ergo.get_balance !== "undefined");
-            } catch (e) {
-                return false;
-            }
+            return new Promise(function (resolve, reject) {
+                window.dispatchEvent(
+                    new CustomEvent('safew_injected_script_message', {
+                        detail: {
+                            type: "is_connected",
+                            url: window.location.origin,
+                        }
+                    }));
+                connectRequests.push({ resolve: resolve, reject: reject });
+            });
         } else {
             return false;
         }
@@ -95,7 +100,7 @@ window.addEventListener("safew_contentscript_message", function (event) {
     //console.log("injected script listener ", event);
     if (event.type && event.type == "safew_contentscript_message") {
         if (event.detail && event.detail.type
-            && (event.detail.type === "connect_response" || event.detail.type === "disconnect_response")) {
+            && (event.detail.type === "connect_response" || event.detail.type === "disconnect_response" || event.detail.type === "is_connected_response")) {
             if (event.detail.err !== undefined) {
                 connectRequests.forEach(promise => promise.reject(event.detail.err));
             } else {
