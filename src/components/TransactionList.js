@@ -1,4 +1,5 @@
 import React, { Fragment } from 'react';
+import Select from 'react-select';
 import { waitingAlert } from '../utils/Alerts';
 import { getAddressListContent, getTransactionsForAddressList, getUnconfirmedTransactionsForAddressList, getWalletAddressList, getWalletById } from '../utils/walletUtils';
 import AddressListContent from './AddressListContent';
@@ -20,6 +21,8 @@ export default class TransactionList extends React.Component {
             limit: 5,
             numberOfTransactions: 0,
             wallet: undefined,
+            addressList: ["All"],
+            selectedAddress: '',
         };
         this.updateTransactionList = this.updateTransactionList.bind(this);
         this.setLimit = this.setLimit.bind(this);
@@ -28,6 +31,13 @@ export default class TransactionList extends React.Component {
     setLimit = (limit) => {
         this.setState({ limit: limit });
     }
+
+    setExportedAddress = (addr) => {
+        console.log("edit wallet setExportedAddress", addr)
+        this.setState({
+            selectedAddress: addr.value
+        });
+    };
 
     async updateTransactionList(showAlert = true) {
         var alert = "";
@@ -61,7 +71,10 @@ export default class TransactionList extends React.Component {
 
     async componentDidMount() {
         const wallet = await getWalletById(this.state.walletId);
-        this.setState({ wallet: wallet });
+        var addressList = getWalletAddressList(wallet);
+        addressList.unshift('All');
+        var optionsChangeAdresses = addressList.map(address => ({ value: address, label: address }));
+        this.setState({ wallet: wallet, addressList: addressList, selectedAddress: addressList[0] });
         await this.updateTransactionList(true);
     }
 
@@ -95,9 +108,47 @@ export default class TransactionList extends React.Component {
         if (this.state.wallet) {
             walletColor = this.state.wallet.color;
         }
+        var optionsExportAdresses = this.state.addressList.map(address => ({ value: address, label: address }));
+        optionsExportAdresses[0].label = "All addresses";
+        const customStyles = {
+            menu: (base) => ({
+                ...base,
+                width: "max-content",
+                minWidth: "100%"
+           }),
+          };
 
         return (
+
             <Fragment>
+                <div className='container card m-1 p-1 d-flex flex-column w-75 '
+                    style={{
+                        borderColor: `rgba(${walletColor.r},${walletColor.g},${walletColor.b}, 0.95)`,
+                    }}
+                >
+                    <div className='m-1 p-1 d-flex flex-row justify-content-between align-items-center'>
+                        <div className='d-flex flex-column'>
+                            <h4>CSV export</h4>
+                        </div>
+                        <div className='d-flex flex-column'>
+                            <Select className='selectReact'
+                                value={{ value: this.state.selectedAddress, label: this.state.selectedAddress }}
+                                onChange={this.setExportedAddress}
+                                options={optionsExportAdresses}
+                                isSearchable={false}
+                                isMulti={false}
+                                styles={customStyles}
+                            />
+                        </div>
+                        <div className='d-flex flex-column'>
+                            <DownloadTxListCSV
+                                walletId={this.state.walletId}
+                                address={this.state.selectedAddress}
+                                numberOfTransactions={this.state.numberOfTransactions} />
+                        </div>
+                    </div>
+                </div>
+                <br/>
                 <div className='container card m-1 p-1 d-flex flex-column w-75 '
                     style={{
                         borderColor: `rgba(${walletColor.r},${walletColor.g},${walletColor.b}, 0.95)`,
@@ -119,9 +170,7 @@ export default class TransactionList extends React.Component {
                                     tips={"Wallet list"}
                                     onClick={() => this.state.setPage('home')}
                                 />
-                                <DownloadTxListCSV
-                                    walletId={this.state.walletId}
-                                    numberOfTransactions={this.state.numberOfTransactions} />
+
                                 <ImageButton
                                     id={"refreshTransactionPage"}
                                     color={"blue"}

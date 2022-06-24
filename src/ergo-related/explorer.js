@@ -1,5 +1,5 @@
 import { DEFAULT_EXPLORER_API_ADDRESS } from '../utils/constants';
-import { LS } from '../utils/utils';
+import { LS, range } from '../utils/utils';
 import { get, postTx } from './rest';
 
 
@@ -103,10 +103,26 @@ export async function getBalanceForAddress(addr) {
 
 export async function getTransactionsForAddress(addr, limit = -1) {
     if (limit > 0) {
-        return getRequestV1(
-            `/addresses/${addr}/transactions?limit=${limit}`, SHORT_CACHE
-        )
-            .then((res) => res.data);
+        if (limit <= 100) {
+            return getRequestV1(
+                `/addresses/${addr}/transactions?limit=${limit}`, SHORT_CACHE
+            )
+                .then((res) => res.data);
+        } else {
+            const offsets = range(0, limit, 100);
+            const addressTransactionsList = await Promise.all(offsets.map(async (offset) => {
+                const tx = await getRequestV1(`/addresses/${addr}/transactions?limit=100&offset=${offset}`, SHORT_CACHE)
+                return tx.data;
+            }));
+            var items = []; var total = 0;
+            console.log("addressTransactionsList",addressTransactionsList);
+            for (const txList of addressTransactionsList) {
+                items = items.concat(txList.items);
+                total += parseInt(txList.total);
+            }
+            console.log("items", items, total)
+            return {"items": items, "total": total};
+        }
     } else {
         return getRequestV1(
             `/addresses/${addr}/transactions`

@@ -1,24 +1,30 @@
 import React, { Fragment } from 'react';
 import { CSVLink } from "react-csv";
+import { getTransactionsForAddress } from '../ergo-related/explorer';
 import { getUtxoBalanceForAddressList } from '../ergo-related/utxos';
 import { errorAlert, promptNumTx, waitingAlert } from '../utils/Alerts';
 import { NANOERG_TO_ERG } from '../utils/constants';
+import { ISODateFromTimestamp, split } from '../utils/utils';
 import { formatTokenAmount, getTransactionsForAddressList, getWalletAddressList, getWalletById } from "../utils/walletUtils";
 import ImageButton from './ImageButton';
 
 export default class DownloadTxListCSV extends React.Component {
     constructor(props) {
+        console.log("DownloadTxListCSV constructor")
         super(props);
         this.state = {
             walletId: props.walletId,
+            address: props.address,
             numberOfTransactions: props.numberOfTransactions,
             data: [],
             headers: [
-                { label: "transactionId", key: "transactionId" },
                 { label: "Date", key: "date" },
                 { label: "Asset Name", key: "assetName" },
                 { label: "Balance", key: "balance" },
+                { label: "Fee amount", key: "feeAmount" },
+                { label: "Fee currency", key: "feeCurrency" },
                 { label: "tokenId", key: "tokenId" },
+                { label: "transactionId", key: "transactionId" },
             ],
             loading: false,
             wallet: undefined,
@@ -41,6 +47,7 @@ export default class DownloadTxListCSV extends React.Component {
     }
 
     async componentDidMount() {
+        console.log("DownloadTxListCSV componentDidMount")
         const wallet = await getWalletById(this.state.walletId);
         this.setState({ wallet: wallet })
     }
@@ -49,6 +56,11 @@ export default class DownloadTxListCSV extends React.Component {
         if (prevProps.numberOfTransactions !== this.props.numberOfTransactions) {
             this.setState({
                 numberOfTransactions: this.props.numberOfTransactions,
+            });
+        }
+        if (prevProps.address !== this.props.address) {
+            this.setState({
+                address: this.props.address,
             });
         }
     }
@@ -73,7 +85,9 @@ export default class DownloadTxListCSV extends React.Component {
                 const alert = waitingAlert("Loading transactions...");
                 const wallet = await getWalletById(this.state.walletId);
                 const walletAddressList = getWalletAddressList(wallet);
-                const allTxList = (await getTransactionsForAddressList(walletAddressList, numberOfTx))
+                var allTxList = [], allTxList2 = [];
+                if (this.state.address === 'All') {
+                    allTxList2 = (await getTransactionsForAddressList(walletAddressList, numberOfTx))
                     .map(res => res.transactions)
                     .flat()
                     .filter((t, index, self) => {
@@ -81,41 +95,58 @@ export default class DownloadTxListCSV extends React.Component {
                     })
                     .sort(function (a, b) {
                         return a.numConfirmations - b.numConfirmations;
-                    });
-
-                const transactionBalances = await Promise.all(allTxList.map(async (transaction) => {
+                    })
+                    .slice(0, numberOfTx);
+                } else {
+                    allTxList = (await getTransactionsForAddress(this.state.address, numberOfTx));
+                    allTxList2 = allTxList.items
+                        .filter((t, index, self) => {
+                            return self.findIndex(tx => tx.id === t.id) === index;
+                        })
+                        .sort(function (a, b) {
+                            return a.numConfirmations - b.numConfirmations;
+                        });
+                    console.log("exportCSVTransactionList0", allTxList2);
+                }
+                
+                const transactionBalances = await Promise.all(allTxList2.map(async (transaction) => {
                     if (!(transaction && transaction.inputs && transaction.outputs)) {
-                        throw "Fail to get transactions for " + wallet.name;
+                        throw "Fail to get transactions for " + this.state.address;
                     }
                     const balance = await getUtxoBalanceForAddressList(transaction.inputs, transaction.outputs, walletAddressList);
                     return balance;
                 }));
                 alert.close();
-                console.log("exportCSVTransactionList", allTxList, transactionBalances);
+                console.log("exportCSVTransactionList", allTxList2, transactionBalances);
                 var csvList = [];
-                for (const i in allTxList) {
-                    const tx = allTxList[i];
+                for (const i in allTxList2) {
+                    const tx = allTxList2[i];
                     const bal = transactionBalances[i];
                     var line = {};
                     var txDate = new Intl.DateTimeFormat();
                     if ("timestamp" in tx) {
-                        txDate = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'long', timeZone: 'UTC' }).format(new Date(tx.timestamp));
+                        console.log("timestamp", tx.timestamp);
+                        txDate = ISODateFromTimestamp(tx.timestamp);
                     } else {
-                        txDate = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'long', timeZone: 'UTC' }).format(new Date(tx.creationTimestamp));
+                        txDate = ISODateFromTimestamp(tx.creationTimestamp);
                     }
-                    line["transactionId"] = tx.id;
                     line["date"] = txDate;
                     line["assetName"] = "ERG";
                     line["balance"] = parseFloat(parseInt(bal.value) / NANOERG_TO_ERG).toString();
+                    line["feeAmount"] = parseFloat(parseInt(bal.fee) / NANOERG_TO_ERG).toString();
+                    line["feeCurrency"] = "ERG";
                     line["tokenId"] = "";
+                    line["transactionId"] = tx.id;
                     csvList.push(line);
                     for (const tok of bal.tokens) {
                         line = {};
-                        line["transactionId"] = tx.id;
                         line["date"] = txDate;
                         line["assetName"] = tok.name;
-                        line["balance"] = formatTokenAmount(tok.amount, tok.decimals);
+                        line["balance"] = formatTokenAmount(tok.amount, tok.decimals).replaceAll(',','');
+                        line["feeAmount"] = "";
+                        line["feeCurrency"] = "";
                         line["tokenId"] = tok.tokenId;
+                        line["transactionId"] = tx.id;
                         csvList.push(line);
                     }
                 }
@@ -129,10 +160,14 @@ export default class DownloadTxListCSV extends React.Component {
 
     render() {
         const csvDelimiter = this.getListSeparator();
+        var fileLabel = this.state.address;
+        if (fileLabel === "All" && this.state.wallet) {
+            fileLabel = this.state.wallet.name;
+        }
         return (
             <Fragment>
                 {
-                    this.state.wallet ?
+                    this.state.address ?
                         <div>
                             <ImageButton
                                 id={"exportCSVTransactionList"}
@@ -143,7 +178,7 @@ export default class DownloadTxListCSV extends React.Component {
                             />
                             <CSVLink
                                 headers={this.state.headers}
-                                filename={"export_transactions_" + this.state.wallet.name + ".csv"}
+                                filename={"export_transactions_" + fileLabel + "_" + ISODateFromTimestamp(Date.now()).replaceAll(' ','_') +".csv"}
                                 data={this.state.data}
                                 ref={this.csvLinkEl}
                                 enclosingCharacter={`"`}

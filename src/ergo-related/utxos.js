@@ -1,4 +1,4 @@
-import { VERIFIED_TOKENS } from "../utils/constants";
+import { TX_FEE_ERGO_TREE, VERIFIED_TOKENS } from "../utils/constants";
 import { ls_slim_flush, ls_slim_get, ls_slim_set } from "../utils/utils";
 import { getUnconfirmedTransactionsForAddressList } from "../utils/walletUtils";
 import { boxByBoxId, currentHeight, getTokenBoxV1, unspentBoxesForV1 } from "./explorer";
@@ -302,7 +302,7 @@ function isDict(v) {
 }
 
 async function getUtxoContentForAddressList(utxos, addressList, input0BoxId = "") {
-    var value = BigInt(0), tokens = [];
+    var value = BigInt(0), tokens = [], fee = 0;
     //console.log("getUtxoContentForAddressList_0", utxos, addressList)
     const cache_newBoxes = await ls_slim_get('cache_newBoxes') ?? [];
     //console.log("getUtxoContentForAddressList cache_newBoxes", cache_newBoxes);
@@ -329,6 +329,10 @@ async function getUtxoContentForAddressList(utxos, addressList, input0BoxId = ""
                     console.log(e);
                 }
             }
+        }
+        if (utxo.ergoTree === TX_FEE_ERGO_TREE) {
+            fee = utxo.value;
+            console.log('tx fee found', fee);
         }
         if (addressList.includes(utxo.address)) {
             //console.log("getUtxoContentForAddressList_3")
@@ -364,7 +368,7 @@ async function getUtxoContentForAddressList(utxos, addressList, input0BoxId = ""
             }
         }
     }
-    return { value: value, tokens: tokens };
+    return { value: value, tokens: tokens, fee: fee };
 }
 
 export async function getUtxoBalanceForAddressList(inputs, outputs, addressList) {
@@ -412,7 +416,7 @@ function buildBalance(inputBal, outputBal) {
         }
     }
     //console.log("buildBalance2", inputBal, outputBal, balValue, balTokens);
-    return { value: balValue, tokens: balTokens };
+    return { value: balValue, tokens: balTokens, fee: outputBal.fee };
 }
 
 export async function getUnspentBoxesForAddressList(addressList) {

@@ -162,3 +162,23 @@ export function convertToHex(str) {
     }
     return hex;
 }
+
+export function range(start, end, interval = 0) {
+    let arr = [];
+    interval = interval > 0 ? interval - 1 : 0
+    for (let i = start; i < end; i++) {
+        arr.push(i)
+        i += interval;
+    }
+    return arr
+}
+
+export function ISODateFromTimestamp(timestamp) {
+    return new Date(timestamp).toISOString().split('T')[0] + ' ' + new Date(timestamp).toISOString().split('T')[1].split('.')[0] + ' UTC';
+}
+
+export function split(str, index) {
+    const result = [str.slice(0, index), str.slice(index)];
+
+    return result;
+}

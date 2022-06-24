@@ -151,16 +151,15 @@ export function promptPassword(title, html, confirmText) {
 export function promptNumTx() {
     return new Promise(function (resolve, reject) {
         Swal.fire({
-            title: "Max number of transactions per address",
-            html: `<div><p>Maximum 500. Reduce that number if the export fails (mining wallet)</p><input type="text" id="txNum" class="swal2-input" placeholder="Max 500"></div>`,
+            title: "Max number of transactions",
+            html: `<div><input type="text" id="txNum" class="swal2-input" placeholder="number of transactions"></div>`,
             confirmButtonText: "export",
             focusConfirm: false,
             showCancelButton: true,
             preConfirm: () => {
                 const txNum = Swal.getPopup().querySelector('#txNum').value;
-
-                if (!txNum || !txNum.match(/^[0-9]+$/) || parseInt(txNum) > 500) {
-                    Swal.showValidationMessage(`The number of transaction per address must be from 0 to 500`);
+                if (!txNum || !txNum.match(/^[0-9]+$/) ) {
+                    Swal.showValidationMessage(`The number of transaction is invalid`);
                 }
                 return { txNum: txNum };
             }
