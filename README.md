@@ -164,3 +164,8 @@ v0.6.4
 v0.6.5
 - improve CSV export: review the format, remove 500 transaction limit, allow export by address
 - fix isConnected ergoConnector function to really check if safew is connected
+
+v0.6.6
+- get headers from Explorer rather than node
+- fix loading of unconfirmed transactions in Transaction Builder
+- fix isConnected to return a promise

@@ -114,7 +114,7 @@ export default class TxBuilder extends React.Component {
         const initTx = this.state.initTx;
         if (initTx.inputs && initTx.outputs && initTx.dataInputs) {
             try {
-                this.loadTxFromJson(initTx);
+                await this.loadTxFromJson(initTx);
             } catch (e) {
                 errorAlert("failed to load transaction: " + e.toString());
             }
@@ -409,7 +409,7 @@ export default class TxBuilder extends React.Component {
     async setErgoPayTx() {
         var txId = '', txReducedB64safe = '';
         try {
-            [txId, txReducedB64safe] = await getTxReducedB64Safe(this.getTransaction(), this.state.selectedBoxList);
+            [txId, txReducedB64safe] = await getTxReducedB64Safe(this.getTransaction(), this.state.selectedBoxList, this.state.selectedDataBoxList);
             var intervalId = setInterval(this.timer, 3000);
             this.setState({
                 ergoPayTxId: txId,
@@ -441,8 +441,10 @@ export default class TxBuilder extends React.Component {
     }
 
     async loadTxFromJson(json) {
+        console.log("loadTxFromJson", json);
         var jsonFixed = json;
         if ("tx" in json) { jsonFixed = json.tx; }
+        console.log("loadTxFromJson2", jsonFixed);
         var alert = waitingAlert("Loading input boxes...")
         const inputs = await enrichUtxos(jsonFixed.inputs, true);
         const dataInputs = await enrichUtxos(jsonFixed.dataInputs, true);

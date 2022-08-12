@@ -97,7 +97,7 @@ export default class SignTransaction extends React.Component {
         const walletAddressList = getWalletAddressList(wallet);
 
         if (wallet.type === 'ergopay') {
-            const [txId, txReducedB64safe] = await getTxReducedB64Safe(jsonUnsignedTx, selectedUtxos);
+            const [txId, txReducedB64safe] = await getTxReducedB64Safe(jsonUnsignedTx, selectedUtxos, jsonUnsignedTx.dataInputs);
             var intervalId = setInterval(this.timer, 3000);
             this.setState({
                 ergoPayTxId: txId,

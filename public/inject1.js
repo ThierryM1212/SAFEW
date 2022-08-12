@@ -48,7 +48,7 @@ class ErgoAPIini {
                 connectRequests.push({ resolve: resolve, reject: reject });
             });
         } else {
-            return false;
+            return Promise.reject();
         }
     }
 

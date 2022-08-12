@@ -1,5 +1,6 @@
 import {Serializer} from "@coinbarn/ergo-ts";
 import JSONBigInt from 'json-bigint';
+import { getExplorerBlockHeaders } from "./explorer";
 import { getLastHeaders } from "./node";
 
 
@@ -136,7 +137,7 @@ export async function ergoTreeToTemplate(ergoTree) {
 
 
 export async function getErgoStateContext() {
-    const block_headers = (await ergolib).BlockHeaders.from_json(await getLastHeaders());
+    const block_headers = (await ergolib).BlockHeaders.from_json(await getExplorerBlockHeaders());
     const pre_header = (await ergolib).PreHeader.from_block_header(block_headers.get(0));
     return new (await ergolib).ErgoStateContext(pre_header, block_headers);
 }
@@ -186,7 +187,7 @@ export async function signTransaction(unsignedTx, inputs, dataInputs, wallet) {
     const inputBoxes = (await ergolib).ErgoBoxes.from_boxes_json(inputs);
     const dataInputsBoxes = (await ergolib).ErgoBoxes.from_boxes_json(dataInputs);
     const ctx = await getErgoStateContext();
-    //console.log("signTransaction2", unsignedTx, inputs, dataInputs);
+    //console.log("signTransaction2", unsignedTx, inputs, dataInputs, ctx);
     const signedTx = wallet.sign_transaction(ctx, unsignedTransaction, inputBoxes, dataInputsBoxes);
     return await signedTx.to_json();
 }

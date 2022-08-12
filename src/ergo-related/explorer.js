@@ -39,6 +39,10 @@ export async function unspentBoxesFor(address) {
     );
 }
 
+export async function getExplorerBlockHeaders() {
+    return getRequestV1(`/blocks/headers`).then((res) => res.data.items.slice(0,10));
+}
+
 export async function unspentBoxesForV1(address) {
     return getRequestV1(`/boxes/unspent/byAddress/${address}`).then(
         (res) => res.data.items

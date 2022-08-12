@@ -65,6 +65,7 @@ export function parseUtxos(utxos, addExtention, mode = 'input') {
 }
 
 export async function enrichUtxos(utxos, addExtension = false) {
+    console.log("enrichUtxos utxos", utxos);
     var utxosFixed = [];
     await ls_slim_flush();
     var cache_newBoxes = await ls_slim_get('cache_newBoxes') ?? [];
@@ -83,6 +84,12 @@ export async function enrichUtxos(utxos, addExtension = false) {
             box = cache_spentBoxes.find(b => b.boxId === utxos[i][key]);
         } else {
             box = await boxByBoxId(utxos[i][key]);
+
+            //console.log("enrichUtxos box", box);
+            if(!box && utxos[i]["address"]) {
+                const [spentBoxes, newBoxes] = getSpentAndUnspentBoxesFromMempool([utxos[i]["address"]]);
+                box = newBoxes.find(box => box.boxId === utxos[i][key]);
+            }
         }
         //console.log("enrichUtxos1", utxos[i][key]);
         var newAssets = []
@@ -206,10 +213,12 @@ export function generateSwaggerTx(json) {
 }
 
 export function getUtxosListValue(utxos) {
+    console.log("getUtxosListValue", utxos);
     return utxos.reduce((acc, utxo) => acc += BigInt(utxo.value), BigInt(0));
 }
 
 export function getTokenListFromUtxos(utxos) {
+    console.log("getTokenListFromUtxos", utxos);
     var tokenList = {};
     for (const i in utxos) {
         for (const j in utxos[i].assets) {
@@ -225,6 +234,7 @@ export function getTokenListFromUtxos(utxos) {
 
 export function enrichTokenInfoFromUtxos(utxos, tokInfo) {
     //[TOKENID_SIGUSD]: ['SigUSD', "token-sigusd.svg", 2],
+    console.log("enrichTokenInfoFromUtxos", utxos);
     var tokenInfo = { ...tokInfo };
     for (const i in utxos) {
         for (const j in utxos[i].assets) {

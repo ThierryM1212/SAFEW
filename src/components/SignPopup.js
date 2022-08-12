@@ -77,7 +77,10 @@ export default class SignPopup extends React.Component {
                     requestId: this.state.requestId,
                 }
             });
-            window.close();
+            if (!this.state.debug) {
+                await this.delay(100);
+                window.close();
+            }
         }
     }
 
@@ -109,7 +112,10 @@ export default class SignPopup extends React.Component {
                     requestId: requestId,
                 }
             });
-            window.close();
+            if (!this.state.debug) {
+                await this.delay(100);
+                window.close();
+            }
         }
 
         var wallet = await getConnectedWalletByURL(this.state.url);
@@ -178,8 +184,10 @@ export default class SignPopup extends React.Component {
                     requestId: this.state.requestId,
                 }
             });
-            sleep(100);
-            window.close();
+            if (!this.state.debug) {
+                await this.delay(100);
+                window.close();
+            }
             return;
         }
         //const res = await sendTx(signedTx);
@@ -212,8 +220,10 @@ export default class SignPopup extends React.Component {
                 requestId: this.state.requestId,
             }
         });
-        sleep(100);
-        window.close();
+        if (!this.state.debug) {
+            sleep(100);
+            window.close();
+        }
     }
 
     render() {
