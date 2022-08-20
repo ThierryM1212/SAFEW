@@ -31,7 +31,7 @@ class ErgoAPIini {
                 connectRequests.push({ resolve: resolve, reject: reject });
             });
         } else {
-            return Promise.reject();
+            return Promise.resolve(false);
         }
     }
 
@@ -48,7 +48,7 @@ class ErgoAPIini {
                 connectRequests.push({ resolve: resolve, reject: reject });
             });
         } else {
-            return Promise.reject();
+            return Promise.resolve(false);
         }
     }
 
