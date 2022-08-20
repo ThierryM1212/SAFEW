@@ -1,13 +1,13 @@
 import { discoverAddresses } from "../ergo-related/ergolibUtils";
-import { addressHasTransactions, getBalanceForAddress, getTransactionsForAddress, getUnconfirmedTxsFor } from "../ergo-related/explorer";
+import { addressHasTransactions, getBalanceForAddress, getTransactionsForAddress } from "../ergo-related/explorer";
 import { NANOERG_TO_ERG, PASSWORD_SALT, WALLET_VERSION } from "./constants";
 import '@sweetalert2/theme-dark/dark.css';
 import { enrichUtxos } from "../ergo-related/utxos";
 import { hexToRgbA } from "./utils";
 import { ExplorerTokenMarket } from 'ergo-market-lib/dist/ExplorerTokenMarket';
 import { LS } from '../utils/utils';
+import { getUnconfirmedTxsFor } from "../ergo-related/node";
 var CryptoJS = require("crypto-js");
-
 
 
 export const MIN_CHAR_WALLET_NAME = 3;

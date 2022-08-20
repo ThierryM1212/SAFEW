@@ -2,6 +2,7 @@ import { TX_FEE_ERGO_TREE, VERIFIED_TOKENS } from "../utils/constants";
 import { ls_slim_flush, ls_slim_get, ls_slim_set } from "../utils/utils";
 import { getUnconfirmedTransactionsForAddressList } from "../utils/walletUtils";
 import { boxByBoxId, currentHeight, getTokenBoxV1, unspentBoxesForV1 } from "./explorer";
+import { boxByIdMempool } from "./node";
 import { decodeString, encodeContract, ergoTreeToAddress } from "./serializer";
 
 /* global BigInt */
@@ -83,10 +84,10 @@ export async function enrichUtxos(utxos, addExtension = false) {
         } else if (cache_spentBoxes.map(b => b.boxId).includes(utxos[i][key])) {
             box = cache_spentBoxes.find(b => b.boxId === utxos[i][key]);
         } else {
-            box = await boxByBoxId(utxos[i][key]);
+            box = await boxByIdMempool(utxos[i][key]);
 
             //console.log("enrichUtxos box", box);
-            if(!box && utxos[i]["address"]) {
+            if(!box.boxId && utxos[i]["address"]) {
                 const [spentBoxes, newBoxes] = getSpentAndUnspentBoxesFromMempool([utxos[i]["address"]]);
                 box = newBoxes.find(box => box.boxId === utxos[i][key]);
             }

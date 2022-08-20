@@ -34,3 +34,32 @@ export async function sendTx(json) {
     const res = await postRequest('transactions', json);
     return res.data;
 }
+
+export async function boxByIdMempool(id) {
+    const res = await getRequest(`utxo/withPool/byId/${id}`);
+    //console.log("boxByIdMempool", res)
+    return res.data;
+}
+
+export async function getUnconfirmedTxs() {
+    return await getRequest(`/transactions/unconfirmed?limit=100`);
+}
+
+export async function getUnconfirmedTxsFor(addr) {
+    const unconfirmedTx = await getRequest(`/transactions/unconfirmed?limit=100`);
+    //console.log("getUnconfirmedTxsFor", unconfirmedTx);
+    const ergoTree = await addressToErgoTree(addr);
+
+    var res = [];
+    if (unconfirmedTx.data) {
+        for (const tx of unconfirmedTx.data) {
+            if (tx.inputs.map(b => b.ergoTree).includes(ergoTree) ||
+                tx.outputs.map(b => b.ergoTree).includes(ergoTree)) {
+                res.push(tx);
+            }
+        }
+    }
+
+    //console.log("getUnconfirmedTxsFor", res);
+    return res;
+}
