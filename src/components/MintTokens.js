@@ -106,8 +106,8 @@ export default class MintTokens extends React.Component {
         this.setTokenDecimals(decimals);
     };
     setTokenMediaHash = (hash) => { this.setState({ tokenMediaHash: hash }); };
-    setTokenMediaAddress = (addr) => { this.setState({ tokenMediaAddress: addr }); };
-    setTokenMediaAddressUploaded = (addr) => { this.setState({ tokenMediaAddress: addr, tokenMediaAddressUploaded: addr }); };
+    async setTokenMediaAddress(addr) { this.setState({ tokenMediaAddress: addr , tokenMediaHash: await downloadAndSetSHA256(addr), tokenMediaAddressUploaded: addr}); };
+    //setTokenMediaAddressUploaded = (addr) => { this.setState({ tokenMediaAddress: addr, tokenMediaAddressUploaded: addr }); };
     isValidTokenAmount = (amount) => {
         var validAmount = false;
         if (amount.match("^[0-9\.]+$") != null) {
@@ -325,14 +325,7 @@ export default class MintTokens extends React.Component {
                                                 <div className='d-flex flex-row align-items-center m-1 p-1'>
                                                     <label htmlFor="tokenMediaUpload" className='col-sm-3'>Upload {this.state.tokenType}</label>
                                                     <div className='d-flex flex-col align-items-center m-1 p-1' id="tokenMediaUpload">
-                                                        {
-                                                            this.state.tokenMediaAddressUploaded === '' ?
-                                                                this.state.tokenType === "Picture" ?
-                                                                    <ImageUpload setUrl={this.setTokenMediaAddressUploaded} setHash={this.setTokenMediaHash} />
-                                                                    :
-                                                                    <FileUpload setUrl={this.setTokenMediaAddressUploaded} setHash={this.setTokenMediaHash} />
-                                                                : null
-                                                        }
+    
                                                         <a href={this.state.tokenMediaAddressUploaded} target='_blank' rel='noopener noreferrer'>
                                                             {this.state.tokenMediaAddressUploaded}
                                                         </a>

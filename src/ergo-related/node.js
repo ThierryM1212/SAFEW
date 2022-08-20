@@ -1,6 +1,7 @@
 import { DEFAULT_NODE_ADDRESS } from '../utils/constants';
 import { LS } from '../utils/utils';
 import { get, postTx } from './rest';
+import { addressToErgoTree } from './serializer';
 
 // in order to secure the node requests (port 9053) the following setting have been done on apache
 // prevent any connection to 9053 except from localhost
@@ -42,11 +43,11 @@ export async function boxByIdMempool(id) {
 }
 
 export async function getUnconfirmedTxs() {
-    return await getRequest(`/transactions/unconfirmed?limit=100`);
+    return await getRequest(`transactions/unconfirmed?limit=100`);
 }
 
 export async function getUnconfirmedTxsFor(addr) {
-    const unconfirmedTx = await getRequest(`/transactions/unconfirmed?limit=100`);
+    const unconfirmedTx = await getRequest(`transactions/unconfirmed?limit=100`);
     //console.log("getUnconfirmedTxsFor", unconfirmedTx);
     const ergoTree = await addressToErgoTree(addr);
 

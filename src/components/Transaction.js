@@ -39,10 +39,13 @@ export default class Transaction extends React.Component {
         const tx = this.state.transaction;
         const balance = this.state.balance;
         var txDate = new Intl.DateTimeFormat();
+        //console.log("tx",tx)
         if (Object.keys(tx).includes("timestamp")) {
             txDate = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'long' }).format(new Date(tx.timestamp));
-        } else {
+        } else if (Object.keys(tx).includes("creationTimestamp")) {
             txDate = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'long' }).format(new Date(tx.creationTimestamp));
+        } else {
+            txDate = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'long' }).format(Date.now());
         }
         
         return (

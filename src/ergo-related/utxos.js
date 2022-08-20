@@ -87,7 +87,7 @@ export async function enrichUtxos(utxos, addExtension = false) {
             box = await boxByIdMempool(utxos[i][key]);
 
             //console.log("enrichUtxos box", box);
-            if(!box.boxId && utxos[i]["address"]) {
+            if(!box && utxos[i]["address"]) {
                 const [spentBoxes, newBoxes] = getSpentAndUnspentBoxesFromMempool([utxos[i]["address"]]);
                 box = newBoxes.find(box => box.boxId === utxos[i][key]);
             }

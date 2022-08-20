@@ -125,6 +125,11 @@ export async function ergoTreeToAddress(ergoTree) {
     return address.to_base58();
 }
 
+export async function addressToErgoTree(addr) {
+    const addrWASM = (await ergolib).Address.from_base58(addr);
+    return addrWASM.to_ergo_tree().to_base16_bytes();
+}
+
 export async function ergoTreeToTemplate(ergoTree) {
     console.log("ergoTreeToTemplate",ergoTree);
     const ergoT = (await ergolib).ErgoTree.from_base16_bytes(ergoTree);
