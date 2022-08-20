@@ -169,3 +169,7 @@ v0.6.6
 - get headers from Explorer rather than node
 - fix loading of unconfirmed transactions in Transaction Builder
 - fix isConnected to return a promise
+
+v0.6.7
+- fix dApp connector for ergopad
+- fix chained transactions through the dApp connector

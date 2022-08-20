@@ -2,7 +2,7 @@
 {
   "short_name": "SAFEW",
   "name": "SAFEW - Simple And Fast Ergo Wallet",
-  "version": "0.6.6",
+  "version": "0.6.7",
   "action": {},
   "icons": {
       "16": "/images/safew_icon_16.png",
