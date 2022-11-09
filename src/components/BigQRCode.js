@@ -15,7 +15,11 @@ export default class BigQRCode extends React.Component {
 
     async componentDidMount() {
         try{
-            const QRCodeTx = await QRCode.toDataURL(this.state.QRCodeTx)
+            const opts = {
+                errorCorrectionLevel: 'H',
+                margin: 2,
+              }
+            const QRCodeTx = await QRCode.toDataURL(this.state.QRCodeTx, opts)
             this.setState({
                 QRCodeTx: QRCodeTx,
             })
@@ -32,6 +36,9 @@ export default class BigQRCode extends React.Component {
             newSize = "512";
         }
         if (this.state.size === "512") {
+            newSize = "1024";
+        }
+        if (this.state.size === "1024") {
             newSize = "256";
         }
         this.setState({

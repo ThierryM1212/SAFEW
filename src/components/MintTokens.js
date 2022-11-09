@@ -3,14 +3,12 @@ import { getWalletAddressList, getWalletById } from '../utils/walletUtils';
 import ImageButton from './ImageButton';
 import SelectWallet from './SelectWallet';
 import Select from 'react-select';
-import { ImageUpload } from './ImageUpload';
-import { FileUpload } from './FileUpload';
 import SignTransaction from './SignTransaction';
 import JSONBigInt from 'json-bigint';
 import { createTxOutputs, createUnsignedTransaction, getUtxosForSelectedInputs } from '../ergo-related/ergolibUtils';
 import { downloadAndSetSHA256, isValidHttpUrl } from '../utils/utils';
 import { NTF_TYPES } from '../utils/constants';
-import { encodeStr } from '../ergo-related/serializer';
+import { encodeHex, encodeStr } from '../ergo-related/serializer';
 import { waitingAlert } from '../utils/Alerts';
 import { LS } from '../utils/utils';
 
@@ -42,7 +40,6 @@ export default class MintTokens extends React.Component {
             tokenType: 'Standard',
             tokenMediaHash: '',
             tokenMediaAddress: '',
-            tokenMediaAddressUploaded: '',
             selectedWalletId: 0,
             selectedWallet: undefined,
             optionsDecimals: optionsDecimals,
@@ -54,7 +51,6 @@ export default class MintTokens extends React.Component {
         this.setTokenAmount = this.setTokenAmount.bind(this);
         this.setTokenDecimals = this.setTokenDecimals.bind(this);
         this.setTokenType = this.setTokenType.bind(this);
-        this.setTokenMediaHash = this.setTokenMediaHash.bind(this);
         this.setTokenMediaAddress = this.setTokenMediaAddress.bind(this);
         this.isValidTokenAmount = this.isValidTokenAmount.bind(this);
         this.validateAmountStrInt = this.validateAmountStrInt.bind(this);
@@ -62,9 +58,9 @@ export default class MintTokens extends React.Component {
         this.isValidTransaction = this.isValidTransaction.bind(this);
         this.getTransactionJson = this.getTransactionJson.bind(this);
     }
-    async setWallet(walletId) { 
+    async setWallet(walletId) {
         const wallet = (await getWalletById(walletId));
-        this.setState({ selectedWalletId: walletId, selectedWallet: wallet }); 
+        this.setState({ selectedWalletId: walletId, selectedWallet: wallet });
     };
     setTokenName = (name) => { this.setState({ tokenName: name }); };
     setTokenDescription = (desc) => { this.setState({ tokenDescription: desc }); };
@@ -80,7 +76,6 @@ export default class MintTokens extends React.Component {
         this.setState({
             tokenDecimals: dec,
             tokenMediaAddress: '',
-            tokenMediaAddressUploaded: '',
             tokenMediaHash: '',
         });
         if (dec === '0') {
@@ -105,9 +100,7 @@ export default class MintTokens extends React.Component {
         });
         this.setTokenDecimals(decimals);
     };
-    setTokenMediaHash = (hash) => { this.setState({ tokenMediaHash: hash }); };
-    async setTokenMediaAddress(addr) { this.setState({ tokenMediaAddress: addr , tokenMediaHash: await downloadAndSetSHA256(addr), tokenMediaAddressUploaded: addr}); };
-    //setTokenMediaAddressUploaded = (addr) => { this.setState({ tokenMediaAddress: addr, tokenMediaAddressUploaded: addr }); };
+    setTokenMediaAddress(addr) { this.setState({ tokenMediaAddress: addr }); };
     isValidTokenAmount = (amount) => {
         var validAmount = false;
         if (amount.match("^[0-9\.]+$") != null) {
@@ -196,13 +189,8 @@ export default class MintTokens extends React.Component {
                     if (outputTokenList.includes(input0BoxId)) {
                         var register = output.additionalRegisters;
                         register["R7"] = NTF_TYPES[tokenType];
-                        if (this.state.tokenMediaHash !== "") {
-                            register["R8"] = await encodeStr(this.state.tokenMediaHash);
-                        } else {
-                            const hash = await downloadAndSetSHA256(this.state.tokenMediaAddress);
-                            register["R8"] = await encodeStr(hash);
-                        }
-
+                        const hash = await downloadAndSetSHA256(this.state.tokenMediaAddress);
+                        register["R8"] = await encodeHex(hash);
                         register["R9"] = await encodeStr(this.state.tokenMediaAddress);
                         output.additionalRegisters = register;
                         jsonUnsignedTx.outputs[i] = output;
@@ -319,17 +307,7 @@ export default class MintTokens extends React.Component {
                                                         className="form-control col-sm"
                                                         onChange={e => this.setTokenMediaAddress(e.target.value)}
                                                         value={this.state.tokenMediaAddress}
-                                                        disabled={this.state.tokenMediaHash !== '' || this.state.tokenMediaAddressUploaded !== ''}
                                                     />
-                                                </div>
-                                                <div className='d-flex flex-row align-items-center m-1 p-1'>
-                                                    <label htmlFor="tokenMediaUpload" className='col-sm-3'>Upload {this.state.tokenType}</label>
-                                                    <div className='d-flex flex-col align-items-center m-1 p-1' id="tokenMediaUpload">
-    
-                                                        <a href={this.state.tokenMediaAddressUploaded} target='_blank' rel='noopener noreferrer'>
-                                                            {this.state.tokenMediaAddressUploaded}
-                                                        </a>
-                                                    </div>
                                                 </div>
                                             </Fragment>
                                     }

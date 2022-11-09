@@ -53,21 +53,10 @@ export function getKeyByValue(object, value) {
     return Object.keys(object).find(key => object[key] === value);
 }
 
-export function computeSHA256(file, setHash) {
-    var reader = new FileReader();
-    reader.onload = function (event) {
-        var data = event.target.result;
-        console.log('computeSHA256 data: ', data);
-        var hash = CryptoJS.SHA256(data);
-        console.log('computeSHA256 SHA-256: ', hash);
-        setHash(hash);
-    };
-    reader.readAsArrayBuffer(file);
-}
-
 export async function downloadAndSetSHA256(url) {
     const blob = await getBlob(url);
     var hash = await getHashAsync(blob);
+    console.log("hash", hash)
     return hash;
 }
 
@@ -77,7 +66,7 @@ function getHashAsync(file) {
         reader.onload = function (event) {
             var data = event.target.result;
             var hash = CryptoJS.SHA256(data);
-            resolve(hash);
+            resolve(hash.toString(CryptoJS.enc.Hex));
         };
         reader.onerror = reject;
         reader.readAsArrayBuffer(file);

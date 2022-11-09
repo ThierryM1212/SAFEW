@@ -17,7 +17,7 @@ SAFEW was awarded as project participating in ErgoHack 3: https://ergoplatform.o
 ## Features
 Wallet features:
  - Wallets:
-    - Wallet with mnemonic for siging from SAFEW extension
+    - Wallet with mnemonic for signing from SAFEW extension
     - Ergopay/Read only wallet for signing with Android/iOS wallet
     - Ledger 
  - View accounts (expert mode), addresses, their balance in ERG and tokens
@@ -173,3 +173,8 @@ v0.6.6
 v0.6.7
 - fix dApp connector for ergopad
 - fix chained transactions through the dApp connector
+
+v0.6.8
+- fix token media hash for minted tokens
+- allow a bigger zoom for the Ergopay transaction QR codes, increase the error correction level
+- fix typo in the README
