@@ -65,6 +65,7 @@ export default class OutputEditable extends React.Component {
                     onDelete={(item) => {
                         console.log("onDelete", item)
                         this.setState({ json: item.updated_src });
+                        this.state.onEdit(this.state.id, item.updated_src);
                     }}
                 />
 
