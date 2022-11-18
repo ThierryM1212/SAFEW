@@ -177,4 +177,5 @@ v0.6.7
 v0.6.8
 - fix token media hash for minted tokens
 - allow a bigger zoom for the Ergopay transaction QR codes, increase the error correction level
+- fix delete key action when editing boxes in Transaction Builder
 - fix typo in the README
