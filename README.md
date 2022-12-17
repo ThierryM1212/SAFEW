@@ -181,4 +181,4 @@ v0.6.8
 - fix typo in the README
 
 v0.6.9
-- 
+- fix output creation height for v5.0

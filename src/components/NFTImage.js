@@ -25,7 +25,7 @@ export default class NFTImage extends React.Component {
         var tokenBox = {};
         try {
             tokenBox = await getTokenBox(this.state.tokenId);
-            console.log("tokenBox", tokenBox);
+            //console.log("tokenBox", tokenBox);
         } catch (e) {
             // console.log(e);
         }
@@ -35,7 +35,7 @@ export default class NFTImage extends React.Component {
             if (Object.keys(tokenBox.additionalRegisters).includes("R7")) {
                 if (Object.values(NTF_TYPES).includes(tokenBox.additionalRegisters.R7)) {
                     const type = getKeyByValue(NTF_TYPES, tokenBox.additionalRegisters.R7);
-                    console.log("NFTImage componentDidMount", type)
+                    //console.log("NFTImage componentDidMount", type)
                     if (Object.keys(tokenBox.additionalRegisters).includes("R9")) {
                         var NFTURL = (await decodeString(tokenBox.additionalRegisters.R9)) ?? '';
                         if (NFTURL.startsWith(ipfsPrefix)) {

@@ -211,7 +211,12 @@ export async function createTxOutputs(selectedUtxos, sendToAddress, changeAddres
         errorAlert("Error generating the transaction", "No box found to be spent.");
         return;
     }
-    const creationHeight = await currentHeight() - 20; // allow some lag between explorer and node
+    var creationHeight = await currentHeight();
+    const maxInputCreationHeight = Math.max(...selectedUtxos.map(o => o.creationHeight ?? 0));
+    if (maxInputCreationHeight > creationHeight) {
+        creationHeight = maxInputCreationHeight;
+    }
+    //console.log("createTxOutputs creationHeight", creationHeight, maxInputCreationHeight);
     const feeNano = BigInt(Math.round((feeFloat * NANOERG_TO_ERG)));
     var amountNano = BigInt(Math.round((amountToSendFloat * NANOERG_TO_ERG)));
     //console.log("createTxOutputs", amountNano, feeNano);
@@ -285,7 +290,7 @@ export async function createTxOutputs(selectedUtxos, sendToAddress, changeAddres
 }
 
 export async function createUnsignedTransaction(selectedUtxos, outputCandidates, dataInputs = []) {
-    console.log("createUnsignedTransaction selectedUtxos", selectedUtxos);
+    //console.log("createUnsignedTransaction selectedUtxos", selectedUtxos);
     const inputIds = selectedUtxos.map(utxo => utxo.boxId);
     const unsignedInputArray = inputIds.map((await ergolib).BoxId.from_str).map((await ergolib).UnsignedInput.from_box_id)
     const unsignedInputs = new (await ergolib).UnsignedInputs();
@@ -295,7 +300,7 @@ export async function createUnsignedTransaction(selectedUtxos, outputCandidates,
         data_inputs.add(new (await ergolib).DataInput(dataInputBox.boxId));
     }
     const unsignedTx = new (await ergolib).UnsignedTransaction(unsignedInputs, data_inputs, outputCandidates);
-    console.log("createUnsignedTransaction unsignedTx", unsignedTx.to_json());
+    //console.log("createUnsignedTransaction unsignedTx", unsignedTx);
     return unsignedTx;
 }
 

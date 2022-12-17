@@ -192,7 +192,7 @@ export default class SendTransaction extends React.Component {
     }
 
     setTokenToSend = (index, tokAmount) => {
-        console.log("setTokenToSend", tokAmount)
+        //console.log("setTokenToSend", tokAmount)
         var amount = tokAmount.toString().replaceAll(",", '.');
         if (tokAmount === '') { amount = '0'; }
         this.setState(prevState => ({

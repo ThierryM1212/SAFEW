@@ -214,12 +214,12 @@ export function generateSwaggerTx(json) {
 }
 
 export function getUtxosListValue(utxos) {
-    console.log("getUtxosListValue", utxos);
+    //console.log("getUtxosListValue", utxos);
     return utxos.reduce((acc, utxo) => acc += BigInt(utxo.value), BigInt(0));
 }
 
 export function getTokenListFromUtxos(utxos) {
-    console.log("getTokenListFromUtxos", utxos);
+    //console.log("getTokenListFromUtxos", utxos);
     var tokenList = {};
     for (const i in utxos) {
         for (const j in utxos[i].assets) {
@@ -235,7 +235,7 @@ export function getTokenListFromUtxos(utxos) {
 
 export function enrichTokenInfoFromUtxos(utxos, tokInfo) {
     //[TOKENID_SIGUSD]: ['SigUSD', "token-sigusd.svg", 2],
-    console.log("enrichTokenInfoFromUtxos", utxos);
+    //console.log("enrichTokenInfoFromUtxos", utxos);
     var tokenInfo = { ...tokInfo };
     for (const i in utxos) {
         for (const j in utxos[i].assets) {
@@ -265,7 +265,7 @@ export function getMissingTokens(inputs, outputs) {
     const tokensIn = getTokenListFromUtxos(inputs);
     const tokensOut = getTokenListFromUtxos(outputs);
     var res = {};
-    console.log("getMissingTokens", tokensIn, tokensOut);
+    //console.log("getMissingTokens", tokensIn, tokensOut);
     if (tokensIn !== {}) {
         for (const token in tokensIn) {
             if (tokensOut !== {} && token in tokensOut) {
@@ -277,7 +277,7 @@ export function getMissingTokens(inputs, outputs) {
             }
         }
     }
-    console.log("getMissingTokens", tokensIn, tokensOut, res);
+    //console.log("getMissingTokens", tokensIn, tokensOut, res);
     return res;
 }
 
@@ -295,8 +295,12 @@ export async function buildBalanceBox(inputs, outputs, address) {
     const missingErgs = getMissingErg(inputs, outputs).toString();
     const contract = await encodeContract(address);
     const tokens = buildTokenList(getMissingTokens(inputs, outputs));
-    const height = await currentHeight();
-    console.log("buildBalanceBox", missingErgs, contract, tokens, height)
+    var height = await currentHeight();
+    const maxInputCreationHeight = Math.max(...inputs.map(o => o.creationHeight ?? 0));
+    if (maxInputCreationHeight > creationHeight) {
+        height = maxInputCreationHeight;
+    }
+    //console.log("buildBalanceBox", missingErgs, contract, tokens, height, inputs, outputs)
 
     return {
         value: missingErgs,
@@ -343,7 +347,7 @@ async function getUtxoContentForAddressList(utxos, addressList, input0BoxId = ""
         }
         if (utxo.ergoTree === TX_FEE_ERGO_TREE) {
             fee = utxo.value;
-            console.log('tx fee found', fee);
+            //console.log('tx fee found', fee);
         }
         if (addressList.includes(utxo.address)) {
             //console.log("getUtxoContentForAddressList_3")
