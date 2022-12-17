@@ -182,3 +182,4 @@ v0.6.8
 
 v0.6.9
 - fix output creation height for v5.0
+- fix signing with ledger recent test app
