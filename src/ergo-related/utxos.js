@@ -297,7 +297,7 @@ export async function buildBalanceBox(inputs, outputs, address) {
     const tokens = buildTokenList(getMissingTokens(inputs, outputs));
     var height = await currentHeight();
     const maxInputCreationHeight = Math.max(...inputs.map(o => o.creationHeight ?? 0));
-    if (maxInputCreationHeight > creationHeight) {
+    if (maxInputCreationHeight > height) {
         height = maxInputCreationHeight;
     }
     //console.log("buildBalanceBox", missingErgs, contract, tokens, height, inputs, outputs)
