@@ -186,3 +186,6 @@ v0.6.9
 
 v0.6.9.1
 - fix balance box generation in transaction builder
+
+v0.6.10
+- fetch boxes by tokenId in transaction builder

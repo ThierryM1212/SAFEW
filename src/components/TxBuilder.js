@@ -8,7 +8,7 @@ import ImageButton from './ImageButton';
 import ImageButtonLabeled from './TransactionBuilder/ImageButtonLabeled';
 import ReactJson from 'react-json-view';
 import { UtxoItem } from './TransactionBuilder/UtxoItem';
-import { unspentBoxesForV1, boxByBoxId, currentHeight, postTxMempool } from '../ergo-related/explorer';
+import { unspentBoxesForV1, boxByBoxId, currentHeight, postTxMempool, getTokenBoxV1, boxByTokenId } from '../ergo-related/explorer';
 import { parseUtxo, parseUtxos, enrichUtxos, buildBalanceBox, getUnspentBoxesForAddressList, parseSignedTx, enrichTokenInfoFromUtxos, getUtxoBalanceForAddressList } from '../ergo-related/utxos';
 import { getWalletForAddresses, signTransaction } from '../ergo-related/serializer';
 import JSONBigInt from 'json-bigint';
@@ -55,6 +55,7 @@ export default class TxBuilder extends React.Component {
             addressBoxList: [],
             searchAddress: '',
             searchBoxId: '',
+            searchBoxTokenId: '',
             selectedBoxList: [],
             selectedDataBoxList: [],
             otherBoxList: [],
@@ -71,6 +72,7 @@ export default class TxBuilder extends React.Component {
         this.setWallet = this.setWallet.bind(this);
         this.setSearchAddress = this.setSearchAddress.bind(this);
         this.setSearchBoxId = this.setSearchBoxId.bind(this);
+        this.setSearchBoxTokenId = this.setSearchBoxTokenId.bind(this);
         this.selectInputBox = this.selectInputBox.bind(this);
         this.selectDataInputBox = this.selectDataInputBox.bind(this);
         this.unSelectDataInputBox = this.unSelectDataInputBox.bind(this);
@@ -78,6 +80,7 @@ export default class TxBuilder extends React.Component {
         this.moveInputBoxDown = this.moveInputBoxDown.bind(this);
         this.moveInputBoxUp = this.moveInputBoxUp.bind(this);
         this.fetchByBoxId = this.fetchByBoxId.bind(this);
+        this.fetchByBoxTokenId = this.fetchByBoxTokenId.bind(this);
         this.fetchByAddress = this.fetchByAddress.bind(this);
         this.fetchWalletBoxes = this.fetchWalletBoxes.bind(this);
         this.addOutputBox = this.addOutputBox.bind(this);
@@ -102,6 +105,7 @@ export default class TxBuilder extends React.Component {
     };
     setSearchAddress = (address) => { this.setState({ searchAddress: address }); };
     setSearchBoxId = (boxId) => { this.setState({ searchBoxId: boxId }); };
+    setSearchBoxTokenId = (tokenId) => { this.setState({ searchBoxTokenId: tokenId }); };
     setTxJsonRaw = (textAreaInput) => { this.setState({ txJsonRaw: textAreaInput }); }
 
     async componentDidMount() {
@@ -176,6 +180,20 @@ export default class TxBuilder extends React.Component {
         this.setState(prevState => ({
             otherBoxList: [...prevState.otherBoxList, boxFixed]
         }))
+    }
+
+    async fetchByBoxTokenId() {
+        const boxes = await boxByTokenId(this.state.searchBoxTokenId);
+        const newTokenInfo = enrichTokenInfoFromUtxos(boxes, this.state.tokenInfo);
+        this.setState({
+            tokenInfo: newTokenInfo,
+        });
+        const otherBoxListFixed = parseUtxos(boxes, true);
+        for (const box of otherBoxListFixed) {
+            this.setState(prevState => ({
+                otherBoxList: [...prevState.otherBoxList, box]
+            }))
+        }
     }
 
     selectInputBox = (box) => {
@@ -532,6 +550,11 @@ export default class TxBuilder extends React.Component {
                                 value={this.state.searchBoxId}
                                 onChange={this.setSearchBoxId}
                                 onClick={this.fetchByBoxId}
+                            />
+                            <InputString label="Search by Token Id"
+                                value={this.state.searchBoxTokenId}
+                                onChange={this.setSearchBoxTokenId}
+                                onClick={this.fetchByBoxTokenId}
                             />
                             <InputString label="Search by address / script address"
                                 value={this.state.searchAddress}

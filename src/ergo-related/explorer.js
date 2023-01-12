@@ -57,6 +57,10 @@ export async function boxByBoxId(id) {
     return getRequestV1(`/boxes/${id}`, SHORT_CACHE).then((res) => res.data);
 }
 
+export async function boxByTokenId(tokenId) {
+    return getRequestV1(`/boxes/unspent/byTokenId/${tokenId}`, SHORT_CACHE).then((res) => res.data.items);
+}
+
 export async function txById(id) {
     return getRequest(`/transactions/${id}`, LONG_CACHE).then((res) => res.data);
 }
