@@ -8,12 +8,12 @@ import ImageButton from './ImageButton';
 import ImageButtonLabeled from './TransactionBuilder/ImageButtonLabeled';
 import ReactJson from 'react-json-view';
 import { UtxoItem } from './TransactionBuilder/UtxoItem';
-import { unspentBoxesForV1, boxByBoxId, currentHeight, postTxMempool, getTokenBoxV1, boxByTokenId } from '../ergo-related/explorer';
-import { parseUtxo, parseUtxos, enrichUtxos, buildBalanceBox, getUnspentBoxesForAddressList, parseSignedTx, enrichTokenInfoFromUtxos, getUtxoBalanceForAddressList } from '../ergo-related/utxos';
+import { boxByBoxId, postTxMempool, boxByTokenId } from '../ergo-related/explorer';
+import { parseUtxo, parseUtxos, enrichUtxos, buildBalanceBox, parseSignedTx, enrichTokenInfoFromUtxos, getUtxoBalanceForAddressList } from '../ergo-related/utxos';
 import { getWalletForAddresses, signTransaction } from '../ergo-related/serializer';
 import JSONBigInt from 'json-bigint';
 import { errorAlert, promptPassword, waitingAlert } from '../utils/Alerts';
-import { sendTx } from '../ergo-related/node';
+import { currentHeight, sendTx, unspentBoxesFor } from '../ergo-related/node';
 import { getTxReducedB64Safe, getUtxosForSelectedInputs } from '../ergo-related/ergolibUtils';
 import BigQRCode from './BigQRCode';
 import SelectWallet from './SelectWallet';
@@ -160,7 +160,7 @@ export default class TxBuilder extends React.Component {
     }
 
     async fetchByAddress() {
-        const boxes = await unspentBoxesForV1(this.state.searchAddress);
+        const boxes = await unspentBoxesFor(this.state.searchAddress);
         const newTokenInfo = enrichTokenInfoFromUtxos(boxes, this.state.tokenInfo);
         this.setState({
             tokenInfo: newTokenInfo,

@@ -133,10 +133,10 @@ function launchPopup(message, sender, param = '') {
         chrome.windows.create({
             url: URLpopup,
             type: 'popup',
-            width: Math.ceil(focusedWindow.width/2),
-            height: focusedWindow.height - Math.floor(focusedWindow.height/3),
+            width: Math.ceil(focusedWindow.width / 2),
+            height: focusedWindow.height - Math.floor(focusedWindow.height / 3),
             top: focusedWindow.top,
-            left: focusedWindow.left + (focusedWindow.width - Math.floor(focusedWindow.width/2)),
+            left: focusedWindow.left + (focusedWindow.width - Math.floor(focusedWindow.width / 2)),
             focused: true,
         });
     });
@@ -234,7 +234,8 @@ async function get(url, apiKey = '') {
             'Content-Type': 'application/json',
             api_key: apiKey,
         }
-    }).then(res => res.json());
+    }).then(res => res.text())
+        .then(res => JSONBigInt.parse(res));
     return result;
 }
 async function post(url, body = {}, apiKey = '') {
@@ -414,7 +415,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
         }
 
-        if (message.data && message.data.type ===  "disconnect") {
+        if (message.data && message.data.type === "disconnect") {
             console.log("Disconnecting", message.data.url);
             const disconnectSuccess = disconnectSite(message.data.url);
             sendResponse({
@@ -425,7 +426,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             return;
         }
 
-        if (message.data && message.data.type ===  "is_connected") {
+        if (message.data && message.data.type === "is_connected") {
             console.log("is_connected", message.data.url);
             sendResponse({
                 type: "is_connected_response",
@@ -438,7 +439,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         if (message.data && message.data.type === "ergo_api") {
             const wallet = getConnectedWalletByURL(message.data.url);
             //console.log("wallet", wallet);
-            
+
             const addressList = wallet.accounts.map(account => account.addresses).flat();
             //console.log("background ergo_api", wallet, addressList);
             if (message.data.func === "ping") {
@@ -526,6 +527,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                         } else { // all utxos
                             selectedUtxos = addressBoxes;
                         }
+                        console.log("selectedUtxos", selectedUtxos)
                         sendResponse({
                             type: "ergo_api_response",
                             result: true,

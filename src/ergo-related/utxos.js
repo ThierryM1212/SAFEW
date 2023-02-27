@@ -1,8 +1,8 @@
 import { TX_FEE_ERGO_TREE, VERIFIED_TOKENS } from "../utils/constants";
 import { ls_slim_flush, ls_slim_get, ls_slim_set } from "../utils/utils";
 import { getUnconfirmedTransactionsForAddressList } from "../utils/walletUtils";
-import { boxByBoxId, currentHeight, getTokenBoxV1, unspentBoxesForV1 } from "./explorer";
-import { boxByIdMempool } from "./node";
+import { boxByBoxId, getTokenBoxV1 } from "./explorer";
+import { boxByIdMempool, currentHeight, unspentBoxesFor } from "./node";
 import { decodeString, encodeContract, ergoTreeToAddress } from "./serializer";
 
 /* global BigInt */
@@ -436,7 +436,7 @@ function buildBalance(inputBal, outputBal) {
 
 export async function getUnspentBoxesForAddressList(addressList) {
     const boxList = await Promise.all(addressList.map(async (address) => {
-        const addressBoxes = await unspentBoxesForV1(address);
+        const addressBoxes = await unspentBoxesFor(address);
         //console.log("getUnspentBoxesForAddressList", address, addressBoxes)
         return addressBoxes;
     }));

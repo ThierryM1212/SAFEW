@@ -42,15 +42,33 @@ export async function postTx(url, body = {}, apiKey = '') {
 }
 
 export async function post(url, body = {}, apiKey = '') {
-    return await fetch(url, {
+    var postedBody = body;
+    if (postedBody && typeof postedBody === 'object' && postedBody.constructor === Object) {
+        postedBody = JSONBigInt.stringify(body)
+    }
+    const response = await fetch(url, {
         method: 'POST',
         headers: {
             Accept: 'application/json',
             'Content-Type': 'application/json',
             api_key: apiKey,
         },
-        body: JSONBigInt.stringify(body),
+        body: postedBody,
     });
+    const [responseOk, bodyres] = await Promise.all([response.ok, response.json()]);
+    if (responseOk) {
+        console.log("fetch1", bodyres);
+        return bodyres;
+    } else {
+        console.log("fetch2", bodyres);
+        try {
+            errorAlert("Failed to fetch", JSON.stringify(bodyres))
+        } catch (e) {
+            console.log("fetch21", bodyres.toString());
+            errorAlert("Failed to fetch", bodyres.toString())
+        }
+    }
+
 }
 
 export async function get(url, apiKey = '', ttl = 0) {

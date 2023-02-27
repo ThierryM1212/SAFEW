@@ -1,6 +1,5 @@
 import {Serializer} from "@coinbarn/ergo-ts";
 import JSONBigInt from 'json-bigint';
-import { getExplorerBlockHeaders } from "./explorer";
 import { getLastHeaders } from "./node";
 
 
@@ -142,7 +141,7 @@ export async function ergoTreeToTemplate(ergoTree) {
 
 
 export async function getErgoStateContext() {
-    const block_headers = (await ergolib).BlockHeaders.from_json(await getExplorerBlockHeaders());
+    const block_headers = (await ergolib).BlockHeaders.from_json(await getLastHeaders());
     const pre_header = (await ergolib).PreHeader.from_block_header(block_headers.get(0));
     return new (await ergolib).ErgoStateContext(pre_header, block_headers);
 }

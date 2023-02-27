@@ -27,27 +27,7 @@ async function postRequestV1(url, body) {
     });
 }
 
-export async function currentHeight() {
-    return getRequest('/blocks?limit=1')
-        .then(res => res.data)
-        .then(res => res.items[0].height);
-}
 
-export async function unspentBoxesFor(address) {
-    return getRequest(`/transactions/boxes/byAddress/unspent/${address}`).then(
-        (res) => res.data
-    );
-}
-
-export async function getExplorerBlockHeaders() {
-    return getRequestV1(`/blocks/headers`).then((res) => res.data.items.slice(0,10));
-}
-
-export async function unspentBoxesForV1(address) {
-    return getRequestV1(`/boxes/unspent/byAddress/${address}`).then(
-        (res) => res.data.items
-    );
-}
 
 export async function boxById(id) {
     return getRequest(`/transactions/boxes/${id}`, SHORT_CACHE).then((res) => res.data);
