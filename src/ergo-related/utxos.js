@@ -1,8 +1,7 @@
 import { TX_FEE_ERGO_TREE, VERIFIED_TOKENS } from "../utils/constants";
 import { ls_slim_flush, ls_slim_get, ls_slim_set } from "../utils/utils";
 import { getUnconfirmedTransactionsForAddressList } from "../utils/walletUtils";
-import { boxByBoxId, getTokenBoxV1 } from "./explorer";
-import { boxByIdMempool, currentHeight, unspentBoxesFor } from "./node";
+import { boxByBoxId, boxByIdMempool, currentHeight, getTokenBox, getTokenInfo, unspentBoxesFor } from "./node";
 import { decodeString, encodeContract, ergoTreeToAddress } from "./serializer";
 
 /* global BigInt */
@@ -66,7 +65,7 @@ export function parseUtxos(utxos, addExtention, mode = 'input') {
 }
 
 export async function enrichUtxos(utxos, addExtension = false) {
-    console.log("enrichUtxos utxos", utxos);
+    //console.log("enrichUtxos utxos", utxos);
     var utxosFixed = [];
     await ls_slim_flush();
     var cache_newBoxes = await ls_slim_get('cache_newBoxes') ?? [];
@@ -98,7 +97,7 @@ export async function enrichUtxos(utxos, addExtension = false) {
             for (var token of box.assets) {
                 var newToken = { ...token }
                 //console.log("enrichUtxos2", token.tokenId);
-                const tokenDesc = await getTokenBoxV1(token.tokenId);
+                const tokenDesc = await getTokenInfo(token.tokenId);
                 //console.log("enrichUtxos2_1", tokenDesc);
                 newToken["name"] = tokenDesc.name;
                 newToken["decimals"] = tokenDesc.decimals;
@@ -371,7 +370,14 @@ async function getUtxoContentForAddressList(utxos, addressList, input0BoxId = ""
                         }
                     }
                 }
-
+                //console.log("token.name", token.name)
+                if (token.name === null || token.name === undefined) {
+                    const tokenInfo = await getTokenInfo(token.tokenId);
+                    //console.log("tokenInfo", tokenInfo)
+                    token["name"] = tokenInfo.name;
+                    token["decimals"] = tokenInfo.decimals;
+                }
+                //console.log("token.name2", token.name)
                 if (tokens.map(tok => tok.tokenId).includes(token.tokenId)) {
                     const index = tokens.findIndex(t => t.tokenId === token.tokenId);
                     const tokAmount = BigInt(token.amount.toString());

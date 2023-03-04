@@ -8,12 +8,12 @@ import ImageButton from './ImageButton';
 import ImageButtonLabeled from './TransactionBuilder/ImageButtonLabeled';
 import ReactJson from 'react-json-view';
 import { UtxoItem } from './TransactionBuilder/UtxoItem';
-import { boxByBoxId, postTxMempool, boxByTokenId } from '../ergo-related/explorer';
+import { boxByTokenId } from '../ergo-related/explorer';
 import { parseUtxo, parseUtxos, enrichUtxos, buildBalanceBox, parseSignedTx, enrichTokenInfoFromUtxos, getUtxoBalanceForAddressList } from '../ergo-related/utxos';
 import { getWalletForAddresses, signTransaction } from '../ergo-related/serializer';
 import JSONBigInt from 'json-bigint';
 import { errorAlert, promptPassword, waitingAlert } from '../utils/Alerts';
-import { currentHeight, sendTx, unspentBoxesFor } from '../ergo-related/node';
+import { boxByBoxId, currentHeight, sendTx, unspentBoxesFor } from '../ergo-related/node';
 import { getTxReducedB64Safe, getUtxosForSelectedInputs } from '../ergo-related/ergolibUtils';
 import BigQRCode from './BigQRCode';
 import SelectWallet from './SelectWallet';
@@ -99,9 +99,9 @@ export default class TxBuilder extends React.Component {
         this.getSignedTransaction = this.getSignedTransaction.bind(this);
         this.getTransaction = this.getTransaction.bind(this);
     }
-    async setWallet(walletId) { 
+    async setWallet(walletId) {
         const wallet = await getWalletById(walletId);
-        this.setState({ selectedWalletId: walletId, wallet: wallet }); 
+        this.setState({ selectedWalletId: walletId, wallet: wallet });
     };
     setSearchAddress = (address) => { this.setState({ searchAddress: address }); };
     setSearchBoxId = (boxId) => { this.setState({ searchBoxId: boxId }); };
@@ -335,7 +335,7 @@ export default class TxBuilder extends React.Component {
         if (this.state.signedTransaction === '') {
             return {}
         }
-        return {...this.state.signedTransaction};
+        return { ...this.state.signedTransaction };
     }
 
     async signTx() {
@@ -404,22 +404,16 @@ export default class TxBuilder extends React.Component {
         const signedTx = await this.signTx();
         console.log("signAndSendTx signedTx", signedTx);
         if (signedTx && signedTx.inputs) {
-            if (this.state.memPoolTransaction) {
-                await postTxMempool(signedTx);
-            } else {
-                await sendTx(signedTx);
-            }
+            await sendTx(signedTx);
             //await delay(3000);
             this.state.setPage('transactions', this.state.selectedWalletId);
         }
     }
 
     async sendSignedTx() {
-        if (this.state.memPoolTransaction) {
-            await postTxMempool(this.state.signedTransaction);
-        } else {
-            await sendTx(this.state.signedTransaction);
-        }
+
+        await sendTx(this.state.signedTransaction);
+
         //await delay(3000);
         this.state.setPage('transactions', this.state.selectedWalletId);
     }

@@ -85,19 +85,19 @@ export default class Wallet extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        //console.log("Wallet did update ", prevProps, prevState, this.state.addressContentList)
-        if (prevProps.wallet.name !== this.state.wallet.name) {
+        //console.log("Wallet did update ", prevProps, prevState, this.props.tokenRatesDict)
+        if (prevState.wallet.name !== this.state.wallet.name) {
             this.setState({
                 wallet: prevProps.wallet,
                 addressContentList: this.props.addressContentList,
             });
         }
-        if (prevProps.addressContentList !== this.props.addressContentList) {
+        if (prevState.addressContentList !== this.props.addressContentList) {
             this.setState({
                 addressContentList: this.props.addressContentList,
             });
         }
-        if (prevProps.tokenRatesDict !== this.props.tokenRatesDict) {
+        if (prevState.tokenRatesDict !== this.props.tokenRatesDict) {
             this.setState({
                 tokenRatesDict: this.props.tokenRatesDict,
             });

@@ -1,6 +1,6 @@
 import React, { Fragment } from 'react';
 import { CSVLink } from "react-csv";
-import { getTransactionsForAddress } from '../ergo-related/explorer';
+import { getTransactionsForAddress } from '../ergo-related/node';
 import { getUtxoBalanceForAddressList } from '../ergo-related/utxos';
 import { errorAlert, promptNumTx, waitingAlert } from '../utils/Alerts';
 import { NANOERG_TO_ERG } from '../utils/constants';

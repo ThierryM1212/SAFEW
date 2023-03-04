@@ -76,17 +76,15 @@ export default class WalletList extends React.Component {
             errorAlert("Failed to fetch wallet content from explorer API")
         }
         await updateErgoPrice();
+        const tokenRatesDict = await getTokenValue();
+
         this.setState({
             addressContentList: walletsAddressListContent,
+            tokenRatesDict: tokenRatesDict,
         });
 
         if (showAlert) { alert.close(); }
 
-        getTokenValue().then(tokenRatesDict => {
-            this.setState({
-                tokenRatesDict: tokenRatesDict,
-            });
-        });
     }
 
     render() {

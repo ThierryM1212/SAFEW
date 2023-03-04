@@ -1,8 +1,7 @@
 import { DeviceError } from 'ledger-ergo-js';
 import React, { Fragment } from 'react';
 import ReactJson from 'react-json-view';
-import { getTxReducedB64Safe, getUnsignedTransaction } from '../ergo-related/ergolibUtils';
-import { boxByBoxId } from '../ergo-related/explorer';
+import { getTxReducedB64Safe } from '../ergo-related/ergolibUtils';
 import { signTxLedger } from '../ergo-related/ledger';
 import { getWalletForAddresses, signTransaction } from '../ergo-related/serializer';
 import { enrichUtxos, getUtxoBalanceForAddressList, parseSignedTx, parseUnsignedTx, parseUtxos } from '../ergo-related/utxos';

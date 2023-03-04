@@ -234,8 +234,8 @@ async function get(url, apiKey = '') {
             'Content-Type': 'application/json',
             api_key: apiKey,
         }
-    }).then(res => res.text())
-        .then(res => JSONBigInt.parse(res));
+    }).then(res => res.json())
+        ;
     return result;
 }
 async function post(url, body = {}, apiKey = '') {

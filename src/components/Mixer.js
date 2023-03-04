@@ -1,5 +1,4 @@
 import React, { Fragment } from 'react';
-import { getTokenBoxV1 } from '../ergo-related/explorer';
 import { getActiveMixes, getCovertAddresses, isMixerAvailable } from '../ergo-related/mixer';
 import { DEFAULT_MIXER_ADDRESS } from '../utils/constants';
 import AddCovertAddress from './AddCovertAddress';
@@ -8,6 +7,7 @@ import ImageButton from './ImageButton';
 import Mix from './Mix';
 import SelectWallet from './SelectWallet';
 import { LS } from '../utils/utils';
+import { getTokenBox } from '../ergo-related/node';
 
 export default class Mixer extends React.Component {
     constructor(props) {
@@ -62,7 +62,7 @@ export default class Mixer extends React.Component {
                 }
             }
             const mixedTokenInfoList = await Promise.all(tokenList.map(async (tokenId) => {
-                const tokenInfo = await getTokenBoxV1(tokenId);
+                const tokenInfo = await getTokenBox(tokenId);
                 return tokenInfo;
             }));
             var mixedTokenInfo = {};

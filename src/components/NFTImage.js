@@ -1,5 +1,5 @@
 import React, { Fragment } from 'react';
-import { getTokenBox } from '../ergo-related/explorer';
+import { getTokenBox } from '../ergo-related/node';
 import { decodeString } from '../ergo-related/serializer';
 import { displayNFT } from '../utils/Alerts';
 import { NTF_TYPES } from '../utils/constants';

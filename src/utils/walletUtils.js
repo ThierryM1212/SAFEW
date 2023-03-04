@@ -1,12 +1,11 @@
 import { discoverAddresses } from "../ergo-related/ergolibUtils";
-import { addressHasTransactions, getBalanceForAddress, getTransactionsForAddress } from "../ergo-related/explorer";
 import { NANOERG_TO_ERG, PASSWORD_SALT, WALLET_VERSION } from "./constants";
 import '@sweetalert2/theme-dark/dark.css';
 import { enrichUtxos } from "../ergo-related/utxos";
 import { hexToRgbA } from "./utils";
-import { ExplorerTokenMarket } from 'ergo-market-lib/dist/ExplorerTokenMarket';
 import { LS } from '../utils/utils';
-import { getUnconfirmedTxsFor } from "../ergo-related/node";
+import { addressHasTransactions, getBalanceForAddress, getTransactionsForAddress, getUnconfirmedTxsFor } from "../ergo-related/node";
+import { getAMMPrices } from "../ergo-related/amm";
 var CryptoJS = require("crypto-js");
 
 
@@ -14,8 +13,6 @@ export const MIN_CHAR_WALLET_NAME = 3;
 export const MIN_CHAR_WALLET_PASSWORD = 10;
 export const INVALID_PASSWORD_LENGTH_MSG = "Min " + MIN_CHAR_WALLET_PASSWORD.toString() + " characters !";
 export const INVALID_NAME_LENGTH_MSG = "Min " + MIN_CHAR_WALLET_NAME.toString() + " characters !";
-
-export const tokenMarket = new ExplorerTokenMarket({ throwOnError: false });
 
 export function isValidPassword(password) {
     console.log(password, password.length);
@@ -335,7 +332,7 @@ export function getWalletListAddressList(walletList) {
 export function getWalletAddressesPathMap(wallet) {
     var addressPathMap = {}
     for (const i in wallet.accounts) {
-        for (const j in wallet.accounts[i].addresses){
+        for (const j in wallet.accounts[i].addresses) {
             addressPathMap[wallet.accounts[i].addresses[j].address] = getDerivationPath(i, j);
         }
     }
@@ -454,24 +451,27 @@ export async function setChangeAddress(walletId, address) {
 }
 
 export async function getTokenValue() {
-    const tokenRatesCalculateBalances = await tokenMarket.getTokenRates();
-    const tokenRatesDict = tokenRatesCalculateBalances.reduce((acc, cur) => {
-        acc[cur.token.tokenId] = cur;
-        return acc;
-    }, {});
-    //console.log('getTokenValue tokenRatesDict', tokenRatesDict);
-    return tokenRatesDict;
+    const AMMPrices = await getAMMPrices();
+    //console.log('getTokenValue AMMPrices', AMMPrices);
+    return AMMPrices;
 }
 
 export async function getAddressListContent(addressList) {
+    //console.log("getAddressListContent", addressList);
     const addressContentList = await Promise.all(addressList.map(async (address) => {
-        const addressContent = await getBalanceForAddress(address);
-        // console.log("getAddressListContent", address, addressContent, JSON.stringify(addressContent))
-        const addressListContent = { address: address, content: addressContent.confirmed, unconfirmed: { ...addressContent.unconfirmed } };
-        addressListContent.content.tokens.forEach(token => {
-        })
-        // console.log('addressListContent', addressListContent);
-        return addressListContent;
+        try {
+            const addressContent = await getBalanceForAddress(address);
+            // console.log("getAddressListContent", address, addressContent, JSON.stringify(addressContent))
+            const addressListContent = { address: address, content: addressContent.confirmed, unconfirmed: { ...addressContent.unconfirmed } };
+            addressListContent.content.tokens.forEach(token => {
+            })
+            // console.log('addressListContent', addressListContent);
+            return addressListContent;
+        } catch (e) {
+            console.log(e)
+            return { address: address, content: { nanoErgs: 0, tokens: [] }, unconfirmed: { nanoErgs: 0, tokens: [] } };;
+        }
+
     }));
     return addressContentList;
 }
