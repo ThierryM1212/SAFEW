@@ -1,3 +1,5 @@
+import JSONBigInt from 'json-bigint';
+
 
 const LS = {
     getAllItems: () => {
@@ -242,7 +244,8 @@ async function get(url, apiKey = '', ttl = 0) {
             api_key: apiKey,
         }
     });
-    const resJSON = await result.json();
+    const restext = await result.text();
+    const resJSON = JSONBigInt.parse(restext);
     if (ttl > 0) {
         res_cache = await ls_slim_get('web_cache_' + ttl.toString()) ?? {};
         res_cache[url] = resJSON;
@@ -254,7 +257,7 @@ async function post(url, body = {}, apiKey = '') {
     //console.log("post0", url, body);
     var postedBody = body;
     if (postedBody && typeof postedBody === 'object' && postedBody.constructor === Object) {
-        postedBody = JSON.stringify(body)
+        postedBody = JSONBigInt.stringify(body)
     }
     const response = await fetch(url, {
         method: 'POST',
@@ -268,15 +271,16 @@ async function post(url, body = {}, apiKey = '') {
         body: postedBody
     });
 
-    const [responseOk, body2] = await Promise.all([response.ok, response.json()]);
-    //console.log("post1", body2, responseOk)
+    const [responseOk, bodyText] = await Promise.all([response.ok, response.text()]);
+    const bodyRes = JSONBigInt.parse(bodyText);
+    //console.log("post1", bodyRes, responseOk)
     if (responseOk) {
-        return { result: true, data: body2 };
+        return { result: true, data: bodyRes };
     } else {
-        if (Object.keys(body2).includes("detail")) {
-            return { result: false, data: body2.detail };
+        if (Object.keys(bodyRes).includes("detail")) {
+            return { result: false, data: bodyRes.detail };
         } else {
-            return { result: false, data: body2.reason };
+            return { result: false, data: bodyRes.reason };
         }
     }
 }
