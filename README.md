@@ -189,3 +189,6 @@ v0.6.9.1
 
 v0.6.10
 - fetch boxes by tokenId in transaction builder
+
+v0.7.0
+- remove explorer dependency, use the configured node to fetch wallet content and send the transactions

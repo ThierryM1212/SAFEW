@@ -81,8 +81,9 @@ export async function getTokenInfo(tokenId) {
 
 export async function getTokenBox(tokenId) {
     const tokenInfo = await getTokenInfo(tokenId);
-    if (tokenInfo.data.boxId) {
-        return await boxByBoxId(tokenInfo.data.boxId);
+    //console.log("getTokenBox tokenInfo", tokenInfo);
+    if (tokenInfo.boxId) {
+        return await boxByBoxId(tokenInfo.boxId);
     }
 }
 
@@ -128,7 +129,7 @@ export async function getUnconfirmedTxs() {
 }
 
 export async function getUnconfirmedTxsFor(addr) {
-    const unconfirmedTx = await getRequest(`transactions/unconfirmed?limit=100`);
+    const unconfirmedTx = await getUnconfirmedTxs();
     const ergoTree = await addressToErgoTree(addr);
 
     var res = [];

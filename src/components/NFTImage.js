@@ -25,9 +25,9 @@ export default class NFTImage extends React.Component {
         var tokenBox = {};
         try {
             tokenBox = await getTokenBox(this.state.tokenId);
-            //console.log("tokenBox", tokenBox);
+            //console.log("componentDidMount tokenBox", tokenBox);
         } catch (e) {
-            // console.log(e);
+            console.log("componentDidMount NFTImage error", e);
         }
         const ipfsPrefix = 'ipfs://';
 

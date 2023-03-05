@@ -15,7 +15,7 @@ export default function TokenLabel(props) {
         });
     }, []);
 
-    //console.log("TokenLabel",props,explorerWebUIAddress)
+    //console.log("TokenLabel", props, explorerWebUIAddress)
     return (
         <div className='d-flex flex-row justify-content-between align-items-center'>
             <div className='d-flex flex-row align-items-center'>
