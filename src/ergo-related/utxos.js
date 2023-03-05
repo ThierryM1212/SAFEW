@@ -232,9 +232,9 @@ export function getTokenListFromUtxos(utxos) {
     return tokenList;
 }
 
-export function enrichTokenInfoFromUtxos(utxos, tokInfo) {
+export async function enrichTokenInfoFromUtxos(utxos, tokInfo) {
     //[TOKENID_SIGUSD]: ['SigUSD', "token-sigusd.svg", 2],
-    //console.log("enrichTokenInfoFromUtxos", utxos);
+    console.log("enrichTokenInfoFromUtxos", utxos, tokInfo);
     var tokenInfo = { ...tokInfo };
     for (const i in utxos) {
         for (const j in utxos[i].assets) {
@@ -242,11 +242,13 @@ export function enrichTokenInfoFromUtxos(utxos, tokInfo) {
                 if (Object.keys(VERIFIED_TOKENS).includes(utxos[i].assets[j].tokenId)) {
                     tokenInfo[utxos[i].assets[j].tokenId] = VERIFIED_TOKENS[utxos[i].assets[j].tokenId];
                 } else {
-                    tokenInfo[utxos[i].assets[j].tokenId] = [utxos[i].assets[j].name, '', utxos[i].assets[j].decimals];
+                    const tokInfo = await getTokenInfo(utxos[i].assets[j].tokenId);
+                    tokenInfo[utxos[i].assets[j].tokenId] = [tokInfo.name, '', tokInfo.decimals];
                 }
             }
         }
     }
+    console.log("enrichTokenInfoFromUtxos", tokenInfo);
     return tokenInfo;
 }
 

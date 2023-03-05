@@ -67,17 +67,18 @@ export async function post(url, body = {}, apiKey = '', ttl = 0) {
         },
         body: postedBody,
     });
-    const [responseOk, bodyres] = await Promise.all([response.ok, response.json()]);
+    const [responseOk, bodyres] = await Promise.all([response.ok, response.text()]);
+    const bodyJSON = JSONBigInt.parse(bodyres);
     if (responseOk) {
         //console.log("fetch1", bodyres);
         if (ttl > 0) {
             res_cache = ls.get('web_cache_' + ttl.toString()) ?? {};
-            res_cache[cache_key] = bodyres;
+            res_cache[cache_key] = bodyJSON;
             ls.set('web_cache_' + ttl.toString(), res_cache, { ttl: ttl })
         }
-        return bodyres;
+        return bodyJSON;
     } else {
-        console.log("post fetch KO", bodyres);
+        console.log("post fetch KO", bodyJSON);
     }
 }
 
@@ -100,7 +101,8 @@ export async function get(url, apiKey = '', ttl = 0) {
                 api_key: apiKey,
             }
         })
-        const resJson = await result.json();
+        const resText = await result.text();
+        const resJson = JSONBigInt.parse(resText);
         if (ttl > 0) {
             res_cache = ls.get('web_cache_' + ttl.toString()) ?? {};
             res_cache[url] = resJson;

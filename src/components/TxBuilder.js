@@ -150,7 +150,7 @@ export default class TxBuilder extends React.Component {
         var alert = waitingAlert("Fetching wallet unspent boxes...")
         //const utxos = await getUnspentBoxesForAddressList(addressList);
         const [utxos, memPoolTransaction] = await getUtxosForSelectedInputs(addressList, '1000000000', [], []);
-        const newTokenInfo = enrichTokenInfoFromUtxos(utxos, this.state.tokenInfo);
+        const newTokenInfo = await enrichTokenInfoFromUtxos(utxos, this.state.tokenInfo);
         alert.close();
         this.setState({
             addressBoxList: parseUtxos(utxos),
@@ -161,7 +161,7 @@ export default class TxBuilder extends React.Component {
 
     async fetchByAddress() {
         const boxes = await unspentBoxesFor(this.state.searchAddress);
-        const newTokenInfo = enrichTokenInfoFromUtxos(boxes, this.state.tokenInfo);
+        const newTokenInfo = await enrichTokenInfoFromUtxos(boxes, this.state.tokenInfo);
         this.setState({
             tokenInfo: newTokenInfo,
         });
@@ -184,7 +184,7 @@ export default class TxBuilder extends React.Component {
 
     async fetchByBoxTokenId() {
         const boxes = await boxByTokenId(this.state.searchBoxTokenId);
-        const newTokenInfo = enrichTokenInfoFromUtxos(boxes, this.state.tokenInfo);
+        const newTokenInfo = await enrichTokenInfoFromUtxos(boxes, this.state.tokenInfo);
         this.setState({
             tokenInfo: newTokenInfo,
         });
@@ -371,7 +371,7 @@ export default class TxBuilder extends React.Component {
             const signingWallet = await getWalletForAddresses(mnemonic, walletAddressList);
             //console.log("signingWallet", signingWallet);
             try {
-                signedTx = JSON.parse(await signTransaction(jsonUnsignedTx, this.state.selectedBoxList, this.state.selectedDataBoxList, signingWallet));
+                signedTx = JSONBigInt.parse(await signTransaction(jsonUnsignedTx, this.state.selectedBoxList, this.state.selectedDataBoxList, signingWallet));
             } catch (e) {
                 errorAlert("Failed to sign transaction", e);
                 return;
@@ -380,7 +380,7 @@ export default class TxBuilder extends React.Component {
 
         if (wallet.type === "ledger") {
             try {
-                signedTx = JSON.parse(await signTxLedger(wallet, jsonUnsignedTx, this.state.selectedBoxList, txSummaryHtml));
+                signedTx = JSONBigInt.parse(await signTxLedger(wallet, jsonUnsignedTx, this.state.selectedBoxList, txSummaryHtml));
             } catch (e) {
                 console.log("getLedgerAddresses catch", e.toString());
                 if (e instanceof DeviceError) {
@@ -460,7 +460,7 @@ export default class TxBuilder extends React.Component {
         var alert = waitingAlert("Loading input boxes...")
         const inputs = await enrichUtxos(jsonFixed.inputs, true);
         const dataInputs = await enrichUtxos(jsonFixed.dataInputs, true);
-        const newTokenInfo = enrichTokenInfoFromUtxos([inputs, dataInputs].flat(), this.state.tokenInfo);
+        const newTokenInfo = await enrichTokenInfoFromUtxos([inputs, dataInputs].flat(), this.state.tokenInfo);
         const outputs = parseUtxos(jsonFixed.outputs, true, 'output');
         alert.close();
         this.setState({
@@ -531,6 +531,7 @@ export default class TxBuilder extends React.Component {
                                             icon="add_box"
                                             tips="Add to selected inputs"
                                             color="green"
+                                            tokenInfo={tokenInfo}
                                         />
                                     </div>
                                 ))}
@@ -566,6 +567,7 @@ export default class TxBuilder extends React.Component {
                                             icon="add_box"
                                             tips="Add to selected inputs"
                                             color="green"
+                                            tokenInfo={tokenInfo}
                                         />
                                     </div>
                                 ))}
@@ -586,6 +588,7 @@ export default class TxBuilder extends React.Component {
                                             icon="clear"
                                             tips="Remove from selected data inputs"
                                             color="red"
+                                            tokenInfo={tokenInfo}
                                         />
                                     </div>
                                 ))}
@@ -609,6 +612,7 @@ export default class TxBuilder extends React.Component {
                                             moveUp={this.moveInputBoxUp}
                                             moveDown={this.moveInputBoxDown}
                                             color="red"
+                                            tokenInfo={tokenInfo}
                                         />
                                     </div>
                                 ))}

@@ -139,7 +139,7 @@ export default class AddressListContent extends React.Component {
                                                     <td>
                                                         {
                                                             tokenRatesDict && Object.keys(tokenRatesDict).includes(tok.tokenId) ?
-                                                                formatERGAmount(Math.round(tok.amount * NANOERG_TO_ERG / (tokenRatesDict[tok.tokenId] * Math.pow(10, tok.decimals))))
+                                                                formatERGAmount(Math.round(parseInt(tok.amount) * NANOERG_TO_ERG / (tokenRatesDict[tok.tokenId] * Math.pow(10, tok.decimals))))
                                                                 : '0'
                                                         }
                                                     </td>

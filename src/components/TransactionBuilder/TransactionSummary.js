@@ -3,6 +3,8 @@ import { getUtxosListValue, getTokenListFromUtxos } from '../../ergo-related/utx
 import TokenLabel from '../TokenLabel';
 import { formatTokenAmount } from '../../utils/walletUtils';
 
+/* global BigInt */
+
 export default function TransactionSummary(props) {
     const inputNanoErgAmount = parseInt(getUtxosListValue(props.json.inputs));
     const outputsNanoErgAmount = parseInt(getUtxosListValue(props.json.outputs));
@@ -12,13 +14,13 @@ export default function TransactionSummary(props) {
 
     var tokenDiffArray = {};
     for (const [key, value] of Object.entries(inputTokens)) {
-        tokenDiffArray[key] = [parseInt(value), 0];
+        tokenDiffArray[key] = [BigInt(value), BigInt(0)];
     }
     for (const [key, value] of Object.entries(outputTokens)) {
         if (key in tokenDiffArray) {
-            tokenDiffArray[key] = [tokenDiffArray[key][0], parseInt(value)];
+            tokenDiffArray[key] = [BigInt(tokenDiffArray[key][0]), BigInt(value)];
         } else {
-            tokenDiffArray[key] = [0, parseInt(value)];
+            tokenDiffArray[key] = [BigInt(0), BigInt(value)];
         }
     }
 
@@ -36,7 +38,8 @@ export default function TransactionSummary(props) {
                 </thead>
                 <tbody>
                     <tr key="tx-sum-2">
-                        <td>ERGs</td><td>{parseFloat(inputNanoErgAmount / 1000000000).toFixed(9).replace(/(\.0+|0+)$/, '')}</td><td>{parseFloat(outputsNanoErgAmount / 1000000000).toFixed(9).replace(/(\.0+|0+)$/, '')}</td>
+                        <td>ERGs</td><td>{parseFloat(inputNanoErgAmount / 1000000000).toFixed(9).replace(/(\.0+|0+)$/, '')}</td>
+                        <td>{parseFloat(outputsNanoErgAmount / 1000000000).toFixed(9).replace(/(\.0+|0+)$/, '')}</td>
                         <td>
                             {(inputNanoErgAmount === outputsNanoErgAmount) ?
                                 <ImageButtonLabeled id="nanoerg-diff" color="green" icon="price_check" label="OK" />
@@ -68,12 +71,8 @@ export default function TransactionSummary(props) {
                             </tr>
                         ))
                     }
-
                 </tbody>
-
             </table>
-
-
         </div>
     )
 }

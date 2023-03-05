@@ -524,12 +524,13 @@ export function getSummaryFromSelectedAddressListContent(addressList, addressCon
             //nanoErgsUnconfirmed += addrUnconfirmedInfo.nanoErgs;
             if (Array.isArray(addrInfo.tokens)) {
                 for (const i in addrInfo.tokens) {
-                    const token = { ...addrInfo.tokens[i] };
+                    var token = { ...addrInfo.tokens[i] };
+                    token.amount = BigInt(token.amount);
                     //if (addressList.includes(addrInfo.address)) {
                     const tokIndex = tokens.findIndex(e => (e.tokenId === token.tokenId));
                     if (tokIndex >= 0) {
                         //console.log("getSummaryFromSelectedAddressListContent adding", i, addressList[i], token.tokenId, token.amount)
-                        tokens[tokIndex].amount += token.amount;
+                        tokens[tokIndex].amount += BigInt(token.amount);
                     } else {
                         tokens.push({ ...token });
                     }
