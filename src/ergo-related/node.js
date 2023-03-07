@@ -120,26 +120,9 @@ export async function addressHasTransactions(addr) {
     return (txList.items.length > 0);
 }
 
-
-
-
-export async function getUnconfirmedTxs() {
+export async function getUnconfirmedTxs(limit = 100) {
     //console.log("getUnconfirmedTxs")
-    return await getRequest(`transactions/unconfirmed?limit=100`);
+    const res = await getRequest(`transactions/unconfirmed?limit=${limit}`);
+    return res.data;
 }
 
-export async function getUnconfirmedTxsFor(addr) {
-    const unconfirmedTx = await getUnconfirmedTxs();
-    const ergoTree = await addressToErgoTree(addr);
-
-    var res = [];
-    if (unconfirmedTx.data) {
-        for (const tx of unconfirmedTx.data) {
-            if (tx.inputs.map(b => b.ergoTree).includes(ergoTree) ||
-                tx.outputs.map(b => b.ergoTree).includes(ergoTree)) {
-                res.push(tx);
-            }
-        }
-    }
-    return res;
-}

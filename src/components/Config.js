@@ -56,18 +56,32 @@ export default class Config extends React.Component {
             <Fragment>
                 <div className='d-flex flex-column card w-75 m-1 p-1'>
                     <div className='d-flex flex-row m-1 p-1 align-items-baseline'>
-                        <h5>Servers used</h5>
+                        <h5>Node server</h5>
                         <ImageButton
-                            id={"urlInfo"}
+                            id={"urlInfoNode"}
+                            color={"white"}
+                            icon={"info"}
+                            tips={"Main server to get UTXOs and send the transactions. Reload the extension to take effect."}
+                        />
+                    </div>
+                    <ConfigURL
+                        localstorageName="nodeAddress"
+                        label="Node address"
+                        defaultURL={DEFAULT_NODE_ADDRESS}
+                    />
+                    <div className='d-flex flex-row m-1 p-1 align-items-baseline'>
+                        <h5>Other servers</h5>
+                        <ImageButton
+                            id={"urlInfoOthers"}
                             color={"white"}
                             icon={"info"}
                             tips={"Reload the extension to take effect"}
                         />
                     </div>
                     <ConfigURL
-                        localstorageName="explorerAPIAddress"
-                        label="Explorer API address"
-                        defaultURL={DEFAULT_EXPLORER_API_ADDRESS}
+                        localstorageName="mixerAddress"
+                        label="Mixer address"
+                        defaultURL={DEFAULT_MIXER_ADDRESS}
                     />
                     <ConfigURL
                         localstorageName="explorerWebUIAddress"
@@ -75,15 +89,13 @@ export default class Config extends React.Component {
                         defaultURL={DEFAULT_EXPLORER_WEBUI_ADDRESS}
                     />
                     <ConfigURL
-                        localstorageName="nodeAddress"
-                        label="Node address"
-                        defaultURL={DEFAULT_NODE_ADDRESS}
+                        localstorageName="explorerAPIAddress"
+                        label="Explorer API address"
+                        defaultURL={DEFAULT_EXPLORER_API_ADDRESS}
                     />
-                    <ConfigURL
-                        localstorageName="mixerAddress"
-                        label="Mixer address"
-                        defaultURL={DEFAULT_MIXER_ADDRESS}
-                    />
+
+
+
                     <br />
                     <div className='d-flex flex-column'>
                         <div className='d-flex flex-row align-items-center '>

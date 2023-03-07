@@ -4,8 +4,9 @@ import '@sweetalert2/theme-dark/dark.css';
 import { enrichUtxos } from "../ergo-related/utxos";
 import { hexToRgbA } from "./utils";
 import { LS } from '../utils/utils';
-import { addressHasTransactions, getBalanceForAddress, getTransactionsForAddress, getUnconfirmedTxsFor } from "../ergo-related/node";
+import { addressHasTransactions, getBalanceForAddress, getTransactionsForAddress, getUnconfirmedTxs } from "../ergo-related/node";
 import { getAMMPrices } from "../ergo-related/amm";
+import { addressToErgoTree } from "../ergo-related/serializer";
 var CryptoJS = require("crypto-js");
 
 
@@ -486,24 +487,33 @@ export async function getTransactionsForAddressList(addressList, limit) {
 }
 
 export async function getUnconfirmedTransactionsForAddressList(addressList, enrich = true) {
-    const addressUnConfirmedTransactionsList = await Promise.all(addressList.map(async (address) => {
-        var addressTransactions = await getUnconfirmedTxsFor(address);
-        //console.log("getUnconfirmedTransactionsForAddressList", address, addressTransactions);
-        if (enrich) {
-            try { // if we fail to fetch one box, skip the unconfirmed transactions for that address
-                for (const tx of addressTransactions) {
-                    tx.inputs = await enrichUtxos(tx.inputs);
-                }
-                return { address: address, transactions: addressTransactions };
-            } catch (e) {
-                console.log(e);
-                return { address: address, transactions: [] };
-            }
-        } else {
-            return { address: address, transactions: addressTransactions };
-        }
+    const ergoTreeList = await Promise.all(addressList.map(async (address) => {
+        return await addressToErgoTree(address);
     }));
-    return addressUnConfirmedTransactionsList;
+
+    const unconfirmedTx = await getUnconfirmedTxs(200);
+    var addressesUnconfirmedTx = [];
+    if (unconfirmedTx) {
+        for (const tx of unconfirmedTx) {
+            var addressTx = [];
+            for (let i = 0; i < addressList.length; i++) {
+                if (tx.inputs.map(b => b.ergoTree).includes(ergoTreeList[i]) ||
+                    tx.outputs.map(b => b.ergoTree).includes(ergoTreeList[i])) {
+                    if (enrich) {
+                        try {
+                            tx.inputs = await enrichUtxos(tx.inputs);
+                        } catch (e) {
+                            console.log(e);
+                        }
+                    }
+                    addressTx.push(tx);
+                }
+                addressesUnconfirmedTx.push({ address: addressList[i], transactions: addressTx });
+            }
+        }
+    };
+
+    return addressesUnconfirmedTx;
 }
 
 export function getSummaryFromAddressListContent(addressContentList) {

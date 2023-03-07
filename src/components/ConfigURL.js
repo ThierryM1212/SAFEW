@@ -16,6 +16,12 @@ export default class ConfigURL extends React.Component {
     }
 
     setURL = (address) => {
+        if (!address.endsWith('/')) {
+            address = address + '/';
+        };
+        if (address.endsWith('//')) {
+            address = address.slice(0, -1);;
+        };
         this.setState({
             URL: address
         });
