@@ -171,3 +171,14 @@ export function split(str, index) {
 
     return result;
 }
+
+export function ensureSingleEndSlash(addr) {
+    var res = addr;
+    if (!res.endsWith('/')) {
+        res = res + '/';
+    };
+    if (res.endsWith('//')) {
+        res = res.slice(0, -1);;
+    };
+    return res;
+}

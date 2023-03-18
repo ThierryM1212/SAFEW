@@ -1,6 +1,6 @@
 import React, { Fragment } from 'react';
 import ImageButton from './ImageButton';
-import { LS } from '../utils/utils';
+import { ensureSingleEndSlash, LS } from '../utils/utils';
 
 
 export default class ConfigURL extends React.Component {
@@ -16,14 +16,8 @@ export default class ConfigURL extends React.Component {
     }
 
     setURL = (address) => {
-        if (!address.endsWith('/')) {
-            address = address + '/';
-        };
-        if (address.endsWith('//')) {
-            address = address.slice(0, -1);;
-        };
         this.setState({
-            URL: address
+            URL: ensureSingleEndSlash(address)
         });
         LS.setItem(this.state.localstorageName, address);
     };

@@ -5,6 +5,7 @@ import { DEFAULT_EXPLORER_API_ADDRESS, DEFAULT_EXPLORER_WEBUI_ADDRESS, DEFAULT_M
 import ConfigURL from './ConfigURL';
 import ImageButton from './ImageButton';
 import { LS } from '../utils/utils';
+import ConfigNodeURL from './ConfigNodeURL';
 
 
 export default class Config extends React.Component {
@@ -64,7 +65,7 @@ export default class Config extends React.Component {
                             tips={"Main server to get UTXOs and send the transactions. Reload the extension to take effect."}
                         />
                     </div>
-                    <ConfigURL
+                    <ConfigNodeURL
                         localstorageName="nodeAddress"
                         label="Node address"
                         defaultURL={DEFAULT_NODE_ADDRESS}

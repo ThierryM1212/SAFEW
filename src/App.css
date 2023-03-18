@@ -8,13 +8,29 @@
   font-family: monospace;
 }
 
-.material-icons.red { color: #aa292d;}
-.material-icons.green { color: #5a884e;}
-.material-icons.blue { color: #216A94;}
-.material-icons.orange { color: #946526;}
+.material-icons.red {
+  color: #aa292d;
+}
 
-.redAmount { color: #ac3344;}
-.greenAmount { color: #5a884e;}
+.material-icons.green {
+  color: #5a884e;
+}
+
+.material-icons.blue {
+  color: #216A94;
+}
+
+.material-icons.orange {
+  color: #946526;
+}
+
+.redAmount {
+  color: #ac3344;
+}
+
+.greenAmount {
+  color: #5a884e;
+}
 
 .validInput {
   border: 1px solid #000000;
@@ -27,8 +43,8 @@
 }
 
 input:disabled {
-    background-color: rgb(161, 161, 161) !important;
-  }
+  background-color: rgb(161, 161, 161) !important;
+}
 
 .card {
   background-color: rgb(51, 51, 51);
@@ -40,11 +56,14 @@ input:disabled {
   border: 2px solid;
 }
 
-table,td,th .tokentable {
+table,
+td,
+th .tokentable {
   padding: 10px;
   border: 1px solid rgb(231, 211, 211);
   border-collapse: collapse;
-  }
+}
+
 th {
   text-align: center;
 }
@@ -80,6 +99,14 @@ th {
 }
 
 .walletName {
-    flex-basis: 200rem;
+  flex-basis: 200rem;
 }
 
+table,
+td,
+tr,
+th .node-list-table {
+  color: rgb(212, 212, 212) !important;
+  border: none !important;
+  text-align: left !important;
+}
