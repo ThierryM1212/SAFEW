@@ -1,6 +1,0 @@
-https://ergo-node.zoomout.io/
-https://ergonode-api.ergohost.io/
-
-
-TokenJay API fetch nodes:
-https://api.tokenjay.app/peers/list
