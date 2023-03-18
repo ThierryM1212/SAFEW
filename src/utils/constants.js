@@ -44,6 +44,17 @@ export const TOKENID_NETA = '472c3d4ecaa08fb7392ff041ee2e6af75f4a558810a74b28600
 export const TOKENID_MI_GORENG = '0779ec04f2fae64e87418a1ad917639d4668f78484f45df962b0dec14a2591d2';
 export const TOKENID_COMET = '0cd8c9f416e5b1ca9f986a7f10a84191dfb85941619e49e53c0dc30ebf83324b';
 export const TOKENID_ERGOLD = 'e91cbc48016eb390f8f872aa2962772863e2e840708517d1ab85e57451f91bed';
+export const TOKENID_SPF = '9a06d9e545a41fd51eeffc5e20d818073bf820c635e2a9d922269913e0de369d';
+export const TOKENID_WALRUS = '59ee24951ce668f0ed32bdb2e2e5731b6c36128748a3b23c28407c5f8ccbf0f6';
+export const TOKENID_THZ = '02f31739e2e4937bb9afb552943753d1e3e9cdd1a5e5661949cb0cef93f907ea';
+export const TOKENID_PAIDEIA = '1fd6e032e8476c4aa54c18c1a308dce83940e8f4a28f576440513ed7326ad489';
+export const TOKENID_FLUX = 'e8b20745ee9d18817305f32eb21015831a48f02d40980de6e849f886dca7f807';
+export const TOKENID_ERMOON = '9dbc8dd9d7ea75e38ef43cf3c0ffde2c55fd74d58ac7fc0489ec8ffee082991b';
+export const TOKENID_EPOS = '00bd762484086cf560d3127eb53f0769d76244d9737636b2699d55c56cd470bf';
+export const TOKENID_EGIO = '00b1e236b60b95c2c6f8007a9d89bc460fc9e78f98b09faec9449007b40bccf3';
+export const TOKENID_AHT = '18c938e1924fc3eadc266e75ec02d81fe73b56e4e9f4e268dffffcb30387c42d';
+export const TOKENID_EXLE = '007fd64d1ee54d78dd269c8930a38286caa28d3f29d27cadcb796418ab15c283';
+
 
 // [token_name, token_icon, token_decimals]
 export const VERIFIED_TOKENS = {
@@ -58,6 +69,17 @@ export const VERIFIED_TOKENS = {
     [TOKENID_MI_GORENG]: ['Mi Goreng', "token-mi-goreng.svg", 0],
     [TOKENID_COMET]: ['COMET', "token-comet.png", 0],
     [TOKENID_ERGOLD]: ['ERGOLD', "token-ergold.png", 0],
+    [TOKENID_SPF]: ['SPF', "spf.svg", 6],
+    [TOKENID_WALRUS]: ['WALRUS', "walrus.png", 0],
+    [TOKENID_THZ]: ['Terahertz', "terahertz.svg", 4],
+    [TOKENID_PAIDEIA]: ['Paideia', "paideia.svg", 4],
+    [TOKENID_FLUX]: ['Flux', "flux.svg", 8],
+    [TOKENID_ERMOON]: ['ErMoon', "ermoon.svg", 2],
+    [TOKENID_EPOS]: ['EPOS', "epos.svg", 4],
+    [TOKENID_EGIO]: ['EGIO', "egio.svg", 4],
+    [TOKENID_AHT]: ['AHT', "aht.svg", 4],
+    [TOKENID_EXLE]: ['EXLE', "exle.svg", 4],
+
 }
 
 export const NTF_TYPES = {
