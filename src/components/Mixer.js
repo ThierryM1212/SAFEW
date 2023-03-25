@@ -7,7 +7,7 @@ import ImageButton from './ImageButton';
 import Mix from './Mix';
 import SelectWallet from './SelectWallet';
 import { LS } from '../utils/utils';
-import { getTokenBox } from '../ergo-related/node';
+import { getTokenInfo } from '../ergo-related/node';
 
 export default class Mixer extends React.Component {
     constructor(props) {
@@ -62,11 +62,12 @@ export default class Mixer extends React.Component {
                 }
             }
             const mixedTokenInfoList = await Promise.all(tokenList.map(async (tokenId) => {
-                const tokenInfo = await getTokenBox(tokenId);
+                const tokenInfo = await getTokenInfo(tokenId);
+                //console.log("tokenInfo", tokenId, tokenInfo);
                 return tokenInfo;
             }));
             var mixedTokenInfo = {};
-            mixedTokenInfoList.forEach(tokenInfo => mixedTokenInfo[tokenInfo.id] = tokenInfo);
+            mixedTokenInfoList.forEach(tokenInfo => mixedTokenInfo[tokenInfo?.id ?? ''] = tokenInfo);
             this.setState({
                 availableMixes: availableMixes,
                 availableCoverts: availableCoverts,
