@@ -3,6 +3,8 @@ import { updateCoverRingAmount } from '../ergo-related/mixer';
 import { NANOERG_TO_ERG } from '../utils/constants';
 import { formatERGAmount, formatTokenAmount, getWalletById } from '../utils/walletUtils';
 import ImageButton from './ImageButton';
+import Select from 'react-select';
+
 
 export default class CovertAsset extends React.Component {
     constructor(props) {
@@ -34,7 +36,7 @@ export default class CovertAsset extends React.Component {
             const wallet = await getWalletById(this.props.walletId);
             this.setState({ walletId: this.props.walletId, walletColor: wallet.color });
         }
-        var ringAmount = "0";
+        var ringAmount = "1.000";
 
         if (prevProps.asset.need !== this.props.asset.need
             || prevProps.asset.confirmedDeposit !== this.props.asset.confirmedDeposit
@@ -82,6 +84,7 @@ export default class CovertAsset extends React.Component {
         const mixedTokenInfo = this.state.mixedTokenInfo;
         const walletColor = this.state.walletColor;
         const ringAmountNano = this.getRingAmountNano();
+        var optionsRingAmounts = ['1.000', '10.000', '100.000', '250.000'].map(nb => ({ value: nb, label: nb }));
         console.log("render", asset, ringAmountNano);
         return (
             <Fragment>
@@ -92,13 +95,12 @@ export default class CovertAsset extends React.Component {
                     <div className='d-flex flex-row align-items-center'>
                         Ring amount:
                         <div className='d-flex flex-row '>
-                            <input type="text"
-                                pattern="[0-9\.]+"
-                                id={"ringAmount" + asset.tokenId + covert.id}
-                                key={"ringAmount" + asset.tokenId + covert.id}
-                                className="form-control"
-                                onChange={e => this.setRingAmount(e.target.value)}
-                                value={this.state.ringAmount}
+                            <Select className='selectReact'
+                                value={{ value: this.state.ringAmount, label: this.state.ringAmount }}
+                                onChange={(a) => this.setRingAmount(a.value)}
+                                options={optionsRingAmounts}
+                                isSearchable={false}
+                                isMulti={false}
                             />
                         </div>
                         {
@@ -115,30 +117,30 @@ export default class CovertAsset extends React.Component {
                     </div>
                     <div className='d-flex flex-row justify-content-between align-items-center'>
                         <div className='d-flex flex-row'>
-                            Deposit amount: {asset.tokenId === "" ? formatERGAmount(asset.need) : formatTokenAmount(asset.need, mixedTokenInfo[asset.tokenId].decimals)}
-                            &nbsp;(done {asset.tokenId === "" ? formatERGAmount(asset.confirmedDeposit) : formatTokenAmount(asset.confirmedDeposit, mixedTokenInfo[asset.tokenId].decimals)})
+                            Required deposit amount: {asset.tokenId === "" ? formatERGAmount(asset.need) : formatTokenAmount(asset.need, mixedTokenInfo[asset.tokenId].decimals)}
+                            &nbsp;(deposited {asset.tokenId === "" ? formatERGAmount(asset.confirmedDeposit) : formatTokenAmount(asset.confirmedDeposit, mixedTokenInfo[asset.tokenId].decimals)})
                         </div>
-                 
-                                <div className='card m-1 p-1 d-flex align-items_center'
-                                    style={{
-                                        borderColor: `rgba(${walletColor.r},${walletColor.g},${walletColor.b}, 0.95)`,
-                                        backgroundColor: `rgba(${walletColor.r},${walletColor.g},${walletColor.b}, 0.10)`
-                                    }}>
-                                    <ImageButton
-                                        id={"mixTransaction"}
-                                        color={"white"}
-                                        icon={"send"}
-                                        tips={"Send to covert address"}
-                                        onClick={() => this.state.setPage('send', this.state.walletId,
-                                            {
-                                                address: this.state.covert.deposit,
-                                                amount: Math.max(0, asset.need - asset.confirmedDeposit),
-                                                tokens: asset.tokenId
-                                            }
-                                        )}
-                                    />
-                                </div>
-               
+
+                        <div className='card m-1 p-1 d-flex align-items_center'
+                            style={{
+                                borderColor: `rgba(${walletColor.r},${walletColor.g},${walletColor.b}, 0.95)`,
+                                backgroundColor: `rgba(${walletColor.r},${walletColor.g},${walletColor.b}, 0.10)`
+                            }}>
+                            <ImageButton
+                                id={"mixTransaction"}
+                                color={"white"}
+                                icon={"send"}
+                                tips={"Send to covert address"}
+                                onClick={() => this.state.setPage('send', this.state.walletId,
+                                    {
+                                        address: this.state.covert.deposit,
+                                        amount: Math.max(0, asset.need - asset.confirmedDeposit),
+                                        tokens: asset.tokenId
+                                    }
+                                )}
+                            />
+                        </div>
+
                     </div>
                     <div className='d-flex flex-row justify-content-between align-items-center'>
                         <div className='d-flex flex-row'>
