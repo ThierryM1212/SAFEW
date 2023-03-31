@@ -180,7 +180,7 @@ export default class SendTransaction extends React.Component {
             const ergAmmount = this.state.nanoErgs / NANOERG_TO_ERG - parseFloat(this.state.txFee);
             this.setState(prevState => ({
                 isSendAll: !prevState.isSendAll,
-                tokenAmountToSend: [...prevState.tokens.map(tok => tok.amount / Math.pow(10, tok.decimals))],
+                tokenAmountToSend: [...prevState.tokens.map(tok => formatTokenAmount(tok.amount, tok.decimals).replaceAll(",",""))],
                 ergsToSend: ergAmmount,
                 isValidErgToSend: this.validateErgAmount(ergAmmount, prevState.txFee),
             }))
