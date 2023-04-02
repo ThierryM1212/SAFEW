@@ -125,7 +125,7 @@ export default class DownloadTxListCSV extends React.Component {
                     var line = {};
                     var txDate = new Intl.DateTimeFormat();
                     if ("timestamp" in tx) {
-                        console.log("timestamp", tx.timestamp);
+                        //console.log("timestamp", tx.timestamp);
                         txDate = ISODateFromTimestamp(tx.timestamp);
                     } else {
                         txDate = ISODateFromTimestamp(tx.creationTimestamp);
