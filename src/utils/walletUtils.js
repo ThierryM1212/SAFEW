@@ -478,11 +478,19 @@ export async function getAddressListContent(addressList) {
 }
 
 export async function getTransactionsForAddressList(addressList, limit) {
-    const addressTransactionsList = await Promise.all(addressList.map(async (address) => {
-        const addressTransactions = await getTransactionsForAddress(address, limit);
-        //console.log("addressTransactions", address, addressTransactions)
-        return { address: address, transactions: addressTransactions.items, total: addressTransactions.total };
-    }));
+    var addressTransactionsList = [];
+    if (limit > 100) { // avoid spam the node with big requests, process sequentially
+        for (const address of addressList) {
+            const addressTransactions = await getTransactionsForAddress(address, limit);
+            addressTransactionsList.push({ address: address, transactions: addressTransactions.items, total: addressTransactions.total });
+        }
+    } else {
+        addressTransactionsList = await Promise.all(addressList.map(async (address) => {
+            const addressTransactions = await getTransactionsForAddress(address, limit);
+            //console.log("addressTransactions", address, addressTransactions)
+            return { address: address, transactions: addressTransactions.items, total: addressTransactions.total };
+        }));
+    }
     return addressTransactionsList;
 }
 
