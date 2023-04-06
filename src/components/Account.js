@@ -5,12 +5,12 @@ import AddressListContent from './AddressListContent';
 import ImageButton from './ImageButton';
 import Address from './Address';
 import { MAX_NUMBER_OF_UNUSED_ADDRESS_PER_ACCOUNT } from '../utils/constants';
-import { addressHasTransactions } from '../ergo-related/explorer';
 import { errorAlert, promptPassword, successAlert } from '../utils/Alerts';
 import { getAddress } from '../ergo-related/ergolibUtils';
 import { LS } from '../utils/utils';
 import { getNewAddress } from '../ergo-related/ledger';
 import { DeviceError } from 'ledger-ergo-js';
+import { addressHasTransactions } from '../ergo-related/node';
 
 export default class Account extends React.Component {
     constructor(props) {

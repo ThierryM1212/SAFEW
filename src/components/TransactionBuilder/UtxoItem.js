@@ -76,8 +76,8 @@ export function UtxoItem(props) {
                                             <tr key={index}>
                                                 <td>
                                                     <TokenLabel tokenId={tok.tokenId}
-                                                        name={tok.name}
-                                                        decimals={tok.decimals}
+                                                        name={props.tokenInfo[tok.tokenId][0] ?? ''}
+                                                        decimals={props.tokenInfo[tok.tokenId][2] ?? ''}
                                                     />
                                                 </td>
                                                 <td>{formatTokenAmount(tok.amount, tok.decimals)}</td>

@@ -1,12 +1,12 @@
 import { discoverAddresses } from "../ergo-related/ergolibUtils";
-import { addressHasTransactions, getBalanceForAddress, getTransactionsForAddress } from "../ergo-related/explorer";
 import { NANOERG_TO_ERG, PASSWORD_SALT, WALLET_VERSION } from "./constants";
 import '@sweetalert2/theme-dark/dark.css';
 import { enrichUtxos } from "../ergo-related/utxos";
 import { hexToRgbA } from "./utils";
-import { ExplorerTokenMarket } from 'ergo-market-lib/dist/ExplorerTokenMarket';
 import { LS } from '../utils/utils';
-import { getUnconfirmedTxsFor } from "../ergo-related/node";
+import { addressHasTransactions, getBalanceForAddress, getTransactionsForAddress, getUnconfirmedTxs } from "../ergo-related/node";
+import { getAMMPrices } from "../ergo-related/amm";
+import { addressToErgoTree } from "../ergo-related/serializer";
 var CryptoJS = require("crypto-js");
 
 
@@ -14,8 +14,6 @@ export const MIN_CHAR_WALLET_NAME = 3;
 export const MIN_CHAR_WALLET_PASSWORD = 10;
 export const INVALID_PASSWORD_LENGTH_MSG = "Min " + MIN_CHAR_WALLET_PASSWORD.toString() + " characters !";
 export const INVALID_NAME_LENGTH_MSG = "Min " + MIN_CHAR_WALLET_NAME.toString() + " characters !";
-
-export const tokenMarket = new ExplorerTokenMarket({ throwOnError: false });
 
 export function isValidPassword(password) {
     console.log(password, password.length);
@@ -335,7 +333,7 @@ export function getWalletListAddressList(walletList) {
 export function getWalletAddressesPathMap(wallet) {
     var addressPathMap = {}
     for (const i in wallet.accounts) {
-        for (const j in wallet.accounts[i].addresses){
+        for (const j in wallet.accounts[i].addresses) {
             addressPathMap[wallet.accounts[i].addresses[j].address] = getDerivationPath(i, j);
         }
     }
@@ -454,56 +452,76 @@ export async function setChangeAddress(walletId, address) {
 }
 
 export async function getTokenValue() {
-    const tokenRatesCalculateBalances = await tokenMarket.getTokenRates();
-    const tokenRatesDict = tokenRatesCalculateBalances.reduce((acc, cur) => {
-        acc[cur.token.tokenId] = cur;
-        return acc;
-    }, {});
-    //console.log('getTokenValue tokenRatesDict', tokenRatesDict);
-    return tokenRatesDict;
+    const AMMPrices = await getAMMPrices();
+    //console.log('getTokenValue AMMPrices', AMMPrices);
+    return AMMPrices;
 }
 
 export async function getAddressListContent(addressList) {
+    //console.log("getAddressListContent", addressList);
     const addressContentList = await Promise.all(addressList.map(async (address) => {
-        const addressContent = await getBalanceForAddress(address);
-        // console.log("getAddressListContent", address, addressContent, JSON.stringify(addressContent))
-        const addressListContent = { address: address, content: addressContent.confirmed, unconfirmed: { ...addressContent.unconfirmed } };
-        addressListContent.content.tokens.forEach(token => {
-        })
-        // console.log('addressListContent', addressListContent);
-        return addressListContent;
+        try {
+            const addressContent = await getBalanceForAddress(address);
+            // console.log("getAddressListContent", address, addressContent, JSON.stringify(addressContent))
+            const addressListContent = { address: address, content: addressContent.confirmed, unconfirmed: { ...addressContent.unconfirmed } };
+            addressListContent.content.tokens.forEach(token => {
+            })
+            // console.log('addressListContent', addressListContent);
+            return addressListContent;
+        } catch (e) {
+            console.log(e)
+            return { address: address, content: { nanoErgs: 0, tokens: [] }, unconfirmed: { nanoErgs: 0, tokens: [] } };;
+        }
+
     }));
     return addressContentList;
 }
 
 export async function getTransactionsForAddressList(addressList, limit) {
-    const addressTransactionsList = await Promise.all(addressList.map(async (address) => {
-        const addressTransactions = await getTransactionsForAddress(address, limit);
-        //console.log("addressTransactions", address, addressTransactions)
-        return { address: address, transactions: addressTransactions.items, total: addressTransactions.total };
-    }));
+    var addressTransactionsList = [];
+    if (limit > 100) { // avoid spam the node with big requests, process sequentially
+        for (const address of addressList) {
+            const addressTransactions = await getTransactionsForAddress(address, limit);
+            addressTransactionsList.push({ address: address, transactions: addressTransactions.items, total: addressTransactions.total });
+        }
+    } else {
+        addressTransactionsList = await Promise.all(addressList.map(async (address) => {
+            const addressTransactions = await getTransactionsForAddress(address, limit);
+            //console.log("addressTransactions", address, addressTransactions)
+            return { address: address, transactions: addressTransactions.items, total: addressTransactions.total };
+        }));
+    }
     return addressTransactionsList;
 }
 
 export async function getUnconfirmedTransactionsForAddressList(addressList, enrich = true) {
-    const addressUnConfirmedTransactionsList = await Promise.all(addressList.map(async (address) => {
-        var addressTransactions = await getUnconfirmedTxsFor(address);
-        //console.log("getUnconfirmedTransactionsForAddressList", address, addressTransactions);
-        if (enrich) {
-            try { // if we fail to fetch one box, skip the unconfirmed transactions for that address
-                for (const tx of addressTransactions) {
-                    tx.inputs = await enrichUtxos(tx.inputs);
-                }
-                return { address: address, transactions: addressTransactions };
-            } catch (e) {
-                console.log(e);
-                return { address: address, transactions: [] };
-            }
-        } else {
-            return { address: address, transactions: addressTransactions };
-        }
+    const ergoTreeList = await Promise.all(addressList.map(async (address) => {
+        return await addressToErgoTree(address);
     }));
-    return addressUnConfirmedTransactionsList;
+
+    const unconfirmedTx = await getUnconfirmedTxs(200);
+    var addressesUnconfirmedTx = [];
+    if (unconfirmedTx) {
+        for (const tx of unconfirmedTx) {
+            var addressTx = [];
+            for (let i = 0; i < addressList.length; i++) {
+                if (tx.inputs.map(b => b.ergoTree).includes(ergoTreeList[i]) ||
+                    tx.outputs.map(b => b.ergoTree).includes(ergoTreeList[i])) {
+                    if (enrich) {
+                        try {
+                            tx.inputs = await enrichUtxos(tx.inputs);
+                        } catch (e) {
+                            console.log(e);
+                        }
+                    }
+                    addressTx.push(tx);
+                }
+                addressesUnconfirmedTx.push({ address: addressList[i], transactions: addressTx });
+            }
+        }
+    };
+
+    return addressesUnconfirmedTx;
 }
 
 export function getSummaryFromAddressListContent(addressContentList) {
@@ -524,12 +542,13 @@ export function getSummaryFromSelectedAddressListContent(addressList, addressCon
             //nanoErgsUnconfirmed += addrUnconfirmedInfo.nanoErgs;
             if (Array.isArray(addrInfo.tokens)) {
                 for (const i in addrInfo.tokens) {
-                    const token = { ...addrInfo.tokens[i] };
+                    var token = { ...addrInfo.tokens[i] };
+                    token.amount = BigInt(token.amount);
                     //if (addressList.includes(addrInfo.address)) {
                     const tokIndex = tokens.findIndex(e => (e.tokenId === token.tokenId));
                     if (tokIndex >= 0) {
                         //console.log("getSummaryFromSelectedAddressListContent adding", i, addressList[i], token.tokenId, token.amount)
-                        tokens[tokIndex].amount += token.amount;
+                        tokens[tokIndex].amount += BigInt(token.amount);
                     } else {
                         tokens.push({ ...token });
                     }

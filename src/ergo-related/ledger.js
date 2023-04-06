@@ -6,10 +6,10 @@ import { DEFAULT_NUMBER_OF_UNUSED_ADDRESS_PER_ACCOUNT } from "../utils/constants
 import { convertToHex, hexToBytes } from "../utils/utils";
 import { getWalletAddressesPathMap } from "../utils/walletUtils";
 import { getUnsignedTransaction } from "./ergolibUtils";
-import { addressHasTransactions } from "./explorer";
 import BIP32Factory from 'bip32';
 import * as ecc from 'tiny-secp256k1';
 import { Address } from "@coinbarn/ergo-ts";
+import { addressHasTransactions } from "./node";
 let ergolib = import('ergo-lib-wasm-browser')
 const bip32 = BIP32Factory(ecc);
 

@@ -85,19 +85,93 @@ Same ergo_request_read_access and ergo_check_read_access than Yoroi method are d
 ![Display NFTs](./screens/display_nft.png)
 
 ## Release notes
-v0.3
-- ErgoPay improvement: allow to delete mnemonic to convert a wallet to an ErgoPay wallet, add/remove addresses from Ergopay wallets, add ErgoPay button for mobile users
-- ErgoMixer integration: Display available Mixes, send mix transactions from the wallet, manage covert addresses
-- Update dApp connector functions to allow future Wallet selector in dApps
-- Update dependencies, cleanup lint
+v0.7.0
+- remove explorer dependency, use the configured node to fetch wallet content and send the transactions
+- fix issues with big numbers of tokens (over js max number)
+- update the verified token list
 
-v0.4
-- Transaction builder integration
-- bug fixes
+v0.6.10
+- fetch boxes by tokenId in transaction builder
 
-v0.4.1
-- Firefox support
-- bug fixes
+v0.6.9.1
+- fix balance box generation in transaction builder
+
+v0.6.9
+- fix output creation height for v5.0
+- fix signing with ledger recent test app
+
+v0.6.8
+- fix token media hash for minted tokens
+- allow a bigger zoom for the Ergopay transaction QR codes, increase the error correction level
+- fix delete key action when editing boxes in Transaction Builder
+- fix typo in the README
+
+v0.6.7
+- fix dApp connector for ergopad
+- fix chained transactions through the dApp connector
+
+v0.6.6
+- get headers from Explorer rather than node
+- fix loading of unconfirmed transactions in Transaction Builder
+- fix isConnected to return a promise
+
+v0.6.5
+- improve CSV export: review the format, remove 500 transaction limit, allow export by address
+- fix isConnected ergoConnector function to really check if safew is connected
+
+v0.6.4
+- fix "Cancel connect" handling
+- add "SAFEW" keyword in the title to be found on the store
+
+v0.6.3
+- dApp connector disconnect feature
+- fix cancel connection response
+- update icons
+
+v0.6.2
+- Switch back to wasm library
+- Update ergo-lib-wasm-browser from 0.15.0 to 0.16.1
+- Allow Nautilus and SAFEW to be activated at the same time
+- Fixes for Chrome 102
+
+v0.6.1
+- Fix signing with ledger when registers are set in output
+- Fix explorer links
+
+v0.6.0
+- Ledger support
+- Embed google fonts
+- Display error message when Ergopay QR code fails to be generated
+- Bug fixes
+
+v0.5.0
+- Manifest v3 support: Use chrome.storage instead of localstorage, dApp connector refactoring
+
+v0.4.7
+- Ergold logo
+- Bug fix in transaction csv export
+
+v0.4.6
+- Chained transactions support in wallet and with dApp connector
+- Add caching for some explorer requests
+- Improve csv export with UTC date and full ERG amount
+- Added COMET and Mi Goreng verified tokens
+- Bug fix
+
+v0.4.5
+- Fix Ergodex connection
+- UI adjustment
+
+v0.4.4
+- Display NFT Images (improved), Audio, Videos
+- Mint tokens, Images, Audio and Videos
+- Burn tokens
+- Bug fixes
+
+v0.4.3
+- Display NFT images
+- Fix csv transaction export
+- Fix send tokens that was failing to generate the transaction for some assets
 
 v0.4.2
 - Export transactions as csv
@@ -107,85 +181,16 @@ v0.4.2
 - Display token details in transaction builder unspent boxes
 - Technical: Remove react-app-rewired, allow to "watch" the build directory (Thanks SoCool)
 
-v0.4.3
-- Display NFT images
-- Fix csv transaction export
-- Fix send tokens that was failing to generate the transaction for some assets
+v0.4.1
+- Firefox support
+- bug fixes
 
-v0.4.4
-- Display NFT Images (improved), Audio, Videos
-- Mint tokens, Images, Audio and Videos
-- Burn tokens
-- Bug fixes
+v0.4
+- Transaction builder integration
+- bug fixes
 
-v0.4.5
-- Fix Ergodex connection
-- UI adjustment
-
-v0.4.6
-- Chained transactions support in wallet and with dApp connector
-- Add caching for some explorer requests
-- Improve csv export with UTC date and full ERG amount
-- Added COMET and Mi Goreng verified tokens
-- Bug fix
-
-v0.4.7
-- Ergold logo
-- Bug fix in transaction csv export
-
-v0.5.0
-- Manifest v3 support: Use chrome.storage instead of localstorage, dApp connector refactoring
-
-v0.6.0
-- Ledger support
-- Embed google fonts
-- Display error message when Ergopay QR code fails to be generated
-- Bug fixes
-
-v0.6.1
-- Fix signing with ledger when registers are set in output
-- Fix explorer links
-
-v0.6.2
-- Switch back to wasm library
-- Update ergo-lib-wasm-browser from 0.15.0 to 0.16.1
-- Allow Nautilus and SAFEW to be activated at the same time
-- Fixes for Chrome 102
-
-v0.6.3
-- dApp connector disconnect feature
-- fix cancel connection response
-- update icons
-
-v0.6.4
-- fix "Cancel connect" handling
-- add "SAFEW" keyword in the title to be found on the store
-
-v0.6.5
-- improve CSV export: review the format, remove 500 transaction limit, allow export by address
-- fix isConnected ergoConnector function to really check if safew is connected
-
-v0.6.6
-- get headers from Explorer rather than node
-- fix loading of unconfirmed transactions in Transaction Builder
-- fix isConnected to return a promise
-
-v0.6.7
-- fix dApp connector for ergopad
-- fix chained transactions through the dApp connector
-
-v0.6.8
-- fix token media hash for minted tokens
-- allow a bigger zoom for the Ergopay transaction QR codes, increase the error correction level
-- fix delete key action when editing boxes in Transaction Builder
-- fix typo in the README
-
-v0.6.9
-- fix output creation height for v5.0
-- fix signing with ledger recent test app
-
-v0.6.9.1
-- fix balance box generation in transaction builder
-
-v0.6.10
-- fetch boxes by tokenId in transaction builder
+v0.3
+- ErgoPay improvement: allow to delete mnemonic to convert a wallet to an ErgoPay wallet, add/remove addresses from Ergopay wallets, add ErgoPay button for mobile users
+- ErgoMixer integration: Display available Mixes, send mix transactions from the wallet, manage covert addresses
+- Update dApp connector functions to allow future Wallet selector in dApps
+- Update dependencies, cleanup lint

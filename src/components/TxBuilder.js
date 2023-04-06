@@ -8,12 +8,12 @@ import ImageButton from './ImageButton';
 import ImageButtonLabeled from './TransactionBuilder/ImageButtonLabeled';
 import ReactJson from 'react-json-view';
 import { UtxoItem } from './TransactionBuilder/UtxoItem';
-import { unspentBoxesForV1, boxByBoxId, currentHeight, postTxMempool, getTokenBoxV1, boxByTokenId } from '../ergo-related/explorer';
-import { parseUtxo, parseUtxos, enrichUtxos, buildBalanceBox, getUnspentBoxesForAddressList, parseSignedTx, enrichTokenInfoFromUtxos, getUtxoBalanceForAddressList } from '../ergo-related/utxos';
+import { boxByTokenId } from '../ergo-related/explorer';
+import { parseUtxo, parseUtxos, enrichUtxos, buildBalanceBox, parseSignedTx, enrichTokenInfoFromUtxos, getUtxoBalanceForAddressList } from '../ergo-related/utxos';
 import { getWalletForAddresses, signTransaction } from '../ergo-related/serializer';
 import JSONBigInt from 'json-bigint';
 import { errorAlert, promptPassword, waitingAlert } from '../utils/Alerts';
-import { sendTx } from '../ergo-related/node';
+import { boxByBoxId, currentHeight, sendTx, unspentBoxesFor } from '../ergo-related/node';
 import { getTxReducedB64Safe, getUtxosForSelectedInputs } from '../ergo-related/ergolibUtils';
 import BigQRCode from './BigQRCode';
 import SelectWallet from './SelectWallet';
@@ -99,9 +99,9 @@ export default class TxBuilder extends React.Component {
         this.getSignedTransaction = this.getSignedTransaction.bind(this);
         this.getTransaction = this.getTransaction.bind(this);
     }
-    async setWallet(walletId) { 
+    async setWallet(walletId) {
         const wallet = await getWalletById(walletId);
-        this.setState({ selectedWalletId: walletId, wallet: wallet }); 
+        this.setState({ selectedWalletId: walletId, wallet: wallet });
     };
     setSearchAddress = (address) => { this.setState({ searchAddress: address }); };
     setSearchBoxId = (boxId) => { this.setState({ searchBoxId: boxId }); };
@@ -150,7 +150,7 @@ export default class TxBuilder extends React.Component {
         var alert = waitingAlert("Fetching wallet unspent boxes...")
         //const utxos = await getUnspentBoxesForAddressList(addressList);
         const [utxos, memPoolTransaction] = await getUtxosForSelectedInputs(addressList, '1000000000', [], []);
-        const newTokenInfo = enrichTokenInfoFromUtxos(utxos, this.state.tokenInfo);
+        const newTokenInfo = await enrichTokenInfoFromUtxos(utxos, this.state.tokenInfo);
         alert.close();
         this.setState({
             addressBoxList: parseUtxos(utxos),
@@ -160,8 +160,8 @@ export default class TxBuilder extends React.Component {
     }
 
     async fetchByAddress() {
-        const boxes = await unspentBoxesForV1(this.state.searchAddress);
-        const newTokenInfo = enrichTokenInfoFromUtxos(boxes, this.state.tokenInfo);
+        const boxes = await unspentBoxesFor(this.state.searchAddress);
+        const newTokenInfo = await enrichTokenInfoFromUtxos(boxes, this.state.tokenInfo);
         this.setState({
             tokenInfo: newTokenInfo,
         });
@@ -184,7 +184,7 @@ export default class TxBuilder extends React.Component {
 
     async fetchByBoxTokenId() {
         const boxes = await boxByTokenId(this.state.searchBoxTokenId);
-        const newTokenInfo = enrichTokenInfoFromUtxos(boxes, this.state.tokenInfo);
+        const newTokenInfo = await enrichTokenInfoFromUtxos(boxes, this.state.tokenInfo);
         this.setState({
             tokenInfo: newTokenInfo,
         });
@@ -335,7 +335,7 @@ export default class TxBuilder extends React.Component {
         if (this.state.signedTransaction === '') {
             return {}
         }
-        return {...this.state.signedTransaction};
+        return { ...this.state.signedTransaction };
     }
 
     async signTx() {
@@ -371,7 +371,7 @@ export default class TxBuilder extends React.Component {
             const signingWallet = await getWalletForAddresses(mnemonic, walletAddressList);
             //console.log("signingWallet", signingWallet);
             try {
-                signedTx = JSON.parse(await signTransaction(jsonUnsignedTx, this.state.selectedBoxList, this.state.selectedDataBoxList, signingWallet));
+                signedTx = JSONBigInt.parse(await signTransaction(jsonUnsignedTx, this.state.selectedBoxList, this.state.selectedDataBoxList, signingWallet));
             } catch (e) {
                 errorAlert("Failed to sign transaction", e);
                 return;
@@ -380,7 +380,7 @@ export default class TxBuilder extends React.Component {
 
         if (wallet.type === "ledger") {
             try {
-                signedTx = JSON.parse(await signTxLedger(wallet, jsonUnsignedTx, this.state.selectedBoxList, txSummaryHtml));
+                signedTx = JSONBigInt.parse(await signTxLedger(wallet, jsonUnsignedTx, this.state.selectedBoxList, txSummaryHtml));
             } catch (e) {
                 console.log("getLedgerAddresses catch", e.toString());
                 if (e instanceof DeviceError) {
@@ -404,22 +404,16 @@ export default class TxBuilder extends React.Component {
         const signedTx = await this.signTx();
         console.log("signAndSendTx signedTx", signedTx);
         if (signedTx && signedTx.inputs) {
-            if (this.state.memPoolTransaction) {
-                await postTxMempool(signedTx);
-            } else {
-                await sendTx(signedTx);
-            }
+            await sendTx(signedTx);
             //await delay(3000);
             this.state.setPage('transactions', this.state.selectedWalletId);
         }
     }
 
     async sendSignedTx() {
-        if (this.state.memPoolTransaction) {
-            await postTxMempool(this.state.signedTransaction);
-        } else {
-            await sendTx(this.state.signedTransaction);
-        }
+
+        await sendTx(this.state.signedTransaction);
+
         //await delay(3000);
         this.state.setPage('transactions', this.state.selectedWalletId);
     }
@@ -466,7 +460,7 @@ export default class TxBuilder extends React.Component {
         var alert = waitingAlert("Loading input boxes...")
         const inputs = await enrichUtxos(jsonFixed.inputs, true);
         const dataInputs = await enrichUtxos(jsonFixed.dataInputs, true);
-        const newTokenInfo = enrichTokenInfoFromUtxos([inputs, dataInputs].flat(), this.state.tokenInfo);
+        const newTokenInfo = await enrichTokenInfoFromUtxos([inputs, dataInputs].flat(), this.state.tokenInfo);
         const outputs = parseUtxos(jsonFixed.outputs, true, 'output');
         alert.close();
         this.setState({
@@ -537,6 +531,7 @@ export default class TxBuilder extends React.Component {
                                             icon="add_box"
                                             tips="Add to selected inputs"
                                             color="green"
+                                            tokenInfo={tokenInfo}
                                         />
                                     </div>
                                 ))}
@@ -572,6 +567,7 @@ export default class TxBuilder extends React.Component {
                                             icon="add_box"
                                             tips="Add to selected inputs"
                                             color="green"
+                                            tokenInfo={tokenInfo}
                                         />
                                     </div>
                                 ))}
@@ -592,6 +588,7 @@ export default class TxBuilder extends React.Component {
                                             icon="clear"
                                             tips="Remove from selected data inputs"
                                             color="red"
+                                            tokenInfo={tokenInfo}
                                         />
                                     </div>
                                 ))}
@@ -615,6 +612,7 @@ export default class TxBuilder extends React.Component {
                                             moveUp={this.moveInputBoxUp}
                                             moveDown={this.moveInputBoxDown}
                                             color="red"
+                                            tokenInfo={tokenInfo}
                                         />
                                     </div>
                                 ))}

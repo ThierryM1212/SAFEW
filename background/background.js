@@ -1,5 +1,6 @@
 import JSONBigInt from 'json-bigint';
 
+
 const LS = {
     getAllItems: () => {
         // Immediately return a promise and start asynchronous work
@@ -45,8 +46,8 @@ chrome.runtime.onInstalled.addListener(() => {
 var connectResponseHandlers = new Map();
 var signResponseHandlers = new Map();
 
-var explorerApi = "https://api.ergoplatform.com/";
 var nodeApi = "http://213.239.193.208:9053/";
+const SHORT_CACHE = 15, LONG_CACHE = 86400;
 
 
 // Where we will expose all the data we retrieve from storage.sync.
@@ -79,7 +80,6 @@ async function handleBrowserActionClicked() {
     } catch (e) {
         // Handle error that occurred during storage initialization.
     }
-    explorerApi = local_storage["explorerAPIAddress"] ?? "https://api.ergoplatform.com/";
     nodeApi = local_storage['nodeAddress'] ?? "http://213.239.193.208:9053/";
 
     chrome.tabs.create({
@@ -133,10 +133,10 @@ function launchPopup(message, sender, param = '') {
         chrome.windows.create({
             url: URLpopup,
             type: 'popup',
-            width: Math.ceil(focusedWindow.width/2),
-            height: focusedWindow.height - Math.floor(focusedWindow.height/3),
+            width: Math.ceil(focusedWindow.width / 2),
+            height: focusedWindow.height - Math.floor(focusedWindow.height / 3),
             top: focusedWindow.top,
-            left: focusedWindow.left + (focusedWindow.width - Math.floor(focusedWindow.width/2)),
+            left: focusedWindow.left + (focusedWindow.width - Math.floor(focusedWindow.width / 2)),
             focused: true,
         });
     });
@@ -227,18 +227,38 @@ function getConnectedWalletByURL(url) {
     }
     return null;
 }
-async function get(url, apiKey = '') {
+async function get(url, apiKey = '', ttl = 0) {
+    var res_cache = {};
+    if (ttl > 0) {
+        await ls_slim_flush();
+        res_cache = await ls_slim_get('web_cache_' + ttl.toString()) ?? {};
+        if (Object.keys(res_cache).includes(url)) {
+            //console.log("res_cache", res_cache[url])
+            return res_cache[url];
+        }
+    }
     const result = await fetch(url, {
         headers: {
             Accept: 'application/json',
             'Content-Type': 'application/json',
             api_key: apiKey,
         }
-    }).then(res => res.json());
-    return result;
+    });
+    const restext = await result.text();
+    const resJSON = JSONBigInt.parse(restext);
+    if (ttl > 0) {
+        res_cache = await ls_slim_get('web_cache_' + ttl.toString()) ?? {};
+        res_cache[url] = resJSON;
+        ls_slim_set('web_cache_' + ttl.toString(), res_cache, { ttl: ttl })
+    }
+    return resJSON;
 }
 async function post(url, body = {}, apiKey = '') {
-    //console.log("post0", JSONBigInt.stringify(body));
+    //console.log("post0", url, body);
+    var postedBody = body;
+    if (postedBody && typeof postedBody === 'object' && postedBody.constructor === Object) {
+        postedBody = JSONBigInt.stringify(body)
+    }
     const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -248,61 +268,73 @@ async function post(url, body = {}, apiKey = '') {
             'Access-Control-Allow-Origin': '*',
             'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
         },
-        body: JSONBigInt.stringify(body)
+        body: postedBody
     });
 
-    const [responseOk, body2] = await Promise.all([response.ok, response.json()]);
-    //console.log("post1", body2, responseOk)
+    const [responseOk, bodyText] = await Promise.all([response.ok, response.text()]);
+    const bodyRes = JSONBigInt.parse(bodyText);
+    //console.log("post1", bodyRes, responseOk)
     if (responseOk) {
-        if (typeof body2 === 'object') {
-            //console.log("post2", body2.id)
-            return { result: true, data: body2.id };
-        } else {
-            return { result: true, data: body2 };
-        }
+        return { result: true, data: bodyRes };
     } else {
-        if (Object.keys(body2).includes("detail")) {
-            return { result: false, data: body2.detail };
+        if (Object.keys(bodyRes).includes("detail")) {
+            return { result: false, data: bodyRes.detail };
         } else {
-            return { result: false, data: body2.reason };
+            return { result: false, data: bodyRes.reason };
         }
     }
-
 }
-async function postTxMempool(tx) {
+
+async function sendTx(tx) {
     try {
-        const res = await post(explorerApi + 'api/v1/mempool/transactions/submit', tx);
-        console.log("postTxMempool", tx, res);
-        return { detail: res };
+        const url = nodeApi + "transactions";
+        //return await postRequest("transactions", tx);
+        const res = await post(url, tx);
+        if (typeof res.data === 'object') {
+            //console.log("post2", body2.id)
+            return { detail: { result: true, data: res.data.id } };
+        } else {
+            return { detail: { result: true, data: res.data } };
+        }
     } catch (err) {
-        console.log("postTxMempool", err);
+        console.log("sendTx", err);
         return { detail: { result: false, data: err.toString() } }
     }
 }
-async function sendTx(tx) {
-    //return await postRequest("transactions", tx);
-    return await postTxMempool(tx);
-}
 async function getRequest(url, ttl = 0) {
-    return get(explorerApi + 'api/v0' + url, '').then(res => {
+    return get(nodeApi + url, '', ttl).then(res => {
         return { data: res };
     });
 }
-async function getRequestV1(url) {
-    const res = await get(explorerApi + 'api/v1' + url);
-    return { data: res };
+async function postRequest(url, body) {
+    return post(nodeApi + url, body, '');
 }
-async function getBalanceConfirmedForAddress(addr) {
-    const res = await getRequestV1(`/addresses/${addr}/balance/confirmed`);
+
+async function getBalanceForAddress(address) {
+    const res = await postRequest(`blockchain/balance`, address);
+    //console.log("getBalanceForAddress", address, res)
     return res.data;
 }
-async function unspentBoxesForV1(address) {
-    const res = await getRequestV1(`/boxes/unspent/byAddress/${address}`);
-    return res.data.items;
+async function getBalanceConfirmedForAddress(addr) {
+    const res = await getBalanceForAddress(addr);
+    if (res && res.confirmed) {
+        return res.confirmed;
+    }
+}
+async function addressToErgoTree(addr) { // P2PK only
+    const res = await getRequest(`utils/addressToRaw/${addr}`, LONG_CACHE);
+    //console.log("addressToErgoTree", addr, res);
+    return "0008cd" + res.data.raw;
+}
+
+async function unspentBoxesFor(address) {
+    const res = await postRequest(`blockchain/box/unspent/byAddress?offset=0&limit=50`, address);
+    //console.log("unspentBoxesFor", address, res)
+    return res.data;
 }
 async function getUnspentBoxesForAddressList(addressList) {
     var boxList = await Promise.all(addressList.map(async (address) => {
-        const addressBoxes = await unspentBoxesForV1(address);
+        const addressBoxes = await unspentBoxesFor(address);
         return addressBoxes;
     }));
     var [spentBoxes, newBoxes] = await getSpentAndUnspentBoxesFromMempool(addressList);
@@ -327,14 +359,19 @@ async function getAddressListContent(addressList) {
     }));
     return addressContentList;
 }
-async function getUnconfirmedTxsFor(addr) {
-    return getRequest(`/transactions/unconfirmed/byAddress/${addr}`)
-        .then((res) => res.data)
-        .then((res) => res.items);
+
+async function getUnconfirmedTxsFor(ergoTree) {
+    const res = await postRequest(`transactions/unconfirmed/byErgoTree`, '"' + ergoTree + '"');
+    //console.log("getUnconfirmedTxsFor", ergoTree, res);
+    return res.data;
 }
+
 async function getUnconfirmedTransactionsForAddressList(addressList) {
-    const addressUnConfirmedTransactionsList = await Promise.all(addressList.map(async (address) => {
-        var addressTransactions = await getUnconfirmedTxsFor(address);
+    const ergoTreeList = await Promise.all(addressList.map(async (address) => {
+        return await addressToErgoTree(address);
+    }));
+    const addressUnConfirmedTransactionsList = await Promise.all(ergoTreeList.map(async (ergoTree) => {
+        var addressTransactions = await getUnconfirmedTxsFor(ergoTree);
         return addressTransactions;
     }));
     return addressUnConfirmedTransactionsList.flat();
@@ -350,7 +387,7 @@ async function getSpentAndUnspentBoxesFromMempool(addressList) {
         }
         newBoxes = unconfirmedTxs.map(tx => tx.outputs).flat().filter(box => addressList.includes(box.address));
     }
-    ls_slim_flush();
+    await ls_slim_flush();
     if (newBoxes.length > 0) {
         for (const i in newBoxes) {
             newBoxes[i]["boxId"] = newBoxes[i].id;
@@ -360,7 +397,7 @@ async function getSpentAndUnspentBoxesFromMempool(addressList) {
         ls_slim_set('cache_newBoxes', newBoxes.concat(cache_newBoxes), 600);
         //console.log('getUtxosForSelectedInputs cache_newBoxes', ls.get('cache_newBoxes'))
     }
-    console.log("getSpentAndUnspentBoxesFromMempool", spentBoxes, newBoxes)
+    //console.log("getSpentAndUnspentBoxesFromMempool", spentBoxes, newBoxes)
     return [spentBoxes, newBoxes];
 }
 
@@ -414,7 +451,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
         }
 
-        if (message.data && message.data.type ===  "disconnect") {
+        if (message.data && message.data.type === "disconnect") {
             console.log("Disconnecting", message.data.url);
             const disconnectSuccess = disconnectSite(message.data.url);
             sendResponse({
@@ -425,7 +462,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             return;
         }
 
-        if (message.data && message.data.type ===  "is_connected") {
+        if (message.data && message.data.type === "is_connected") {
             console.log("is_connected", message.data.url);
             sendResponse({
                 type: "is_connected_response",
@@ -438,7 +475,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         if (message.data && message.data.type === "ergo_api") {
             const wallet = getConnectedWalletByURL(message.data.url);
             //console.log("wallet", wallet);
-            
+
             const addressList = wallet.accounts.map(account => account.addresses).flat();
             //console.log("background ergo_api", wallet, addressList);
             if (message.data.func === "ping") {
@@ -526,6 +563,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                         } else { // all utxos
                             selectedUtxos = addressBoxes;
                         }
+                        console.log("selectedUtxos", selectedUtxos)
                         sendResponse({
                             type: "ergo_api_response",
                             result: true,
@@ -643,7 +681,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 async function getTabId() {
     var tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-    console.log("getTabId", tabs);
+    //console.log("getTabId", tabs);
     if (tabs.length > 0) {
         return tabs[0].id;
     } else {

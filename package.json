@@ -1,6 +1,6 @@
 {
   "name": "safew-wallet",
-  "version": "0.6.10",
+  "version": "0.7.0",
   "private": true,
   "dependencies": {
     "@babel/polyfill": "^7.12.1",
@@ -66,6 +66,7 @@
   "devDependencies": {
     "@babel/core": "^7.0.0",
     "@babel/plugin-proposal-class-properties": "^7.16.7",
+    "@babel/plugin-transform-destructuring": "^7.20.7",
     "@babel/plugin-transform-modules-commonjs": "^7.17.9",
     "@babel/plugin-transform-runtime": "^7.17.0",
     "@babel/preset-env": "^7.16.11",
@@ -77,7 +78,6 @@
     "copy-webpack-plugin": "^10.2.4",
     "cross-env": "^7.0.3",
     "css-loader": "^6.6.0",
-    "ergo-market-lib": "github:JimmyHoffa/ergo-market-lib#1.1.2",
     "file-loader": "^6.2.0",
     "html-webpack-plugin": "^5.5.0",
     "patch-package": "^6.4.7",

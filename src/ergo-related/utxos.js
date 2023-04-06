@@ -1,8 +1,7 @@
 import { TX_FEE_ERGO_TREE, VERIFIED_TOKENS } from "../utils/constants";
 import { ls_slim_flush, ls_slim_get, ls_slim_set } from "../utils/utils";
 import { getUnconfirmedTransactionsForAddressList } from "../utils/walletUtils";
-import { boxByBoxId, currentHeight, getTokenBoxV1, unspentBoxesForV1 } from "./explorer";
-import { boxByIdMempool } from "./node";
+import { boxByBoxId, boxByIdMempool, currentHeight, getTokenBox, getTokenInfo, unspentBoxesFor } from "./node";
 import { decodeString, encodeContract, ergoTreeToAddress } from "./serializer";
 
 /* global BigInt */
@@ -66,7 +65,7 @@ export function parseUtxos(utxos, addExtention, mode = 'input') {
 }
 
 export async function enrichUtxos(utxos, addExtension = false) {
-    console.log("enrichUtxos utxos", utxos);
+    //console.log("enrichUtxos utxos", utxos);
     var utxosFixed = [];
     await ls_slim_flush();
     var cache_newBoxes = await ls_slim_get('cache_newBoxes') ?? [];
@@ -98,7 +97,7 @@ export async function enrichUtxos(utxos, addExtension = false) {
             for (var token of box.assets) {
                 var newToken = { ...token }
                 //console.log("enrichUtxos2", token.tokenId);
-                const tokenDesc = await getTokenBoxV1(token.tokenId);
+                const tokenDesc = await getTokenInfo(token.tokenId);
                 //console.log("enrichUtxos2_1", tokenDesc);
                 newToken["name"] = tokenDesc.name;
                 newToken["decimals"] = tokenDesc.decimals;
@@ -233,9 +232,9 @@ export function getTokenListFromUtxos(utxos) {
     return tokenList;
 }
 
-export function enrichTokenInfoFromUtxos(utxos, tokInfo) {
+export async function enrichTokenInfoFromUtxos(utxos, tokInfo) {
     //[TOKENID_SIGUSD]: ['SigUSD', "token-sigusd.svg", 2],
-    //console.log("enrichTokenInfoFromUtxos", utxos);
+    console.log("enrichTokenInfoFromUtxos", utxos, tokInfo);
     var tokenInfo = { ...tokInfo };
     for (const i in utxos) {
         for (const j in utxos[i].assets) {
@@ -243,11 +242,13 @@ export function enrichTokenInfoFromUtxos(utxos, tokInfo) {
                 if (Object.keys(VERIFIED_TOKENS).includes(utxos[i].assets[j].tokenId)) {
                     tokenInfo[utxos[i].assets[j].tokenId] = VERIFIED_TOKENS[utxos[i].assets[j].tokenId];
                 } else {
-                    tokenInfo[utxos[i].assets[j].tokenId] = [utxos[i].assets[j].name, '', utxos[i].assets[j].decimals];
+                    const tokInfo = await getTokenInfo(utxos[i].assets[j].tokenId);
+                    tokenInfo[utxos[i].assets[j].tokenId] = [tokInfo.name, '', tokInfo.decimals];
                 }
             }
         }
     }
+    console.log("enrichTokenInfoFromUtxos", tokenInfo);
     return tokenInfo;
 }
 
@@ -371,7 +372,14 @@ async function getUtxoContentForAddressList(utxos, addressList, input0BoxId = ""
                         }
                     }
                 }
-
+                //console.log("token.name", token.name)
+                if (token.name === null || token.name === undefined) {
+                    const tokenInfo = await getTokenInfo(token.tokenId);
+                    //console.log("tokenInfo", tokenInfo)
+                    token["name"] = tokenInfo.name;
+                    token["decimals"] = tokenInfo.decimals;
+                }
+                //console.log("token.name2", token.name)
                 if (tokens.map(tok => tok.tokenId).includes(token.tokenId)) {
                     const index = tokens.findIndex(t => t.tokenId === token.tokenId);
                     const tokAmount = BigInt(token.amount.toString());
@@ -436,7 +444,7 @@ function buildBalance(inputBal, outputBal) {
 
 export async function getUnspentBoxesForAddressList(addressList) {
     const boxList = await Promise.all(addressList.map(async (address) => {
-        const addressBoxes = await unspentBoxesForV1(address);
+        const addressBoxes = await unspentBoxesFor(address);
         //console.log("getUnspentBoxesForAddressList", address, addressBoxes)
         return addressBoxes;
     }));

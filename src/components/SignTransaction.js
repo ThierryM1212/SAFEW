@@ -9,7 +9,6 @@ import { decryptMnemonic, formatERGAmount, formatLongString, formatTokenAmount, 
 import BigQRCode from './BigQRCode';
 import ImageButton from './ImageButton';
 import JSONBigInt from 'json-bigint';
-import { postTxMempool } from '../ergo-related/explorer';
 import { LS } from '../utils/utils';
 import { signTxLedger } from '../ergo-related/ledger';
 import { DeviceError } from 'ledger-ergo-js';
@@ -154,13 +153,9 @@ export default class SignTransaction extends React.Component {
                     errorAlert("Failed to sign transaction", e);
                     return;
                 }
-                if (memPoolTransaction) {
-                    await postTxMempool(signedTx);
-                    console.log("Transaction sent to mempool", signedTx);
-                } else {
-                    await sendTx(signedTx);
-                    console.log("Transaction sent to node", signedTx);
-                }
+
+                await sendTx(signedTx);
+                console.log("Transaction sent to node", signedTx);
 
                 //await delay(3000);
                 this.state.setPage('transactions', this.state.walletId);
@@ -168,14 +163,9 @@ export default class SignTransaction extends React.Component {
             if (wallet.type === "ledger") {
                 try {
                     signedTx = JSONBigInt.parse(await signTxLedger(wallet, jsonUnsignedTx, selectedUtxos, txSummaryHtml));
-                    console.log("signedTx", signedTx)
-                    if (true) {
-                        await postTxMempool(signedTx);
-                        console.log("Transaction sent to mempool", signedTx);
-                    } else {
-                        await sendTx(signedTx);
-                        console.log("Transaction sent to node", signedTx);
-                    }
+                    await sendTx(signedTx);
+                    console.log("Transaction sent to node", signedTx);
+
                     this.state.setPage('transactions', this.state.walletId);
                 } catch (e) {
                     console.log("getLedgerAddresses catch", e.toString());

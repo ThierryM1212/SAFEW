@@ -47,18 +47,18 @@ export default class AddressListContent extends React.Component {
 
     async componentDidMount() {
         const ergoPrice = await readErgoPrice();
-        console.log("componentDidMount AddressListContent", this.state.addressContentList, ergoPrice);
+        //console.log("componentDidMount AddressListContent", this.state.addressContentList, ergoPrice);
         this.setState({ergoPrice: ergoPrice});
         await this.computeUncomfirmedBalance(this.state.addressContentList);
     }
 
     async componentDidUpdate(prevProps, prevState) {
-        if (prevProps.tokenRatesDict !== this.props.tokenRatesDict) {
+        if (prevState.tokenRatesDict !== this.props.tokenRatesDict) {
             this.setState({
                 tokenRatesDict: this.props.tokenRatesDict,
             });
         }
-        if (prevProps.addressContentList !== this.props.addressContentList) {
+        if (prevState.addressContentList !== this.props.addressContentList) {
             this.setState({
                 addressContentList: this.props.addressContentList,
             });
@@ -73,6 +73,7 @@ export default class AddressListContent extends React.Component {
         const unconfirmedBalance = this.state.unconfirmedBalance;
         const nanoErgs = this.state.nanoErgs;
         const tokens = this.state.tokens;
+        //console.log("render addreslist content tokenRatesDict tokens", tokenRatesDict, tokens);
 
         return (
             <Fragment>
@@ -138,7 +139,7 @@ export default class AddressListContent extends React.Component {
                                                     <td>
                                                         {
                                                             tokenRatesDict && Object.keys(tokenRatesDict).includes(tok.tokenId) ?
-                                                                formatERGAmount(tokenRatesDict[tok.tokenId].ergPerToken * tok.amount * NANOERG_TO_ERG / Math.pow(10, tok.decimals))
+                                                                formatERGAmount(Math.round(parseInt(tok.amount) * NANOERG_TO_ERG / (tokenRatesDict[tok.tokenId] * Math.pow(10, tok.decimals))))
                                                                 : '0'
                                                         }
                                                     </td>

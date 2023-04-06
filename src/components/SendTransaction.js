@@ -140,7 +140,7 @@ export default class SendTransaction extends React.Component {
                 if (tokIndex < 0) {
                     newTokens.push({
                         tokenId: requestedToken.tokenId,
-                        amount: 0,
+                        amount: "0",
                         name: requestedToken.name,
                         decimals: requestedToken.decimals,
                     })
@@ -180,7 +180,7 @@ export default class SendTransaction extends React.Component {
             const ergAmmount = this.state.nanoErgs / NANOERG_TO_ERG - parseFloat(this.state.txFee);
             this.setState(prevState => ({
                 isSendAll: !prevState.isSendAll,
-                tokenAmountToSend: [...prevState.tokens.map(tok => tok.amount / Math.pow(10, tok.decimals))],
+                tokenAmountToSend: [...prevState.tokens.map(tok => formatTokenAmount(tok.amount, tok.decimals).replaceAll(",",""))],
                 ergsToSend: ergAmmount,
                 isValidErgToSend: this.validateErgAmount(ergAmmount, prevState.txFee),
             }))
@@ -226,7 +226,7 @@ export default class SendTransaction extends React.Component {
         const token = this.state.tokens[index];
         const tokenDecimals = parseInt(token.decimals);
         //console.log("validateTokenAmount", token, tokenDecimals, tokAmount)
-        const tokAmountStr = tokAmount.toString();
+        const tokAmountStr = tokAmount.toString().replace(',','');
         var tokenAmount = BigInt(0);
         if (tokAmountStr.indexOf('.') > -1) {
             var str = tokAmountStr.split(".");
@@ -419,7 +419,13 @@ export default class SendTransaction extends React.Component {
                                                         tips={"Select all"}
                                                         onClick={() => {
                                                             if (!(this.state.burnMode && Object.keys(VERIFIED_TOKENS).includes(tok.tokenId))) {
-                                                                this.setTokenToSend(index, (tok.amount / Math.pow(10, tok.decimals)).toString())
+                                                                //this.setTokenToSend(index, (tok.amount / Math.pow(10, tok.decimals)).toString())
+                                                                const amountStr = tok.amount.toString();
+                                                                if (tok.decimals > 0) {
+                                                                    this.setTokenToSend(index, amountStr.slice(0, amountStr.length - tok.decimals) + '.' + amountStr.slice(amountStr.length - tok.decimals))
+                                                                } else {
+                                                                    this.setTokenToSend(index, amountStr)
+                                                                }
                                                             }
                                                         }
                                                     }

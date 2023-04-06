@@ -4,8 +4,25 @@ export const SUGGESTED_TRANSACTION_FEE = 1100000;
 
 export const DEFAULT_EXPLORER_API_ADDRESS = "https://api.ergoplatform.com/";
 export const DEFAULT_EXPLORER_WEBUI_ADDRESS = "https://explorer.ergoplatform.com/";
-export const DEFAULT_NODE_ADDRESS = "http://213.239.193.208:9053/";
 export const DEFAULT_MIXER_ADDRESS = "http://localhost:9000/";
+
+export const VERIFIED_NODE_ADDRESSES = [
+    { // Kushti
+        url: "http://213.239.193.208:9053/",
+        name: "Kushti's node"
+    },  
+    { // Error
+        url: "https://ergo-node.zoomout.io/",
+        name: "Error's node (geo load balanced)"
+    },  
+    { // Reqlez
+        url: "https://ergonode-api.ergohost.io/",
+        name: "Reqlez's node"
+    }, 
+]
+export const DEFAULT_NODE_ADDRESS = VERIFIED_NODE_ADDRESSES[0].url;
+
+export const TOKENJAY_PEER_LIST_URL = "https://api.tokenjay.app/peers/list";
 
 export const PASSWORD_SALT = "vtvfAKubpNuc6Vn648TTUjh3KmuC8u";
 
@@ -27,6 +44,17 @@ export const TOKENID_NETA = '472c3d4ecaa08fb7392ff041ee2e6af75f4a558810a74b28600
 export const TOKENID_MI_GORENG = '0779ec04f2fae64e87418a1ad917639d4668f78484f45df962b0dec14a2591d2';
 export const TOKENID_COMET = '0cd8c9f416e5b1ca9f986a7f10a84191dfb85941619e49e53c0dc30ebf83324b';
 export const TOKENID_ERGOLD = 'e91cbc48016eb390f8f872aa2962772863e2e840708517d1ab85e57451f91bed';
+export const TOKENID_SPF = '9a06d9e545a41fd51eeffc5e20d818073bf820c635e2a9d922269913e0de369d';
+export const TOKENID_WALRUS = '59ee24951ce668f0ed32bdb2e2e5731b6c36128748a3b23c28407c5f8ccbf0f6';
+export const TOKENID_THZ = '02f31739e2e4937bb9afb552943753d1e3e9cdd1a5e5661949cb0cef93f907ea';
+export const TOKENID_PAIDEIA = '1fd6e032e8476c4aa54c18c1a308dce83940e8f4a28f576440513ed7326ad489';
+export const TOKENID_FLUX = 'e8b20745ee9d18817305f32eb21015831a48f02d40980de6e849f886dca7f807';
+export const TOKENID_ERMOON = '9dbc8dd9d7ea75e38ef43cf3c0ffde2c55fd74d58ac7fc0489ec8ffee082991b';
+export const TOKENID_EPOS = '00bd762484086cf560d3127eb53f0769d76244d9737636b2699d55c56cd470bf';
+export const TOKENID_EGIO = '00b1e236b60b95c2c6f8007a9d89bc460fc9e78f98b09faec9449007b40bccf3';
+export const TOKENID_AHT = '18c938e1924fc3eadc266e75ec02d81fe73b56e4e9f4e268dffffcb30387c42d';
+export const TOKENID_EXLE = '007fd64d1ee54d78dd269c8930a38286caa28d3f29d27cadcb796418ab15c283';
+
 
 // [token_name, token_icon, token_decimals]
 export const VERIFIED_TOKENS = {
@@ -41,7 +69,18 @@ export const VERIFIED_TOKENS = {
     [TOKENID_MI_GORENG]: ['Mi Goreng', "token-mi-goreng.svg", 0],
     [TOKENID_COMET]: ['COMET', "token-comet.png", 0],
     [TOKENID_ERGOLD]: ['ERGOLD', "token-ergold.png", 0],
-  }
+    [TOKENID_SPF]: ['SPF', "spf.svg", 6],
+    [TOKENID_WALRUS]: ['WALRUS', "walrus.png", 0],
+    [TOKENID_THZ]: ['Terahertz', "terahertz.svg", 4],
+    [TOKENID_PAIDEIA]: ['Paideia', "paideia.svg", 4],
+    [TOKENID_FLUX]: ['Flux', "flux.svg", 8],
+    [TOKENID_ERMOON]: ['ErMoon', "ermoon.svg", 2],
+    [TOKENID_EPOS]: ['EPOS', "epos.svg", 4],
+    [TOKENID_EGIO]: ['EGIO', "egio.svg", 4],
+    [TOKENID_AHT]: ['AHT', "aht.svg", 4],
+    [TOKENID_EXLE]: ['EXLE', "exle.svg", 4],
+
+}
 
 export const NTF_TYPES = {
     'Picture': "0e020101",
@@ -64,108 +103,108 @@ Enjoy Ergo dApps !<br/>
 `
 
 export const sampleTxErgodex = {
-  "inputs": [
-      {
-          "boxId": "6a50a0d91e66263ee1be743a30956af4bc8e3f7b229b27b84ef646311d79bf20",
-          "transactionId": "e68d0c75d01d47dde8e558c60a5d02e351b2c2c37297c11f5bc8cf7067ffd756",
-          "blockId": "8c092e799071fcc3cbe50fcf362c8139319c43bf53a64e1937a14ffd564ea811",
-          "value": "1071024",
-          "index": 1,
-          "globalIndex": 12802711,
-          "creationHeight": 0,
-          "settlementHeight": 678848,
-          "ergoTree": "0008cd02c35a808c1c713fc1ae169e33da7492eee8f913a2045a7d56a3ca3103b5525ff3",
-          "address": "9g16ZMPo22b3qaRL7HezyQt2HSW2ZBF6YR3WW9cYQjgQwYKxxoT",
-          "assets": [
-              {
-                  "tokenId": "003bd19d0187117f130b62e1bcab0939929ff5c7709f843c5c4dd158949285d0",
-                  "index": 0,
-                  "amount": "131",
-                  "name": "SigRSV",
-                  "decimals": 0,
-                  "type": "EIP-004"
-              }
-          ],
-          "additionalRegisters": {},
-          "spentTransactionId": null,
-          "mainChain": true,
-          "extension": {}
-      },
-      {
-          "boxId": "057e3c0d880e95efb41ad15fb51d43065acc3b9ed3dad264045f6fea064a2d1a",
-          "transactionId": "cc7382d10571c52a8ce7b7328931eb285dd52ef7b8f3230e758bd09725532bef",
-          "blockId": "03cb799ba12ecd2dd955ae02897b534c8002d1af57b310ac41ade9cf55c7153c",
-          "value": "1080002",
-          "index": 1,
-          "globalIndex": 12803530,
-          "creationHeight": 0,
-          "settlementHeight": 678868,
-          "ergoTree": "0008cd02c35a808c1c713fc1ae169e33da7492eee8f913a2045a7d56a3ca3103b5525ff3",
-          "address": "9g16ZMPo22b3qaRL7HezyQt2HSW2ZBF6YR3WW9cYQjgQwYKxxoT",
-          "assets": [
-              {
-                  "tokenId": "472c3d4ecaa08fb7392ff041ee2e6af75f4a558810a74b28600549d5392810e8",
-                  "index": 0,
-                  "amount": "13363832",
-                  "name": "NETA",
-                  "decimals": 6,
-                  "type": "EIP-004"
-              }
-          ],
-          "additionalRegisters": {},
-          "spentTransactionId": null,
-          "mainChain": true,
-          "extension": {}
-      },
-      {
-          "boxId": "8ca4242ba64d8b5fb7d4007f9ce1b22e7e20adbc046cf0000d7185d307a01e27",
-          "transactionId": "092b65d4488cf95fbf0a0a51d70117875a8509f08d8b1fbd0a97b471e99c2f09",
-          "blockId": "4b89667a7c9c007462689bf0b0167b2fd9a443bd039e39314e82508dc4b86ade",
-          "value": "2000000000",
-          "index": 0,
-          "globalIndex": 12803561,
-          "creationHeight": 678847,
-          "settlementHeight": 678869,
-          "ergoTree": "0008cd02c35a808c1c713fc1ae169e33da7492eee8f913a2045a7d56a3ca3103b5525ff3",
-          "address": "9g16ZMPo22b3qaRL7HezyQt2HSW2ZBF6YR3WW9cYQjgQwYKxxoT",
-          "assets": [],
-          "additionalRegisters": {},
-          "spentTransactionId": null,
-          "mainChain": true,
-          "extension": {}
-      }
-  ],
-  "dataInputs": [],
-  "outputs": [
-      {
-          "value": "107260000",
-          "ergoTree": "19f5031808cd03cf7be6fda7f58713fe0e1d60c8fbade1e38d727c0734b656d83477311724790f0400058084af5f040404060402040004000e209916d75132593c8b07fe18bd8d583bda1652eed7565cf41a4738ddd90fc992ec0e2003faf2cb329f2e90d6d23b58d91bbb6c046aa143261cc21f52fbe2824bfcbf04054605ecb6fbe6ced5f33c0580a0b787e905040404c60f06010104d00f058084af5f04c60f0e691005040004000e36100204a00b08cd0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ea02d192a39a8cc7a701730073011001020402d19683030193a38cc7b2a57300000193c2b2a57301007473027303830108cdeeac93b1a5730405000500058092f4010100d803d6017300d602b2a4730100d6037302eb027201d195ed93b1a4730393b1db630872027304d804d604db63087202d605b2a5730500d606b2db63087205730600d6077e8c72060206edededededed938cb2720473070001730893c27205d07201938c72060173099272077e730a06927ec172050699997ec1a7069d9c72077e730b067e730c067e720306909c9c7e8cb27204730d0002067e7203067e730e069c9a7207730f9a9c7ec17202067e7310067e9c73117e7312050690b0ada5d90108639593c272087313c1720873147315d90108599a8c7208018c72080273167317",
-          "creationHeight": 679611,
-          "assets": [],
-          "additionalRegisters": {}
-      },
-      {
-          "value": "1892891026",
-          "ergoTree": "0008cd03cf7be6fda7f58713fe0e1d60c8fbade1e38d727c0734b656d83477311724790f",
-          "creationHeight": 679611,
-          "assets": [
-              {
-                  "tokenId": "003bd19d0187117f130b62e1bcab0939929ff5c7709f843c5c4dd158949285d0",
-                  "amount": "131"
-              },
-              {
-                  "tokenId": "472c3d4ecaa08fb7392ff041ee2e6af75f4a558810a74b28600549d5392810e8",
-                  "amount": "13363832"
-              }
-          ],
-          "additionalRegisters": {}
-      },
-      {
-          "value": "2000000",
-          "ergoTree": "1005040004000e36100204a00b08cd0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ea02d192a39a8cc7a701730073011001020402d19683030193a38cc7b2a57300000193c2b2a57301007473027303830108cdeeac93b1a57304",
-          "creationHeight": 679611,
-          "assets": [],
-          "additionalRegisters": {}
-      }
-  ]
+    "inputs": [
+        {
+            "boxId": "6a50a0d91e66263ee1be743a30956af4bc8e3f7b229b27b84ef646311d79bf20",
+            "transactionId": "e68d0c75d01d47dde8e558c60a5d02e351b2c2c37297c11f5bc8cf7067ffd756",
+            "blockId": "8c092e799071fcc3cbe50fcf362c8139319c43bf53a64e1937a14ffd564ea811",
+            "value": "1071024",
+            "index": 1,
+            "globalIndex": 12802711,
+            "creationHeight": 0,
+            "settlementHeight": 678848,
+            "ergoTree": "0008cd02c35a808c1c713fc1ae169e33da7492eee8f913a2045a7d56a3ca3103b5525ff3",
+            "address": "9g16ZMPo22b3qaRL7HezyQt2HSW2ZBF6YR3WW9cYQjgQwYKxxoT",
+            "assets": [
+                {
+                    "tokenId": "003bd19d0187117f130b62e1bcab0939929ff5c7709f843c5c4dd158949285d0",
+                    "index": 0,
+                    "amount": "131",
+                    "name": "SigRSV",
+                    "decimals": 0,
+                    "type": "EIP-004"
+                }
+            ],
+            "additionalRegisters": {},
+            "spentTransactionId": null,
+            "mainChain": true,
+            "extension": {}
+        },
+        {
+            "boxId": "057e3c0d880e95efb41ad15fb51d43065acc3b9ed3dad264045f6fea064a2d1a",
+            "transactionId": "cc7382d10571c52a8ce7b7328931eb285dd52ef7b8f3230e758bd09725532bef",
+            "blockId": "03cb799ba12ecd2dd955ae02897b534c8002d1af57b310ac41ade9cf55c7153c",
+            "value": "1080002",
+            "index": 1,
+            "globalIndex": 12803530,
+            "creationHeight": 0,
+            "settlementHeight": 678868,
+            "ergoTree": "0008cd02c35a808c1c713fc1ae169e33da7492eee8f913a2045a7d56a3ca3103b5525ff3",
+            "address": "9g16ZMPo22b3qaRL7HezyQt2HSW2ZBF6YR3WW9cYQjgQwYKxxoT",
+            "assets": [
+                {
+                    "tokenId": "472c3d4ecaa08fb7392ff041ee2e6af75f4a558810a74b28600549d5392810e8",
+                    "index": 0,
+                    "amount": "13363832",
+                    "name": "NETA",
+                    "decimals": 6,
+                    "type": "EIP-004"
+                }
+            ],
+            "additionalRegisters": {},
+            "spentTransactionId": null,
+            "mainChain": true,
+            "extension": {}
+        },
+        {
+            "boxId": "8ca4242ba64d8b5fb7d4007f9ce1b22e7e20adbc046cf0000d7185d307a01e27",
+            "transactionId": "092b65d4488cf95fbf0a0a51d70117875a8509f08d8b1fbd0a97b471e99c2f09",
+            "blockId": "4b89667a7c9c007462689bf0b0167b2fd9a443bd039e39314e82508dc4b86ade",
+            "value": "2000000000",
+            "index": 0,
+            "globalIndex": 12803561,
+            "creationHeight": 678847,
+            "settlementHeight": 678869,
+            "ergoTree": "0008cd02c35a808c1c713fc1ae169e33da7492eee8f913a2045a7d56a3ca3103b5525ff3",
+            "address": "9g16ZMPo22b3qaRL7HezyQt2HSW2ZBF6YR3WW9cYQjgQwYKxxoT",
+            "assets": [],
+            "additionalRegisters": {},
+            "spentTransactionId": null,
+            "mainChain": true,
+            "extension": {}
+        }
+    ],
+    "dataInputs": [],
+    "outputs": [
+        {
+            "value": "107260000",
+            "ergoTree": "19f5031808cd03cf7be6fda7f58713fe0e1d60c8fbade1e38d727c0734b656d83477311724790f0400058084af5f040404060402040004000e209916d75132593c8b07fe18bd8d583bda1652eed7565cf41a4738ddd90fc992ec0e2003faf2cb329f2e90d6d23b58d91bbb6c046aa143261cc21f52fbe2824bfcbf04054605ecb6fbe6ced5f33c0580a0b787e905040404c60f06010104d00f058084af5f04c60f0e691005040004000e36100204a00b08cd0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ea02d192a39a8cc7a701730073011001020402d19683030193a38cc7b2a57300000193c2b2a57301007473027303830108cdeeac93b1a5730405000500058092f4010100d803d6017300d602b2a4730100d6037302eb027201d195ed93b1a4730393b1db630872027304d804d604db63087202d605b2a5730500d606b2db63087205730600d6077e8c72060206edededededed938cb2720473070001730893c27205d07201938c72060173099272077e730a06927ec172050699997ec1a7069d9c72077e730b067e730c067e720306909c9c7e8cb27204730d0002067e7203067e730e069c9a7207730f9a9c7ec17202067e7310067e9c73117e7312050690b0ada5d90108639593c272087313c1720873147315d90108599a8c7208018c72080273167317",
+            "creationHeight": 679611,
+            "assets": [],
+            "additionalRegisters": {}
+        },
+        {
+            "value": "1892891026",
+            "ergoTree": "0008cd03cf7be6fda7f58713fe0e1d60c8fbade1e38d727c0734b656d83477311724790f",
+            "creationHeight": 679611,
+            "assets": [
+                {
+                    "tokenId": "003bd19d0187117f130b62e1bcab0939929ff5c7709f843c5c4dd158949285d0",
+                    "amount": "131"
+                },
+                {
+                    "tokenId": "472c3d4ecaa08fb7392ff041ee2e6af75f4a558810a74b28600549d5392810e8",
+                    "amount": "13363832"
+                }
+            ],
+            "additionalRegisters": {}
+        },
+        {
+            "value": "2000000",
+            "ergoTree": "1005040004000e36100204a00b08cd0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ea02d192a39a8cc7a701730073011001020402d19683030193a38cc7b2a57300000193c2b2a57301007473027303830108cdeeac93b1a57304",
+            "creationHeight": 679611,
+            "assets": [],
+            "additionalRegisters": {}
+        }
+    ]
 };

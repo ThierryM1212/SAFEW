@@ -1,12 +1,11 @@
-import { getUtxosListValue, getTokenListFromUtxos, enrichTokenInfoFromUtxos } from '../../ergo-related/utxos';
+import { getUtxosListValue, getTokenListFromUtxos } from '../../ergo-related/utxos';
 import { formatTokenAmount } from '../../utils/walletUtils';
 import TokenLabel from '../TokenLabel';
 
 export default function UtxosSummary(props) {
-
     const ergAmount = parseFloat(parseInt(getUtxosListValue(props.list)) / 1000000000).toFixed(4);
     const tokenDict = getTokenListFromUtxos(props.list);
-    const tokenInfo = enrichTokenInfoFromUtxos(props.list);
+    const tokenInfo = props.tokenInfo;
     return (
         <div className="card m-1 p-1" >
             <div className="d-flex flex-row">
@@ -35,7 +34,6 @@ export default function UtxosSummary(props) {
                 </table>
                 : <h6>No token in selected {props.name} boxes</h6>
             }
-
         </div>
     )
 }
