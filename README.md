@@ -88,6 +88,7 @@ Same ergo_request_read_access and ergo_check_read_access than Yoroi method are d
 v0.7.0
 - remove explorer dependency, use the configured node to fetch wallet content and send the transactions
 - fix issues with big numbers of tokens (over js max number)
+- update the verified token list
 
 v0.6.10
 - fetch boxes by tokenId in transaction builder
