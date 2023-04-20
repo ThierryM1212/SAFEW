@@ -102,7 +102,7 @@ export async function getTransactionsForAddress(addr, limit = -1) {
         const offsets = range(0, limit, 100);
         const addressTransactionsList = await Promise.all(offsets.map(async (offset) => {
             try {
-                const tx = await postRequest(`blockchain/transaction/byAddress?limit=${limit}&offset=${offset}`, addr, '', SHORT_CACHE)
+                const tx = await postRequest(`blockchain/transaction/byAddress?limit=100&offset=${offset}`, addr, '', SHORT_CACHE)
                 return tx.data;
             } catch (e) {
                 console.log(e);
