@@ -503,7 +503,7 @@ export default class TxBuilder extends React.Component {
                     <div className="w-100 container-xxl ">
                         <div className="card p-1 m-2 w-100">
                             <div className="d-flex flex-row align-items-center justify-content-between">
-                                <h5>Unspent boxes</h5>
+                                <h5>Unspent boxes ({this.state.addressBoxList.length})</h5>
                                 {
                                     selectedWallet ?
                                         <div className="d-flex flex-row align-items-center">

@@ -103,7 +103,7 @@ export async function get(url, apiKey = '', ttl = 0) {
         })
         const resText = await result.text();
         const resJson = JSONBigInt.parse(resText);
-        if (ttl > 0) {
+        if (ttl > 0 && !resJson.error) {
             res_cache = ls.get('web_cache_' + ttl.toString()) ?? {};
             res_cache[url] = resJson;
             ls.set('web_cache_' + ttl.toString(), res_cache, { ttl: ttl })

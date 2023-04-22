@@ -4,6 +4,7 @@ import { ensureSingleEndSlash, LS } from '../utils/utils';
 import { TOKENJAY_PEER_LIST_URL, VERIFIED_NODE_ADDRESSES } from '../utils/constants';
 import { get } from '../ergo-related/rest';
 import { Table } from 'react-bootstrap';
+import ls from 'localstorage-slim';
 
 
 export default class ConfigNodeURL extends React.Component {
@@ -29,6 +30,7 @@ export default class ConfigNodeURL extends React.Component {
     };
 
     refreshPage() {
+        ls.clear(); 
         window.location.reload();
     }
 
