@@ -135,3 +135,22 @@ export async function get2(url, apiKey = '') {
     }).then(res => res.json());
     return result;
 }
+
+export async function getText(url, apiKey = '') {
+    try {
+        return await fetch(url, {
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+                'mode': 'cors',
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
+                'Access-Control-Allow-Methods': 'GET,HEAD,OPTIONS,POST,PUT',
+                api_key: apiKey,
+            }
+        }).then(res => res.text());
+    } catch (e) {
+        console.error(e);
+        return [];
+    }
+}

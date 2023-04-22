@@ -1,6 +1,7 @@
 import { TX_FEE_ERGO_TREE, VERIFIED_TOKENS } from "../utils/constants";
 import { ls_slim_flush, ls_slim_get, ls_slim_set } from "../utils/utils";
 import { getUnconfirmedTransactionsForAddressList } from "../utils/walletUtils";
+import { boxById } from "./explorer";
 import { boxByBoxId, boxByIdMempool, currentHeight, getTokenBox, getTokenInfo, unspentBoxesFor } from "./node";
 import { decodeString, encodeContract, ergoTreeToAddress } from "./serializer";
 
@@ -84,6 +85,10 @@ export async function enrichUtxos(utxos, addExtension = false) {
             box = cache_spentBoxes.find(b => b.boxId === utxos[i][key]);
         } else {
             box = await boxByIdMempool(utxos[i][key]);
+            if(box.error) { // try explorer if box not found in node
+                console.log("fetching box from explorer, boxId: ", utxos[i][key])
+                box = await boxById(utxos[i][key]);
+            }
 
             //console.log("enrichUtxos box", box);
             if(!box && utxos[i]["address"]) {
