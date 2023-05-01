@@ -79,12 +79,12 @@ export default class ConfigNodeURL extends React.Component {
                     fullHeight: '0',
                     version: '0.0',
                 }
-                const currentHeights = await getCurrentHeights();
+                const currentHeights = await getCurrentHeights(n.url);
                 if (currentHeights.indexedHeight) {
                     nodeEnriched['indexedHeight'] = currentHeights.indexedHeight;
                     nodeEnriched['fullHeight'] = currentHeights.fullHeight;
                 }
-                const nodeInfo = await getNodeInfo();
+                const nodeInfo = await getNodeInfo(n.url);
                 if (nodeInfo.appVersion) {
                     nodeEnriched['version'] = nodeInfo.appVersion;
                 }

@@ -134,14 +134,12 @@ export async function getUnconfirmedTxs(limit = 100) {
     return res.data;
 }
 
-export async function getCurrentHeights() {
+export async function getCurrentHeights(nodeUrl) {
     //console.log("getUnconfirmedTxs")
-    const res = await getRequest(`blockchain/indexedHeight`);
-    return res.data;
+    return await get(nodeUrl + `blockchain/indexedHeight`);
 }
 
-export async function getNodeInfo() {
+export async function getNodeInfo(nodeUrl) {
     //console.log("getUnconfirmedTxs")
-    const res = await getRequest(`info`);
-    return res.data;
+    return await get(nodeUrl + `info`);
 }
