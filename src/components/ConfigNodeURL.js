@@ -5,6 +5,7 @@ import { TOKENJAY_PEER_LIST_URL, VERIFIED_NODE_ADDRESSES } from '../utils/consta
 import { get } from '../ergo-related/rest';
 import { Table } from 'react-bootstrap';
 import ls from 'localstorage-slim';
+import { getCurrentHeights, getNodeInfo } from '../ergo-related/node';
 
 
 export default class ConfigNodeURL extends React.Component {
@@ -30,7 +31,7 @@ export default class ConfigNodeURL extends React.Component {
     };
 
     refreshPage() {
-        ls.clear(); 
+        ls.clear();
         window.location.reload();
     }
 
@@ -46,26 +47,63 @@ export default class ConfigNodeURL extends React.Component {
         this.setState({ URL: ensureSingleEndSlash(url) })
         var nodeList = VERIFIED_NODE_ADDRESSES;
         const fetchedNodeList = await get(TOKENJAY_PEER_LIST_URL);
-        console.log("fetchedNodeList", fetchedNodeList);
+        //console.log("fetchedNodeList", fetchedNodeList);
         const validNodeList = fetchedNodeList.filter(n => n.openRestApi && n.blockchainApi).map(n => { return { "url": ensureSingleEndSlash(n.url), "name": n.name } });
 
-        console.log("validNodeList", validNodeList);
-        var allNodeList = nodeList.concat(validNodeList.filter(n => !nodeList.map(n2 => n2.url).includes(n.url)))
-        allNodeList = allNodeList.map(n => { return { ...n, ping: "-" } });
+        //console.log("validNodeList", validNodeList);
+        var allNodeList = nodeList.concat(validNodeList.filter(n => !nodeList.map(n2 => n2.url).includes(n.url)));
+
+        // add current configured node
+        allNodeList.unshift({
+            name: "* Current node",
+            url: url,
+        });
+
+        allNodeList = allNodeList.map(n => {
+            return {
+                ...n,
+                ping: "-",
+                indexedHeight: "-",
+                fullHeight: "-",
+                version: "-",
+            }
+        });
         this.setState({ nodeList: allNodeList })
 
-       allNodeList = await Promise.all(allNodeList.map(async n => {
-           try {
-               return { ...n, ping: await this.ping(n.url + "info") }
-           } catch (e) {
-               console.log("ping error", n.url, e);
-               return { ...n, ping: "error" }
-           }
-       }
-       ))
-//
-       console.log("allNodeList", allNodeList);
-       this.setState({ nodeList: allNodeList })
+        allNodeList = await Promise.all(allNodeList.map(async n => {
+            try {
+                var nodeEnriched = {
+                    ...n,
+                    ping: await this.ping(n.url + "info"),
+                    indexedHeight: '0',
+                    fullHeight: '0',
+                    version: '0.0',
+                }
+                const currentHeights = await getCurrentHeights();
+                if (currentHeights.indexedHeight) {
+                    nodeEnriched['indexedHeight'] = currentHeights.indexedHeight;
+                    nodeEnriched['fullHeight'] = currentHeights.fullHeight;
+                }
+                const nodeInfo = await getNodeInfo();
+                if (nodeInfo.appVersion) {
+                    nodeEnriched['version'] = nodeInfo.appVersion;
+                }
+                return nodeEnriched;
+            } catch (e) {
+                console.log("ping error", n.url, e);
+                return {
+                    ...n,
+                    ping: "error",
+                    indexedHeight: '0',
+                    fullHeight: '0',
+                    version: '0.0',
+                }
+            }
+        }
+        ))
+        //
+        //console.log("allNodeList", allNodeList);
+        this.setState({ nodeList: allNodeList })
     }
 
     render() {
@@ -89,13 +127,16 @@ export default class ConfigNodeURL extends React.Component {
                         />
                     </div>
                     <div className='card m-2 p-2 d-flex'>
-                        <h5>Community public servers</h5>
+                        <h5>Current and community public nodes</h5>
                         <Table striped hover className='node-list-table'>
                             <thead>
                                 <tr>
                                     <th>Name</th>
                                     <th>URL</th>
                                     <th>Ping (ms)</th>
+                                    <th>Current height</th>
+                                    <th>Indexed height</th>
+                                    <th>Node version</th>
                                     <th>Set</th>
                                 </tr>
                             </thead>
@@ -105,8 +146,11 @@ export default class ConfigNodeURL extends React.Component {
                                         <tr key={n.url}>
                                             <td>{n.name}</td>
                                             <td>{n.url}</td>
-                                            <td>{n.ping}</td>
-                                            <td>
+                                            <td className='align-center'>{n.ping}</td>
+                                            <td className='align-center'>{n.fullHeight}</td>
+                                            <td className='align-center'>{n.indexedHeight}</td>
+                                            <td className='align-center'>{n.version}</td>
+                                            <td className='align-center'>
                                                 <ImageButton
                                                     id={n.url + "setAddresses"}
                                                     color={"orange"}

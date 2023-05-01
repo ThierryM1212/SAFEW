@@ -108,5 +108,8 @@ tr,
 th .node-list-table {
   color: rgb(212, 212, 212) !important;
   border: none !important;
-  text-align: left !important;
+}
+
+.align-center {
+  text-align: center !important;
 }
