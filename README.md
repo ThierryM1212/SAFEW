@@ -87,6 +87,7 @@ Same ergo_request_read_access and ergo_check_read_access than Yoroi method are d
 ## Release notes
 v0.7.2
 - update the node address used by the dApp connector immediately whenever updated
+- Add the node version, the indexed height and the current height in the node table. Add the current node in the list.
 
 v0.7.1
 - remove explorer dependency, use the configured node to fetch wallet content and send the transactions
