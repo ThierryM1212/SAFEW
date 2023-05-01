@@ -85,6 +85,9 @@ Same ergo_request_read_access and ergo_check_read_access than Yoroi method are d
 ![Display NFTs](./screens/display_nft.png)
 
 ## Release notes
+v0.7.2
+- update the node address used by the dApp connector immediately whenever updated
+
 v0.7.1
 - remove explorer dependency, use the configured node to fetch wallet content and send the transactions
 - fix issues with big numbers of tokens (over js max number)

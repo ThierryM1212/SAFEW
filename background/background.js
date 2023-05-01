@@ -65,6 +65,7 @@ chrome.storage.onChanged.addListener(function (changes, namespace) {
         //);
         local_storage[key] = newValue;
     }
+    nodeApi = local_storage['nodeAddress'] ?? "http://213.239.193.208:9053/";
 });
 
 var isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
