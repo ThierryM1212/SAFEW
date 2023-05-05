@@ -1,11 +1,12 @@
 import React, { Fragment } from 'react';
 import ImageButton from './ImageButton';
-import { ensureSingleEndSlash, LS } from '../utils/utils';
+import { asyncCallWithTimeout, ensureSingleEndSlash, LS } from '../utils/utils';
 import { TOKENJAY_PEER_LIST_URL, VERIFIED_NODE_ADDRESSES } from '../utils/constants';
 import { get } from '../ergo-related/rest';
 import { Table } from 'react-bootstrap';
 import ls from 'localstorage-slim';
 import { getCurrentHeights, getNodeInfo } from '../ergo-related/node';
+import { waitingAlert } from '../utils/Alerts';
 
 
 export default class ConfigNodeURL extends React.Component {
@@ -43,6 +44,7 @@ export default class ConfigNodeURL extends React.Component {
     }
 
     async componentDidMount() {
+        const alert = waitingAlert("Checking the state of the nodes...");
         const url = (await LS.getItem(this.state.localstorageName)) ?? this.state.defaultURL;
         this.setState({ URL: ensureSingleEndSlash(url) })
         var nodeList = VERIFIED_NODE_ADDRESSES;
@@ -62,10 +64,10 @@ export default class ConfigNodeURL extends React.Component {
         allNodeList = allNodeList.map(n => {
             return {
                 ...n,
-                ping: "-",
-                indexedHeight: "-",
-                fullHeight: "-",
-                version: "-",
+                ping: "...",
+                indexedHeight: "...",
+                fullHeight: "...",
+                version: "...",
             }
         });
         this.setState({ nodeList: allNodeList })
@@ -74,17 +76,17 @@ export default class ConfigNodeURL extends React.Component {
             try {
                 var nodeEnriched = {
                     ...n,
-                    ping: await this.ping(n.url + "info"),
+                    ping: await asyncCallWithTimeout(this.ping(n.url + "info"), 2000),
                     indexedHeight: '0',
                     fullHeight: '0',
                     version: '0.0',
                 }
-                const currentHeights = await getCurrentHeights(n.url);
+                const currentHeights = await asyncCallWithTimeout(getCurrentHeights(n.url), 2000);
                 if (currentHeights.indexedHeight) {
                     nodeEnriched['indexedHeight'] = currentHeights.indexedHeight;
                     nodeEnriched['fullHeight'] = currentHeights.fullHeight;
                 }
-                const nodeInfo = await getNodeInfo(n.url);
+                const nodeInfo = await asyncCallWithTimeout(getNodeInfo(n.url), 2000);
                 if (nodeInfo.appVersion) {
                     nodeEnriched['version'] = nodeInfo.appVersion;
                 }
@@ -104,6 +106,7 @@ export default class ConfigNodeURL extends React.Component {
         //
         //console.log("allNodeList", allNodeList);
         this.setState({ nodeList: allNodeList })
+        alert.close()
     }
 
     render() {
