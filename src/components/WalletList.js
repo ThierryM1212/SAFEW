@@ -5,6 +5,7 @@ import { getAddressListContent, getTokenValue, getUnconfirmedTransactionsForAddr
 import { errorAlert, waitingAlert } from '../utils/Alerts';
 import { updateErgoPrice } from '../ergo-related/ergoprice';
 import { LS } from '../utils/utils';
+import { getOldestBoxAgeByAddressList } from '../ergo-related/node';
 
 export default class WalletList extends React.Component {
     constructor(props) {
@@ -14,6 +15,7 @@ export default class WalletList extends React.Component {
             addressContentList: [],
             setPage: props.setPage,
             tokenRatesDict: {},
+            oldestBoxAges: [],
         };
         this.updateWalletList = this.updateWalletList.bind(this);
         this.timer = this.timer.bind(this);
@@ -23,7 +25,7 @@ export default class WalletList extends React.Component {
         const walletList = (await LS.getItem('walletList')) ?? [];
         var intervalId = setInterval(this.timer, 60000);
         this.setState({ intervalId: intervalId, walletList: walletList });
-        updateUnusedAddresses();
+        await updateUnusedAddresses();
         await this.updateWalletAddressListContent();
     }
 
@@ -48,6 +50,7 @@ export default class WalletList extends React.Component {
         var alert = '';
         if (showAlert) { alert = waitingAlert("Loading wallet content..."); }
         var walletsAddressListContent = [];
+        var oldestBoxAges = [];
         const addressList = getWalletListAddressList(this.state.walletList);
 
         var unconfirmedTransactions = [];
@@ -70,10 +73,16 @@ export default class WalletList extends React.Component {
                     e["unconfirmedTx"] = unconfirmedTransactions;
                 }
                 walletsAddressListContent.push(addressContentList);
+                //const oldestBoxAge = await getOldestBoxAgeByAddressList(walletAddressList)
+                //console.log("oldest box age ", oldestBoxAge, msToTime(oldestBoxAge));
+                //oldestBoxAges.push(oldestBoxAge);
             }
+            oldestBoxAges = await Promise.all(addressList.map(async (walletAddressList) => {
+                return await getOldestBoxAgeByAddressList(walletAddressList);
+            }));
             //console.log("walletsAddressListContent", walletsAddressListContent);
         } catch (e) {
-            errorAlert("Failed to fetch wallet content from explorer API")
+            errorAlert("Failed to fetch wallet content from node API")
         }
         await updateErgoPrice();
         const tokenRatesDict = await getTokenValue();
@@ -81,6 +90,7 @@ export default class WalletList extends React.Component {
         this.setState({
             addressContentList: walletsAddressListContent,
             tokenRatesDict: tokenRatesDict,
+            oldestBoxAges: oldestBoxAges,
         });
 
         if (showAlert) { alert.close(); }
@@ -135,6 +145,7 @@ export default class WalletList extends React.Component {
                                 addressContentList={this.state.addressContentList[id]}
                                 updateWalletList={this.updateWalletList}
                                 tokenRatesDict={this.state.tokenRatesDict}
+                                oldestBoxAge={this.state.oldestBoxAges[id]}
                             />
                         ))}
                     </div>

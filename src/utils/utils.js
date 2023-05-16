@@ -189,7 +189,7 @@ export function ensureSingleEndSlash(addr) {
  * @param {number} timeLimit Time limit to attempt function in milliseconds
  * @returns {Promise<any> | undefined} Resolved promise for async function call, or an error if time limit reached
  */
-export async function asyncCallWithTimeout (asyncPromise, timeLimit) {
+export async function asyncCallWithTimeout(asyncPromise, timeLimit) {
     let timeoutHandle;
 
     const timeoutPromise = new Promise((_resolve, reject) => {
@@ -203,4 +203,15 @@ export async function asyncCallWithTimeout (asyncPromise, timeLimit) {
         clearTimeout(timeoutHandle);
         return result;
     })
+}
+
+export function msToTime(ms) {
+    const years = Math.floor(ms / (365 * 24 * 60 * 60 * 1000));
+    const yearsms = ms % (365 * 24 * 60 * 60 * 1000);
+    const days = Math.floor(yearsms / (24 * 60 * 60 * 1000));
+    var output = days + " days ";
+    if (years > 0) {
+        output = years + " years " + output;
+    }
+    return output;
 }

@@ -9,6 +9,7 @@ import { errorAlert, promptPassword } from '../utils/Alerts';
 import { LS } from '../utils/utils';
 import { getNewAccount } from '../ergo-related/ledger';
 import { DeviceError } from 'ledger-ergo-js';
+import StorageRentIcon from './StorageRentIcon';
 
 export default class Wallet extends React.Component {
     constructor(props) {
@@ -23,6 +24,7 @@ export default class Wallet extends React.Component {
             expertMode: false,
             expertMode: (localStorage.getItem('expertMode') === 'true') ?? false,
             tokenRatesDict: props.tokenRatesDict,
+            oldestBoxAge: props.oldestBoxAge,
         };
         //console.log("Wallet constructor", props.wallet, props.addressContentList, JSON.stringify(props.addressContentList));
         this.addNewAccount = this.addNewAccount.bind(this);
@@ -102,11 +104,16 @@ export default class Wallet extends React.Component {
                 tokenRatesDict: this.props.tokenRatesDict,
             });
         }
+        if (prevState.oldestBoxAge !== this.props.oldestBoxAge) {
+            this.setState({
+                oldestBoxAge: this.props.oldestBoxAge,
+            });
+        }
     }
 
     async componentDidMount() {
         const expertMode = (await LS.getItem('expertMode')) ?? false;
-        this.setState({expertMode: expertMode});
+        this.setState({ expertMode: expertMode });
     }
 
     render() {
@@ -148,7 +155,8 @@ export default class Wallet extends React.Component {
                                 icon={"edit"}
                                 tips={"Edit wallet"}
                                 onClick={() => this.state.setPage('edit', this.state.id)}
-                            />&nbsp;
+                            />
+                            &nbsp;
                             <h5>{this.state.wallet.name}</h5>
                             {
                                 this.state.wallet.type === "ergopay" ?
@@ -168,11 +176,22 @@ export default class Wallet extends React.Component {
                                         tips={"Ledger wallet"} />
                                     : null
                             }
+                            &nbsp;
+                            {
+                                this.state.oldestBoxAge > 365 * 24 * 3600 * 1000 ?
+                                    <StorageRentIcon
+                                        name={this.state.wallet.name}
+                                        oldestBoxAge={this.state.oldestBoxAge}
+                                    />
+                                    : null
+                            }
+
                         </div>
                         {
                             !this.state.showAccounts ?
                                 <div>
-                                    <AddressListContent addressContentList={this.state.addressContentList} tokenRatesDict={this.state.tokenRatesDict}/>
+                                    <AddressListContent addressContentList={this.state.addressContentList}
+                                        tokenRatesDict={this.state.tokenRatesDict} />
                                 </div>
                                 : <div></div>
                         }

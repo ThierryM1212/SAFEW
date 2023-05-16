@@ -143,3 +143,65 @@ export async function getNodeInfo(nodeUrl) {
     //console.log("getUnconfirmedTxs")
     return await get(nodeUrl + `info`);
 }
+
+export async function getOldestUnspentBoxesFor(address) {
+    const res = await postRequest(`blockchain/box/unspent/byAddress?offset=0&limit=1&sortDirection=asc`, address, '', SHORT_CACHE);
+    //console.log("getOldestUnspentBoxesFor", address, res)
+    return res.data[0];
+}
+
+export async function getBlockHeaderIdByHeight(height) {
+    const res = await getRequest(`blocks/at/${height}`);
+    //console.log("getBlockHeaderIdByHeight", height, res)
+    return res.data[0];
+}
+
+export async function getBlockHeaderById(headerId) {
+    const res = await getRequest(`blocks/${headerId}`);
+    //console.log("getBlockHeaderById", headerId, res)
+    return res.data;
+}
+
+export async function getOldestBoxAgeByAddress(address) {
+    const oldestBox = await getOldestUnspentBoxesFor(address);
+    var creationHeight = 0;
+
+    if (oldestBox && oldestBox.creationHeight) {
+        creationHeight = oldestBox.creationHeight;
+    }
+    if (creationHeight > 0) {
+        const headerId = await getBlockHeaderIdByHeight(creationHeight);
+        const header = await getBlockHeaderById(headerId);
+        const creationTimestamp = header.header.timestamp;
+        return Date.now() - creationTimestamp;
+    }
+    return 0;
+}
+
+export async function getOldestBoxAgeByAddressList(addressList) {
+    const creationHeightList = await Promise.all(addressList.map(async (addr) => {
+        try {
+            const b = await getOldestUnspentBoxesFor(addr);
+            var creationHeight = 0;
+            if (b && b.creationHeight) {
+                creationHeight = b.creationHeight;
+            }
+            return creationHeight;
+        } catch (e) {
+            console.log(e);
+            return 0;
+        }
+    }));
+    
+
+    const minCreationHeigth = Math.min(...creationHeightList.filter(n => n > 0));
+    //console.log("creationHeightList", creationHeightList, creationHeightList.filter(n => n > 0), minCreationHeigth);
+    if (minCreationHeigth > 0) {
+        const headerId = await getBlockHeaderIdByHeight(minCreationHeigth);
+        const header = await getBlockHeaderById(headerId);
+        const creationTimestamp = header.header.timestamp;
+        return Date.now() - creationTimestamp;
+    }
+    return 0;
+
+}

@@ -11,6 +11,8 @@ import TokenLabel from './TokenLabel';
 import JSONBigInt from 'json-bigint';
 import SignTransaction from './SignTransaction';
 import Switch from "react-switch";
+import { getOldestBoxAgeByAddressList } from '../ergo-related/node';
+import StorageRentIcon from './StorageRentIcon';
 
 /* global BigInt */
 
@@ -39,6 +41,7 @@ export default class SendTransaction extends React.Component {
             isValidTxFee: true,
             isSendAll: false,
             burnMode: false,
+            oldestBoxAge: 0,
         };
         this.setSendToAddress = this.setSendToAddress.bind(this);
         this.setErgsToSend = this.setErgsToSend.bind(this);
@@ -56,7 +59,7 @@ export default class SendTransaction extends React.Component {
         })
     }
     toggleSelectedAddresses = () => { this.setState(prevState => ({ viewSelectAddress: !prevState.viewSelectAddress })) }
-    async toggleBurnMode () {
+    async toggleBurnMode() {
         const wallet = await getWalletById(this.state.walletId);
         const walletAddressList = getWalletAddressList(wallet);
         if (!this.state.burnMode) {
@@ -115,6 +118,7 @@ export default class SendTransaction extends React.Component {
             }
         }
         const [nanoErgs, tokens] = getSummaryFromAddressListContent(addressContentList);
+        const oldestBoxAge = await getOldestBoxAgeByAddressList(walletAddressList);
         this.setState({
             tokens: tokens,
             nanoErgs: nanoErgs,
@@ -124,6 +128,7 @@ export default class SendTransaction extends React.Component {
             addressContentList: addressContentList,
             walletAddressList: walletAddressList,
             wallet: wallet,
+            oldestBoxAge: oldestBoxAge,
         });
 
         // init the transaction from iniTran param
@@ -180,7 +185,7 @@ export default class SendTransaction extends React.Component {
             const ergAmmount = this.state.nanoErgs / NANOERG_TO_ERG - parseFloat(this.state.txFee);
             this.setState(prevState => ({
                 isSendAll: !prevState.isSendAll,
-                tokenAmountToSend: [...prevState.tokens.map(tok => formatTokenAmount(tok.amount, tok.decimals).replaceAll(",",""))],
+                tokenAmountToSend: [...prevState.tokens.map(tok => formatTokenAmount(tok.amount, tok.decimals).replaceAll(",", ""))],
                 ergsToSend: ergAmmount,
                 isValidErgToSend: this.validateErgAmount(ergAmmount, prevState.txFee),
             }))
@@ -226,7 +231,7 @@ export default class SendTransaction extends React.Component {
         const token = this.state.tokens[index];
         const tokenDecimals = parseInt(token.decimals);
         //console.log("validateTokenAmount", token, tokenDecimals, tokAmount)
-        const tokAmountStr = tokAmount.toString().replace(',','');
+        const tokAmountStr = tokAmount.toString().replace(',', '');
         var tokenAmount = BigInt(0);
         if (tokAmountStr.indexOf('.') > -1) {
             var str = tokAmountStr.split(".");
@@ -276,7 +281,7 @@ export default class SendTransaction extends React.Component {
 
     render() {
         var walletColor = { r: 141, g: 140, b: 143, a: 1 };
-        if(this.state.wallet){
+        if (this.state.wallet) {
             walletColor = this.state.wallet.color;
         }
         return (
@@ -285,7 +290,13 @@ export default class SendTransaction extends React.Component {
                     style={{ borderColor: `rgba(${walletColor.r},${walletColor.g},${walletColor.b}, 0.95)`, }}
                 >
                     <div className='d-flex flex-row justify-content-between align-items-center'>
-                        <h5>Send ERGs and tokens - Wallet {this.state.wallet ? this.state.wallet.name : null }</h5>
+                        <div className='d-flex flex-row align-items-center'>
+                            <h5>Send ERGs and tokens - Wallet {this.state.wallet ? this.state.wallet.name : null}</h5>
+                            <StorageRentIcon
+                                name={this.state.wallet ? this.state.wallet.name : ""}
+                                oldestBoxAge={this.state.oldestBoxAge}
+                            />
+                        </div>
                         <div className='d-flex flex-row align-items-center '>
                             <div className='d-flex flex-row align-items-baseline'>
                                 <h5>Burn mode</h5>
@@ -428,7 +439,7 @@ export default class SendTransaction extends React.Component {
                                                                 }
                                                             }
                                                         }
-                                                    }
+                                                        }
                                                     />
                                                     <input type="text"
                                                         pattern={parseInt(tok.decimals) > 0 ? "[0-9]+([\\.,][0-9]{0," + tok.decimals + "})?" : "[0-9]+"}
