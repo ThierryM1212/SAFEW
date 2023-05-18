@@ -8,14 +8,16 @@ export default function ImageButton(props) {
                 onClick={props.onClick}
                 data-tip
                 data-for={props.id}
-                style={{cursor: 'pointer'}}
+                style={{ cursor: 'pointer' }}
             >
                 {props.icon}
             </span>
-            <ReactTooltip id={props.id} html={true} delayShow={400}>
-                {props.tips}
+            <ReactTooltip id={props.id} delayShow={400} data-html={true} insecure={true} multiline={true}>
+                <div className="d-flex flex-column align-items-start">
+                    {props.tips}
+                </div>
             </ReactTooltip>
-            
+
         </div>
     )
 

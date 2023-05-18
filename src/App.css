@@ -9,7 +9,7 @@
 }
 
 .material-icons.red {
-  color: #aa292d;
+  color: #ac3344;
 }
 
 .material-icons.green {
@@ -28,6 +28,10 @@
   color: #ac3344;
 }
 
+.orangeAmount {
+  color: #946526;
+}
+
 .greenAmount {
   color: #5a884e;
 }
@@ -38,8 +42,8 @@
 }
 
 .invalidInput {
-  border: 1px solid #aa292d;
-  outline-color: #aa292d;
+  border: 1px solid #ac3344;
+  outline-color: #ac3344;
 }
 
 input:disabled {

@@ -26,3 +26,19 @@ export async function boxById(id) {
     const res = await getRequestV1Text(`/boxes/${id}`);
     return JSONBigInt.parse(res);
 }
+
+export async function getTotalNumberOfBoxesByAddress(address) {
+    const res = await getRequestV1(`/boxes/unspent/byAddress/${address}?limit=1`, SHORT_CACHE);
+    //console.log("getTotalNumberOfBoxesByAddress res", res);
+    if (res && res.data && res.data.total) {
+        return res.data.total;
+    }
+    return 0;
+}
+
+export async function getTotalNumberOfBoxesByAddressList(addressList) {
+    const totalNumberOfBoxes = await Promise.all(addressList.map(async (address) => {
+        return await getTotalNumberOfBoxesByAddress(address);
+    }));
+    return totalNumberOfBoxes.reduce((a, b) => a + b, 0)
+}

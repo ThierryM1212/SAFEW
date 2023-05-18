@@ -193,6 +193,9 @@ export async function getOldestBoxAgeByAddressList(addressList) {
         }
     }));
     
+    if (creationHeightList.length === 0) {
+        return 0;
+    }
 
     const minCreationHeigth = Math.min(...creationHeightList.filter(n => n > 0));
     //console.log("creationHeightList", creationHeightList, creationHeightList.filter(n => n > 0), minCreationHeigth);

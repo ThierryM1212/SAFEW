@@ -11,8 +11,7 @@ import TokenLabel from './TokenLabel';
 import JSONBigInt from 'json-bigint';
 import SignTransaction from './SignTransaction';
 import Switch from "react-switch";
-import { getOldestBoxAgeByAddressList } from '../ergo-related/node';
-import StorageRentIcon from './StorageRentIcon';
+import AddressListInfoTips from './AddressListInfoTips';
 
 /* global BigInt */
 
@@ -41,7 +40,6 @@ export default class SendTransaction extends React.Component {
             isValidTxFee: true,
             isSendAll: false,
             burnMode: false,
-            oldestBoxAge: 0,
         };
         this.setSendToAddress = this.setSendToAddress.bind(this);
         this.setErgsToSend = this.setErgsToSend.bind(this);
@@ -118,7 +116,6 @@ export default class SendTransaction extends React.Component {
             }
         }
         const [nanoErgs, tokens] = getSummaryFromAddressListContent(addressContentList);
-        const oldestBoxAge = await getOldestBoxAgeByAddressList(walletAddressList);
         this.setState({
             tokens: tokens,
             nanoErgs: nanoErgs,
@@ -128,7 +125,6 @@ export default class SendTransaction extends React.Component {
             addressContentList: addressContentList,
             walletAddressList: walletAddressList,
             wallet: wallet,
-            oldestBoxAge: oldestBoxAge,
         });
 
         // init the transaction from iniTran param
@@ -292,10 +288,7 @@ export default class SendTransaction extends React.Component {
                     <div className='d-flex flex-row justify-content-between align-items-center'>
                         <div className='d-flex flex-row align-items-center'>
                             <h5>Send ERGs and tokens - Wallet {this.state.wallet ? this.state.wallet.name : null}</h5>
-                            <StorageRentIcon
-                                name={this.state.wallet ? this.state.wallet.name : ""}
-                                oldestBoxAge={this.state.oldestBoxAge}
-                            />
+                            <AddressListInfoTips addressList={this.state.walletAddressList} />
                         </div>
                         <div className='d-flex flex-row align-items-center '>
                             <div className='d-flex flex-row align-items-baseline'>
@@ -304,7 +297,12 @@ export default class SendTransaction extends React.Component {
                                     id={"burnModeInfo"}
                                     color={"white"}
                                     icon={"info"}
-                                    tips={"Create a transaction to burn tokens.<br/>Certified tokens like SigUSD or SigRSV cannot be added to the burn transaction."}
+                                    tips={
+                                        <div>
+                                            <div>Create a transaction to burn tokens.</div>
+                                            <div>Certified tokens like SigUSD or SigRSV cannot be added to the burn transaction.</div>
+                                        </div>
+                                    }
                                 />
                             </div>
                             <Switch

@@ -9,7 +9,7 @@ import { errorAlert, promptPassword } from '../utils/Alerts';
 import { LS } from '../utils/utils';
 import { getNewAccount } from '../ergo-related/ledger';
 import { DeviceError } from 'ledger-ergo-js';
-import StorageRentIcon from './StorageRentIcon';
+import AddressListInfoTips from './AddressListInfoTips';
 
 export default class Wallet extends React.Component {
     constructor(props) {
@@ -24,7 +24,6 @@ export default class Wallet extends React.Component {
             expertMode: false,
             expertMode: (localStorage.getItem('expertMode') === 'true') ?? false,
             tokenRatesDict: props.tokenRatesDict,
-            oldestBoxAge: props.oldestBoxAge,
         };
         //console.log("Wallet constructor", props.wallet, props.addressContentList, JSON.stringify(props.addressContentList));
         this.addNewAccount = this.addNewAccount.bind(this);
@@ -104,11 +103,6 @@ export default class Wallet extends React.Component {
                 tokenRatesDict: this.props.tokenRatesDict,
             });
         }
-        if (prevState.oldestBoxAge !== this.props.oldestBoxAge) {
-            this.setState({
-                oldestBoxAge: this.props.oldestBoxAge,
-            });
-        }
     }
 
     async componentDidMount() {
@@ -177,14 +171,7 @@ export default class Wallet extends React.Component {
                                     : null
                             }
                             &nbsp;
-                            {
-                                this.state.oldestBoxAge > 365 * 24 * 3600 * 1000 ?
-                                    <StorageRentIcon
-                                        name={this.state.wallet.name}
-                                        oldestBoxAge={this.state.oldestBoxAge}
-                                    />
-                                    : null
-                            }
+                            <AddressListInfoTips addressList={walletAddressList.map(wa => wa.address)} />
 
                         </div>
                         {
