@@ -150,6 +150,7 @@ export default class Wallet extends React.Component {
                                 tips={"Edit wallet"}
                                 onClick={() => this.state.setPage('edit', this.state.id)}
                             />
+                            <AddressListInfoTips addressList={walletAddressList.map(wa => wa.address)} />
                             &nbsp;
                             <h5>{this.state.wallet.name}</h5>
                             {
@@ -170,9 +171,6 @@ export default class Wallet extends React.Component {
                                         tips={"Ledger wallet"} />
                                     : null
                             }
-                            &nbsp;
-                            <AddressListInfoTips addressList={walletAddressList.map(wa => wa.address)} />
-
                         </div>
                         {
                             !this.state.showAccounts ?
