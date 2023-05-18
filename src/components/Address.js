@@ -5,6 +5,7 @@ import { copySuccess } from '../utils/Alerts';
 import QR from './QRCode';
 import { setAddressUsed } from '../utils/walletUtils';
 import { DEFAULT_EXPLORER_WEBUI_ADDRESS } from '../utils/constants';
+import AddressListInfoTips from './AddressListInfoTips';
 
 
 export default function Address(props) {
@@ -64,6 +65,7 @@ export default function Address(props) {
                                 tips={"Show/hide QR code"}
                                 onClick={() => toggleQR(!QRcode)}
                             />
+                            <AddressListInfoTips addressList={[address]} />
                         </div>
                         <div className='d-flex flex-row align-items-center justify-content-between'>
                             <div></div>

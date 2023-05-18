@@ -286,7 +286,7 @@ export default class SendTransaction extends React.Component {
                     style={{ borderColor: `rgba(${walletColor.r},${walletColor.g},${walletColor.b}, 0.95)`, }}
                 >
                     <div className='d-flex flex-row justify-content-between align-items-center'>
-                        <div className='d-flex flex-row align-items-center'>
+                        <div className='d-flex flex-row align-items-baseline'>
                             <h5>Send ERGs and tokens - Wallet {this.state.wallet ? this.state.wallet.name : null}</h5>
                             <AddressListInfoTips addressList={this.state.walletAddressList} />
                         </div>

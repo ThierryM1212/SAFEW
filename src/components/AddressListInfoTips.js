@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Fragment } from 'react';
 import { getTotalNumberOfBoxesByAddressList } from "../ergo-related/explorer";
 import { getOldestBoxAgeByAddressList } from "../ergo-related/node";
 import { msToTime } from "../utils/utils";
@@ -40,52 +40,58 @@ export default class AddressListInfoTips extends React.Component {
         const yearInMilli = 365 * 24 * 60 * 60 * 1000;
         const storageRentTime = Math.max(4 * yearInMilli - this.state.oldestBoxAge, 0);
         var color = "green", numBoxColor = "greenAmount", ageBoxColor = "greenAmount", tips = "All good";
-        if (this.state.totalNumberOfBoxes > 30 || storageRentTime < 2 * yearInMilli) {
+        if (this.state.totalNumberOfBoxes >= 25 || storageRentTime < 2 * yearInMilli) {
             color = "orange";
             tips = "Condider consolidating your wallet (send all to yourself) for the performance of the wallet and to avoid the storage rent";
-            if (this.state.totalNumberOfBoxes > 30) {
+            if (this.state.totalNumberOfBoxes >= 25) {
                 numBoxColor = "orangeAmount";
             }
             if (storageRentTime < 2 * yearInMilli) {
                 ageBoxColor = "orangeAmount";
             }
         }
-        
-        if (this.state.totalNumberOfBoxes > 50 || storageRentTime < yearInMilli) {
+
+        if (this.state.totalNumberOfBoxes >= 50 || storageRentTime < yearInMilli) {
             color = "red";
             tips = "Consolidate your wallet (send all to yourself) for the performance of the wallet and to avoid the storage rent"
-            if (this.state.totalNumberOfBoxes > 50) {
+            if (this.state.totalNumberOfBoxes >= 50) {
                 numBoxColor = "redAmount";
             }
             if (storageRentTime < yearInMilli) {
                 ageBoxColor = "redAmount";
             }
         }
-        
+
         return (
-            <ImageButton
-                id={"infoWalletTips" + this.state.addressList.toString()}
-                color={color}
-                icon={"info"}
-                tips={<table>
-                    <tr>
-                        <td>Total number of boxes</td>
-                        <td><h6 className={numBoxColor}>{this.state.totalNumberOfBoxes}</h6></td>
-                    </tr>
-                    <tr>
-                        <td>Oldest box age</td>
-                        <td><h6 className={ageBoxColor}>{msToTime(this.state.oldestBoxAge)}</h6></td>
-                    </tr>
-                    <tr>
-                        <td>Storage rent in</td>
-                        <td><h6 className={ageBoxColor}>{msToTime(storageRentTime)}</h6></td>
-                    </tr>
-                    <tr>
-                        <td>Tips</td>
-                        <td><h6><b>{tips}</b></h6></td>
-                    </tr>
-                </table>}
-            />
+            <Fragment>
+                {
+                    this.state.oldestBoxAge > 0 ?
+                        <ImageButton
+                            id={"infoWalletTips" + this.state.addressList.toString()}
+                            color={color}
+                            icon={"info"}
+                            tips={<table>
+                                <tr>
+                                    <td>Total number of boxes</td>
+                                    <td><h6 className={numBoxColor}>{this.state.totalNumberOfBoxes}</h6></td>
+                                </tr>
+                                <tr>
+                                    <td>Oldest box age</td>
+                                    <td><h6 className={ageBoxColor}>{msToTime(this.state.oldestBoxAge)}</h6></td>
+                                </tr>
+                                <tr>
+                                    <td>Storage rent in</td>
+                                    <td><h6 className={ageBoxColor}>{msToTime(storageRentTime)}</h6></td>
+                                </tr>
+                                <tr>
+                                    <td>Tips</td>
+                                    <td><h6><b>{tips}</b></h6></td>
+                                </tr>
+                            </table>}
+                        />
+                        : null
+                }
+            </Fragment>
         )
     }
 }
